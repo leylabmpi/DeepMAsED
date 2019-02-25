@@ -1,0 +1,9 @@
+import os
+
+genomes_dir = os.path.join(config['output_dir'], 'genomes/')
+mgsim_dir = os.path.join(config['output_dir'], 'MGSIM/')
+
+
+log_dir = os.path.join(config['output_dir'], 'logs/')
+benchmark_dir = os.path.join(config['output_dir'], 'benchmarks/')
+scripts_dir = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'scripts/')

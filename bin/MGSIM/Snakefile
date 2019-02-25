@@ -1,0 +1,90 @@
+#import pandas as pd
+
+# def genome_fasta_files(genomes_file, output_dir):
+#     """Setting genome fasta file location
+#     """
+#     df = pd.read_csv(genomes_file, sep='\t', comment='#')
+    
+
+if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
+    localrules: MGSIM_genome_download
+    
+    rule MGSIM_genome_download:
+        """
+        Using MGSIM to download the genomes
+        """
+        input:
+            tbl = config['genomes_file']
+        output:
+            tbl = genomes_dir + 'genomes.tsv',
+            fna = config['genomes_tbl']['Fasta']
+        params:
+            config['params']['MGSIM']['genome_download']
+        conda:
+            '../envs/MGSIM.yaml'
+        threads:
+            12
+        log:
+            log_dir + 'MGSIM_download/all.log'
+        shell:
+            """
+            MGSIM genome_download {params} \
+              -n {threads} {input.tbl} \
+              > {output.tbl} 2> {log}
+            """
+
+rule MGSIM_communities:
+    """
+    Using MGSIM to simulate communities
+    """
+    input:
+        tbl = genomes_dir + 'genomes.tsv',
+        fna = config['genomes_tbl']['Fasta']
+    output:
+        abund = mgsim_dir + '{rep}/comm_abund.txt',
+        wAbund = mgsim_dir + '{rep}/comm_wAbund.txt'
+    params:
+        prefix = mgsim_dir + 'comm',
+        params = config['params']['MGSIM']['communities']
+    conda:
+        '../envs/MGSIM.yaml'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    log:
+        log_dir + '{rep}/MGSIM_communities/all.log'
+    shell:
+        """
+        MGSIM communities {params.params} \
+          {params.prefix} {input.tbl} 2>&1 > {log}
+        """
+
+rule MGSIM_reads:
+    """
+    Using MGSIM to simulate reads
+    """
+    input:
+        wAbund = mgsim_dir + '{rep}/comm_wAbund.txt',
+        tbl = genomes_dir + 'genomes.tsv',     
+    output:
+        mgsim_dir + '{rep}/reads.done'
+    params:
+        params = config['params']['MGSIM']['reads']
+    conda:
+        '../envs/MGSIM.yaml'
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        n = lambda wildcards, attempt: 12,	 
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2
+    log:
+        log_dir + '{rep}/MGSIM_reads/all.log'
+    shell:
+        """
+        OUTDIR=`dirname {output}`
+
+        MGSIM reads {params.params} \
+          -n {threads} {input.wAbund} \
+          {input.tbl} $OUTDIR \
+          2>&1 > {log}
+        """

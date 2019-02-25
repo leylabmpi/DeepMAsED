@@ -1,0 +1,17 @@
+{
+    "__default__": {
+        "time"      : "00:59:00",
+        "n"         : 1,
+        "mem"       : 6,
+        "output"    : "{rule}.{wildcards}.out",
+        "error"     : "{rule}.{wildcards}.err"
+    },
+    "MGSIM_communities" : {
+	"time" : "{resources.time}"
+    },
+    "MGSIM_reads" : {
+	"time" : "{resources.time}"
+        "n" : "{resources.n}"
+        "mem" : "{resources.mem_gb_pt}"
+    }
+}

@@ -1,0 +1,14 @@
+channels: !!python/tuple
+- conda-forge
+- bioconda
+dependencies:
+- conda-forge::docopt
+- conda-forge::configobj
+- conda-forge::numpy
+- conda-forge::pandas
+- conda-forge::scipy
+- bioconda::biopython
+- bioconda::pyfasta
+- bioconda::art
+- pip:
+  - MGSIM

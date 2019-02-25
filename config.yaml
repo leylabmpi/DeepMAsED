@@ -1,0 +1,32 @@
+# Input
+genomes_file: tests/data/genome_download.tsv
+
+# Output location
+output_dir: tests/n3/
+
+
+# software parameters
+# Use "Skip" to skip  steps. If no params for rule, use ""
+params:
+  # simulating metagenomes
+  reps: 2
+  MGSIM:
+    genome_download: ""
+    communities: --n-comm 1 --richness 0.8
+    reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
+  # assemblying metagenomes
+  assemblers:
+    meta_spades: -k auto --only-assembler
+    megahit: --min-count 3 --min-contig-len 500 --presets meta-sensitive
+    idba_ud: --mink 20 --maxk 100
+  # assessing assembly errors
+  meta_quast: ""
+  # creating DL features
+  make_features: ""
+  
+
+# snakemake pipeline
+pipeline:
+  snakemake_folder: ./
+  script_folder: ./bin/scripts/
+  temp_folder: /tmp/global2/  
