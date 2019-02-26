@@ -1,8 +1,8 @@
 # Input
-genomes_file: tests/data/genome_download.tsv
+genomes_file: tests/data/genome_download_n8.tsv
 
 # Output location
-output_dir: tests/n3/
+output_dir: tests/output_n8/
 
 
 # software parameters
@@ -12,21 +12,20 @@ params:
   reps: 2
   MGSIM:
     genome_download: ""
-    communities: --n-comm 1 --richness 0.8
-    reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
+    communities: --richness 0.8
+    reads: --sr-seq-depth 1e5 --art-paired --art-mflen 250
   # assemblying metagenomes
   assemblers:
-    meta_spades: -k auto --only-assembler
+    metaspades: -k auto --only-assembler
     megahit: --min-count 3 --min-contig-len 500 --presets meta-sensitive
-    idba_ud: --mink 20 --maxk 100
+    idba_ud: Skip --mink 20 --maxk 100
   # assessing assembly errors
   meta_quast: ""
   # creating DL features
   make_features: ""
   
-
 # snakemake pipeline
 pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
-  temp_folder: /tmp/global2/  
+  temp_folder: /tmp/global/

@@ -2,6 +2,7 @@ import os
 
 genomes_dir = os.path.join(config['output_dir'], 'genomes/')
 mgsim_dir = os.path.join(config['output_dir'], 'MGSIM/')
+asmbl_dir = os.path.join(config['output_dir'], 'assembly/')
 
 
 log_dir = os.path.join(config['output_dir'], 'logs/')

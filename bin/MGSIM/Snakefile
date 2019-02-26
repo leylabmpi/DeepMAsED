@@ -1,10 +1,5 @@
-#import pandas as pd
-
-# def genome_fasta_files(genomes_file, output_dir):
-#     """Setting genome fasta file location
-#     """
-#     df = pd.read_csv(genomes_file, sep='\t', comment='#')
-    
+import os
+import pandas as pd
 
 if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
     localrules: MGSIM_genome_download
@@ -28,9 +23,14 @@ if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
             log_dir + 'MGSIM_download/all.log'
         shell:
             """
+            OUTDIR=`dirname {output.tbl}`
+            if [ ! -d $OUTDIR ]; then
+              mkdir -p $OUTDIR
+            fi
+
             MGSIM genome_download {params} \
-              -n {threads} {input.tbl} \
-              > {output.tbl} 2> {log}
+              -n {threads} -d $OUTDIR \
+              {input.tbl} > {output.tbl} 2> {log}
             """
 
 rule MGSIM_communities:
@@ -44,7 +44,7 @@ rule MGSIM_communities:
         abund = mgsim_dir + '{rep}/comm_abund.txt',
         wAbund = mgsim_dir + '{rep}/comm_wAbund.txt'
     params:
-        prefix = mgsim_dir + 'comm',
+        prefix = mgsim_dir + '{rep}/comm',
         params = config['params']['MGSIM']['communities']
     conda:
         '../envs/MGSIM.yaml'
@@ -54,9 +54,17 @@ rule MGSIM_communities:
         log_dir + '{rep}/MGSIM_communities/all.log'
     shell:
         """
-        MGSIM communities {params.params} \
-          {params.prefix} {input.tbl} 2>&1 > {log}
+       
+        MGSIM communities {params.params} --n-comm 1 \
+          {input.tbl} {params.prefix} 2>&1 > {log}
         """
+
+# def MGSIM_reads_output(comm_file, out_dir, rep, reads='R1.fq'):
+#     """Creating list of output files for MGSIM
+#     """
+#     comms = pd.read_csv(comm_file, sep='\t')['Community'].tolist()
+#     comms = [os.path.join(out_dir, x, rep, reads) for x in comms]
+#     return comms
 
 rule MGSIM_reads:
     """
@@ -66,25 +74,29 @@ rule MGSIM_reads:
         wAbund = mgsim_dir + '{rep}/comm_wAbund.txt',
         tbl = genomes_dir + 'genomes.tsv',     
     output:
-        mgsim_dir + '{rep}/reads.done'
+        done = touch(mgsim_dir + '{rep}/reads.done'),
+	read1 = mgsim_dir + '{rep}/1/R1.fq',
+	read2 = mgsim_dir + '{rep}/1/R2.fq'	
     params:
+        tmp_dir = os.path.join(config['tmp_dir'], '{rep}'),
+	out_dir = os.path.join(mgsim_dir, '{rep}'),
         params = config['params']['MGSIM']['reads']
     conda:
         '../envs/MGSIM.yaml'
     threads:
-        12
+        8
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        n = lambda wildcards, attempt: 12,	 
+        n = lambda wildcards, attempt: 8,
         mem_gb_pt = lambda wildcards, attempt: attempt * 2
     log:
-        log_dir + '{rep}/MGSIM_reads/all.log'
+        log_dir + 'MGSIM_reads/{rep}.log'
+    benchmark:
+        benchmark_dir + 'MGSIM_reads/{rep}.txt'
     shell:
         """
-        OUTDIR=`dirname {output}`
-
-        MGSIM reads {params.params} \
-          -n {threads} {input.wAbund} \
-          {input.tbl} $OUTDIR \
+        MGSIM reads {params.params} -n {threads} \
+          --tmp-dir {params.tmp_dir} \
+          {input.tbl} {input.wAbund} {params.out_dir} \
           2>&1 > {log}
         """

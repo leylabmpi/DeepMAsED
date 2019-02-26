@@ -38,11 +38,13 @@ config['tmp_dir'] = os.path.join(config['pipeline']['temp_folder'],
 if not os.path.isdir(config['tmp_dir']):
     os.makedirs(config['tmp_dir'])
 
-# reps
+# config calculated parameters
 config['reps'] = [x+1 for x in range(config['params']['reps'])]
+config['assemblers'] = [k for k,v in config['params']['assemblers'].items() if not v.startswith('Skip')]
 
 ## modular snakefiles
 include: snake_dir + 'bin/MGSIM/Snakefile'
+include: snake_dir + 'bin/assembly/Snakefile'
 
 ## local rules
 localrules: all
@@ -51,16 +53,20 @@ localrules: all
 rule all:
     input:
         config['genomes_tbl']['Fasta'],
-        expand(mgsim_dir + '{rep}/reads.done', rep = config['reps'])
+	expand(asmbl_dir + '{rep}/{assembler}/contigs.fasta',
+	       rep = config['reps'],
+	       assembler = config['assemblers'])
+
+        #expand(mgsim_dir + '{rep}/reads.done', rep = config['reps'])
 
 
 # notifications (only first & last N lines)
-onsuccess:
-    print("Workflow finished, no error")
-    cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED finished successfully' " + config['pipeline']['email']
-    shell(cmd)
+# onsuccess:
+#     print("Workflow finished, no error")
+#     cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED finished successfully' " + config['pipeline']['email']
+#     shell(cmd)
 
-onerror:
-    print("An error occurred")
-    cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED => error occurred' " + config['pipeline']['email']
-    shell(cmd)
+# onerror:
+#     print("An error occurred")
+#     cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED => error occurred' " + config['pipeline']['email']
+#     shell(cmd)
