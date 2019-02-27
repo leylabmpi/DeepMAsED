@@ -13,14 +13,16 @@ params:
   MGSIM:
     genome_download: ""
     communities: --richness 0.8
-    reads: --sr-seq-depth 1e5 --art-paired --art-mflen 250
+    reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
   # assemblying metagenomes
   assemblers:
     metaspades: -k auto --only-assembler
     megahit: --min-count 3 --min-contig-len 500 --presets meta-sensitive
     idba_ud: Skip --mink 20 --maxk 100
   # assessing assembly errors
-  meta_quast: ""
+  metaquast: --min-identity 95 --no-icarus
+  # mapping reads to contigs
+  samtools: -q 0
   # creating DL features
   make_features: ""
   

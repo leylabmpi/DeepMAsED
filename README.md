@@ -34,7 +34,17 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 * MetaQUAST vs reference genomes
   * mapping reads to ref genomes
-
+  * output to use for labeling misassembly regions of each contig
+    * contigs_reports/contigs_report_contigs.mis_contigs.info
+    * contigs_reports/interspecies_translocations_by_refs_contigs.info
+    * ./reads_stats/combined_reference.bed
+* ALE
+  * likelihood of errors
+* Struct. Var. detection
+  * breseq
+  * Bambus 2
+  * Marygold
+  * Anvio
 
 ## Creating features for DL
 

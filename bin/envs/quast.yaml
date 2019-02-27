@@ -1,0 +1,4 @@
+channels: !!python/tuple
+- bioconda
+dependencies:
+- bioconda::quast=5.0.2

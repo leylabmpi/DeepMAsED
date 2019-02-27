@@ -1,0 +1,55 @@
+# rule combine_ref_genomes:
+#     """
+#     Combining reference genomes
+#     """
+#     input:
+#         config['genomes_tbl']['Fasta']
+#     output:
+#         temp(config['tmp_dir'] + 'ref_genomes.fna')
+#     resources:
+#         time = lambda wildcards, attempt: attempt ** 3 * 59
+#     log:
+#         log_dir + 'combine_ref_genomes.log'
+#     benchmark:
+#         benchmark_dir + 'combine_ref_genomes.txt'
+#     shell:
+#         """
+#         cat {input} > {output} 2> {log}
+#         """
+
+rule metaquast:
+    """
+    MetaQUAST assessment of assemblies
+    """
+    input:
+        contigs = asmbl_dir + '{rep}/{assembler}/contigs.fasta',
+        refs = config['genomes_tbl']['Fasta'],
+        read1 = mgsim_dir + '{rep}/1/R1.fq',
+	read2 = mgsim_dir + '{rep}/1/R2.fq'
+    output:
+        done = touch(true_errors_dir + '{rep}/{assembler}/metaquast.done')
+    params:
+        config['params']['metaquast']
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        n = lambda wildcards, attempt: 12,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2
+    conda:
+        '../envs/quast.yaml'	
+    log:
+        log_dir + 'metaquast/{rep}/{assembler}.log'
+    benchmark:
+        benchmark_dir + 'metaquast/{rep}/{assembler}.txt'
+    shell:
+        """
+        OUTDIR=`dirname {output.done}`
+        REFS=`echo {input.refs} | perl -pe 's/ /,/g'`
+
+        metaquast.py {params} -t {threads} \
+          --reads1 {input.read1} --reads2 {input.read2} \
+          -o $OUTDIR -R $REFS \
+          {input.contigs} 2>&1 > {log}
+        """
+ 

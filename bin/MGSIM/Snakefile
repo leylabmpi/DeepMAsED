@@ -59,13 +59,6 @@ rule MGSIM_communities:
           {input.tbl} {params.prefix} 2>&1 > {log}
         """
 
-# def MGSIM_reads_output(comm_file, out_dir, rep, reads='R1.fq'):
-#     """Creating list of output files for MGSIM
-#     """
-#     comms = pd.read_csv(comm_file, sep='\t')['Community'].tolist()
-#     comms = [os.path.join(out_dir, x, rep, reads) for x in comms]
-#     return comms
-
 rule MGSIM_reads:
     """
     Using MGSIM to simulate reads

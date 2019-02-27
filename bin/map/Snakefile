@@ -1,0 +1,87 @@
+rule map_bowtie2_build:
+    """
+    Building bowtie2 index for metagenome assembly contigs
+    """
+    input:
+        contigs = asmbl_dir + '{rep}/{assembler}/contigs.fasta'
+    output:
+        touch(asmbl_dir + '{rep}/{assembler}/map_bowtie2_build.done')
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt * 59,
+        n = lambda wildcards, attempt: 12,
+	mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 1
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'map_bowtie2_build/{rep}/{assembler}.log'
+    benchmark:
+        benchmark_dir + 'map_bowtie2_build/{rep}/{assembler}.log'
+    shell:
+        """
+	PREF=`echo {input.contigs} | perl -pe 's/\.[^.]+$//'`
+
+        bowtie2-build --threads {threads} \
+          {input} $PREF 2> {log} 1>&2
+        """
+
+rule map_bowtie2:
+    """
+    Mapping reads from all samples to the metagenome assembly contigs
+    """
+    input:
+        ref = asmbl_dir + '{rep}/{assembler}/contigs.fasta',
+	done = asmbl_dir + '{rep}/{assembler}/map_bowtie2_build.done',
+        read1 = mgsim_dir + '{rep}/1/R1.fq',
+	read2 = mgsim_dir + '{rep}/1/R2.fq'
+    output:
+        bam = map_dir + '{rep}/{assembler}.bam'
+    params:
+        samtools = config['params']['samtools']
+    conda:
+        '../envs/bowtie2.yaml'
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt * 59 * 12,
+	n = lambda wildcards: 12,
+	mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 2
+    log:
+        bt2 = log_dir + 'map_bowtie2/{rep}/{assembler}.log',    
+        sam = log_dir + 'map_bowtie2_samtools/{rep}/{assembler}.log'
+    benchmark:
+        benchmark_dir + 'map_bowtie2/{rep}/{assembler}.txt'
+    shell:
+        """
+	PREF=`echo {input.ref} | perl -pe 's/\.[^.]+$//'`
+        TMPDIR=`dirname {output.bam}`
+
+        bowtie2 -p {threads} -q --no-unal \
+          -x $PREF -1 {input.read1} -2 {input.read2} 2> {log.bt2} | \
+          samtools view {params.samtools} -h -o - | \
+          samtools sort -@ {threads} -T $TMPDIR -o - \
+          > {output.bam} 2> {log.sam}
+        """
+
+rule map_bowtie2_index_bam:
+    """
+    Mapping reads from all samples to the metagenome assembly contigs
+    """
+    input:
+        bam = map_dir + '{rep}/{assembler}.bam'
+    output:
+        bai = map_dir + '{rep}/{assembler}.bam.bai'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 12
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'map_bowtie2_index_bam/{rep}/{assembler}.log'
+    benchmark:
+        benchmark_dir + 'map_bowtie2_index_bam/{rep}/{assembler}.txt'
+    shell:
+        """
+        samtools index {input.bam} 2> {log}
+        """

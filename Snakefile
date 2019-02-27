@@ -45,6 +45,9 @@ config['assemblers'] = [k for k,v in config['params']['assemblers'].items() if n
 ## modular snakefiles
 include: snake_dir + 'bin/MGSIM/Snakefile'
 include: snake_dir + 'bin/assembly/Snakefile'
+include: snake_dir + 'bin/true_errors/Snakefile'
+include: snake_dir + 'bin/map/Snakefile'
+
 
 ## local rules
 localrules: all
@@ -52,12 +55,20 @@ localrules: all
 # rules
 rule all:
     input:
+        # genome fasta files
         config['genomes_tbl']['Fasta'],
+	# assemblies
 	expand(asmbl_dir + '{rep}/{assembler}/contigs.fasta',
 	       rep = config['reps'],
-	       assembler = config['assemblers'])
-
-        #expand(mgsim_dir + '{rep}/reads.done', rep = config['reps'])
+	       assembler = config['assemblers']),
+	# metaquast
+        expand(true_errors_dir + '{rep}/{assembler}/metaquast.done',
+	       rep = config['reps'],
+	       assembler = config['assemblers']),
+	# read mapping to contigs
+	expand(map_dir + '{rep}/{assembler}.bam.bai',
+	       rep = config['reps'],
+	       assembler = config['assemblers'])	
 
 
 # notifications (only first & last N lines)
