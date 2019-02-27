@@ -23,6 +23,7 @@ params:
   metaquast: --min-identity 95 --no-icarus
   # mapping reads to contigs
   samtools: -q 0
+  mpileup: --max-depth 0
   # creating DL features
   make_features: ""
   

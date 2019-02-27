@@ -68,7 +68,10 @@ rule all:
 	# read mapping to contigs
 	expand(map_dir + '{rep}/{assembler}.bam.bai',
 	       rep = config['reps'],
-	       assembler = config['assemblers'])	
+	       assembler = config['assemblers']),
+	expand(map_dir + '{rep}/{assembler}_mpileup.tsv.gz',
+	       rep = config['reps'],
+	       assembler = config['assemblers'])	     
 
 
 # notifications (only first & last N lines)

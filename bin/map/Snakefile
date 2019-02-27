@@ -46,7 +46,7 @@ rule map_bowtie2:
     resources:
         time = lambda wildcards, attempt: attempt * 59 * 12,
 	n = lambda wildcards: 12,
-	mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 2
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 2
     log:
         bt2 = log_dir + 'map_bowtie2/{rep}/{assembler}.log',    
         sam = log_dir + 'map_bowtie2_samtools/{rep}/{assembler}.log'
@@ -84,4 +84,56 @@ rule map_bowtie2_index_bam:
     shell:
         """
         samtools index {input.bam} 2> {log}
+        """
+
+rule samtools_faidx:
+    """
+    Running samtools faidx on contigs
+    """
+    input:
+        asmbl_dir + '{rep}/{assembler}/contigs.fasta'
+    output:
+        temp(asmbl_dir + '{rep}/{assembler}/contigs.fasta.fai')
+    params:
+        config['params']['mpileup']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 12
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'samtools_faidx/{rep}/{assembler}.log'
+    benchmark:
+        benchmark_dir + 'samtools_faidx/{rep}/{assembler}.txt'
+    shell:
+        """
+        samtools faidx {input} 2>&1 > {log}
+        """
+
+rule samtools_mpileup:
+    """
+    Calling samtools mpileup on each bam
+    """
+    input:
+        bam = map_dir + '{rep}/{assembler}.bam',
+        bai = map_dir + '{rep}/{assembler}.bam.bai',
+        ref = asmbl_dir + '{rep}/{assembler}/contigs.fasta',
+        ref_fai = asmbl_dir + '{rep}/{assembler}/contigs.fasta.fai'
+    output:
+        map_dir + '{rep}/{assembler}_mpileup.tsv.gz'
+    params:
+        config['params']['mpileup']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 12
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'map_bowtie2_index_bam/{rep}/{assembler}.log'
+    benchmark:
+        benchmark_dir + 'map_bowtie2_index_bam/{rep}/{assembler}.txt'
+    shell:
+        """
+        echo "" > {log}
+        samtools mpileup {params} -s -aa -f {input.ref} {input.bam} 2>> {log} | gzip > {output} 2>> {log}
         """
