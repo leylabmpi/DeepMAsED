@@ -32,6 +32,10 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 ## Detecting assembly errors
 
+* BLASTN
+  * as used for the minFinder paper
+* minimap2
+  * Generates sam files, so small variants can be identified
 * MetaQUAST vs reference genomes
   * mapping reads to ref genomes
   * output to use for labeling misassembly regions of each contig
@@ -40,11 +44,16 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
     * ./reads_stats/combined_reference.bed
 * ALE
   * likelihood of errors
+* SuRankCo-score
+  * utilizes BLAT; provides many scores
 * Struct. Var. detection
   * breseq
   * Bambus 2
   * Marygold
   * Anvio
+  * SGTK
+    * creates a scaffold graph
+    * can have just contigs and ref genome(s) as input
 
 ## Creating features for DL
 
@@ -66,5 +75,12 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 * Differing priors based on the assembler (and parameters)?
 
 
+
+# Similar work
+  * [SuRankCo](https://doi.org/10.1186/s12859-015-0644-7)
+    * random forests to rank contig quality
+  * ALE (CGAL, LAP, or REAPR)
+    * provide log-likelihoods based on probabilistic assumptions
+  
   
 
