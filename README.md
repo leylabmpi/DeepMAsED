@@ -32,6 +32,24 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 ## Detecting assembly errors
 
+* edit distance
+  * min number of changes required to change contig to ref seq
+  * eg., with Needleman-Wunsch algorithm
+  * using minimap2
+    * the "NM" tag is the edit distance
+      * `NM = #mismatches + #I + #D + #ambiguous_bases`
+    * what about chimeric contigs?
+      * chimeric = differing sections of the contig best align to different ref genomes
+      * if chimeric, automatically "bad" assembly
+      * getting chimeras: `0x800` flag; also same QNAME
+      * use: `--secondary=no` for minimap2
+    * pysam implementation
+      * `pysam.AlignedSegment`
+        * `get_tag`
+	* `is_supplementary` = chimeric
+  * python-based methods:
+    * https://pypi.org/project/nwalign/
+    
 * BLASTN
   * as used for the minFinder paper
 * minimap2
