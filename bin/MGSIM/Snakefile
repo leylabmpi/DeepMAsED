@@ -29,7 +29,7 @@ if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
             fi
 
             MGSIM genome_download {params} \
-              -n {threads} -d $OUTDIR \
+              -n {threads} -d $OUTDIR -r \
               {input.tbl} > {output.tbl} 2> {log}
             """
 
@@ -53,8 +53,7 @@ rule MGSIM_communities:
     log:
         log_dir + '{rep}/MGSIM_communities/all.log'
     shell:
-        """
-       
+        """       
         MGSIM communities {params.params} --n-comm 1 \
           {input.tbl} {params.prefix} 2>&1 > {log}
         """

@@ -61,7 +61,15 @@ rule all:
 	expand(asmbl_dir + '{rep}/{assembler}/contigs.fasta',
 	       rep = config['reps'],
 	       assembler = config['assemblers']),
-	# metaquast
+	# true mis-assemblies
+	## minimap2
+        expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln.paf.gz',
+	       rep = config['reps'],
+	       assembler = config['assemblers']),
+        expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln_summary.tsv',
+	       rep = config['reps'],
+	       assembler = config['assemblers']),        
+	## metaquast
         expand(true_errors_dir + '{rep}/{assembler}/metaquast.done',
 	       rep = config['reps'],
 	       assembler = config['assemblers']),
@@ -75,12 +83,12 @@ rule all:
 
 
 # notifications (only first & last N lines)
-# onsuccess:
-#     print("Workflow finished, no error")
-#     cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED finished successfully' " + config['pipeline']['email']
-#     shell(cmd)
+onsuccess:
+    print("Workflow finished, no error")
+    cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED finished successfully' " + config['pipeline']['email']
+    shell(cmd)
 
-# onerror:
-#     print("An error occurred")
-#     cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED => error occurred' " + config['pipeline']['email']
-#     shell(cmd)
+onerror:
+    print("An error occurred")
+    cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED => error occurred' " + config['pipeline']['email']
+    shell(cmd)

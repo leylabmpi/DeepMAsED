@@ -10,37 +10,51 @@
         "time" : "{resources.time}"
     },
     "MGSIM_reads" : {
-        "time" : "{resources.time}"
-        "n" : "{resources.n}"
+        "time" : "{resources.time}",
+        "n" : "{resources.n}",
         "mem" : "{resources.mem_gb_pt}"
     },
     "metaSPAdes" : {
-        "time" : "{resources.time}"
-        "n" : "{resources.n}"
+        "time" : "{resources.time}",
+        "n" : "{resources.n}",
         "mem" : "{resources.mem_gb_pt}"
     },
     "megahit" : {
-        "time" : "{resources.time}"
-        "n" : "{resources.n}"
+        "time" : "{resources.time}",
+        "n" : "{resources.n}",
         "mem" : "{resources.mem_gb_pt}"
     },
-    "metaquast" : {
+    "combine_ref_genomes" : {
         "time" : "{resources.time}"
-        "n" : "{resources.n}"
+    },
+    "minimap2_contigs_vs_refs" : {
+        "time" : "{resources.time}",
+        "n" : "{resources.n}",
+        "mem" : "{resources.mem_gb_pt}"
+    },
+    "paf_compress" : {
+        "time" : "{resources.time}"
+    },
+    "minimap2_contigs_vs_refs_summary" : {
+        "time" : "{resources.time}"
+    },    
+    "metaquast" : {
+        "time" : "{resources.time}",
+        "n" : "{resources.n}",
         "mem" : "{resources.mem_gb_pt}"
     },
     "map_bowtie2_build" : {
-        "time" : "{resources.time}"
-        "n" : "{resources.n}"
+        "time" : "{resources.time}",
+        "n" : "{resources.n}",
         "mem" : "{resources.mem_gb_pt}"
     },    
     "map_bowtie2" : {
-        "time" : "{resources.time}"
-        "n" : "{resources.n}"
+        "time" : "{resources.time}",
+        "n" : "{resources.n}",
         "mem" : "{resources.mem_gb_pt}"
     },
     "map_bowtie2_index_bam" : {
-        "time" : "{resources.time}"
+        "time" : "{resources.time}",
         "mem" : "{resources.mem_gb_pt}"
     }
 }

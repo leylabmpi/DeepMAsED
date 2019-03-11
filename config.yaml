@@ -20,6 +20,7 @@ params:
     megahit: --min-count 3 --min-contig-len 500 --presets meta-sensitive
     idba_ud: Skip --mink 20 --maxk 100
   # assessing assembly errors
+  minimap2: ""
   metaquast: --min-identity 95 --no-icarus
   # mapping reads to contigs
   samtools: -q 0
@@ -31,4 +32,4 @@ params:
 pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
-  temp_folder: /tmp/global/
+  temp_folder: /tmp/global2/
