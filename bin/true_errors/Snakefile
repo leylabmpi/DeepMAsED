@@ -1,20 +1,57 @@
+import os
+import pandas as pd
+
+# rule combine_ref_genomes:
+#     """
+#     Combining reference genomes
+#     """
+#     input:
+#         config['genomes_tbl']['Fasta']
+#     output:
+#         temp(config['tmp_dir'] + 'ref_genomes.fna')
+#     resources:
+#         time = lambda wildcards, attempt: attempt ** 3 * 59
+#     log:
+#         log_dir + 'combine_ref_genomes.log'
+#     benchmark:
+#         benchmark_dir + 'combine_ref_genomes.txt'
+#     shell:
+#         """
+#         cat {input} > {output} 2> {log}
+#         """
+
+def get_ref_genomes(wildcards):
+    # simulated metagenome community
+    wAbund = os.path.join(mgsim_dir, wildcards[0], 'comm_wAbund.txt')
+    wAbund = pd.read_csv(wAbund, sep='\t')
+    # genome fasta files
+    fna = config['genomes_tbl']
+    # inner join & return
+    return pd.merge(wAbund, fna, on='Taxon', how='inner')['Fasta'].tolist()
+
 rule combine_ref_genomes:
     """
-    Combining reference genomes
+    Combining reference genomes.
+    Only using those included in the metagenome community
     """
     input:
-        config['genomes_tbl']['Fasta']
+        fna = config['genomes_file'],
+        comm = mgsim_dir + '{rep}/comm_wAbund.txt' 
     output:
-        temp(config['tmp_dir'] + 'ref_genomes.fna')
+        temp(config['tmp_dir'] + '{rep}/ref_genomes.fna')
+    params:
+        exe = config['pipeline']['script_folder'] + 'concat_ref_genomes.py',
+	genomes_dir = genomes_dir
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'combine_ref_genomes.log'
+        log_dir + '{rep}/combine_ref_genomes.log'
     benchmark:
-        benchmark_dir + 'combine_ref_genomes.txt'
+        benchmark_dir + '{rep}/combine_ref_genomes.txt'
     shell:
         """
-        cat {input} > {output} 2> {log}
+        {params.exe} {input.fna} {input.comm} {params.genomes_dir} \
+           > {output} 2> {log}
         """
 
 rule minimap2_contigs_vs_refs:
@@ -23,7 +60,7 @@ rule minimap2_contigs_vs_refs:
     """
     input:
         contigs = asmbl_dir + '{rep}/{assembler}/contigs.fasta',
-        refs = config['tmp_dir'] + 'ref_genomes.fna'
+        refs = config['tmp_dir'] + '{rep}/ref_genomes.fna'
     output:
         aln = temp(config['tmp_dir'] + '{rep}/{assembler}/minimap2_aln.paf')
     params:

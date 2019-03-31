@@ -90,28 +90,3 @@ if __name__ == '__main__':
     main(args)
 
 
-    
-    # last_res = ['blank', False, 0, 0]
-    # with open(args.paf_file) as inF:
-    #     for i,line in enumerate(inF):
-    #         # parsing line
-    #         line = line.rstrip().split('\t')
-    #         query = line[0]
-    #         query_len = int(line[1])
-    #         query_hit_len = int(line[3]) - int(line[2])
-    #         nm = line[12].split(':')
-    #         if len(nm) != 3:
-    #             msg = 'NM tag not formatted correctly (line {})'
-    #             raise ValueError(msg.format(i))
-    #         # scoring
-    #         chimeric = False
-    #         if last_res[0] == query:
-    #             chimeric = True
-    #             last_res[1] = True
-    #             last_res[2] = 
-    #         edit_dist = int(nm[2]) / query_hit_len
-    #         # printing
-    #         if i > 0:
-    #             print('\t'.join([str(x) for x in last_res]))
-    #         last_res = [query, chimeric, nm, edit_dist]
-    # print('\t'.join([str(x) for x in last_res]))
