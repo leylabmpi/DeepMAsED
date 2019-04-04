@@ -10,7 +10,6 @@ tmp/
 ._*
 tests/output*/
 screenlog.*
-notebooks/
 
 # hg
 **/.hg/
