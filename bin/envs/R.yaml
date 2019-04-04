@@ -1,0 +1,7 @@
+channels: !!python/tuple
+- bioconda
+- conda-forge
+dependencies:
+- pigz
+- r-argparse
+- r-data.table

@@ -50,10 +50,24 @@
     },    
     "map_bowtie2" : {
         "time" : "{resources.time}",
-        "n" : "{resources.n}",
+        "n" : 12,
         "mem" : "{resources.mem_gb_pt}"
     },
     "map_bowtie2_index_bam" : {
+        "time" : "{resources.time}",
+	"n" : 8,	
+        "mem" : "{resources.mem_gb_pt}"
+    },
+    "bam_to_DL_features" : {
+        "time" : "{resources.time}",
+	"n" : 12,
+        "mem" : "{resources.mem_gb_pt}"
+    },
+    "feature_true_est_join" : {
+        "time" : "{resources.time}",
+        "mem" : "{resources.mem_gb_pt}"
+    },
+    "features_compress" : {
         "time" : "{resources.time}",
         "mem" : "{resources.mem_gb_pt}"
     }

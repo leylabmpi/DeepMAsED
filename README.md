@@ -49,7 +49,9 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 	* `is_supplementary` = chimeric
   * python-based methods:
     * https://pypi.org/project/nwalign/
-    
+
+* VALET (http://github.com/marbl/VALET)
+
 * BLASTN
   * as used for the minFinder paper
 * minimap2
@@ -79,14 +81,22 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
   * just use metaQUAST output?
   * use genome polishing tool to get info?
     * eg., `pilon`
-  * features:
+  * using pysam to generate the features:
     * each base position on each contig:
-      * mis-assembly?
-        * based on metaQUAST
-	* which type (eg., SNP, chimera, etc?)
       * coverage
-      * SNP? (A->T?, T-A?, Gap->Base? (insertion), Base->Gap? (deletion), etc.)
+        * `samfile.pileup()`
+	* `count_coverage()`
+      * SNPs (A->T?, T-A?, Gap->Base? (insertion), Base->Gap? (deletion), etc.)
+        * pysam.PileupColumn
+	  * get_query_sequence
+      * supplementary/secondary alignments
+        * pysam.AlignedSegment
+          * is_secondary()
+	  * is_supplementary()
       * discordant reads
+        * -F 14
+	* pysam.AlignedSegment
+	  * is_paired() == True & is_proper_pair != False & is_unmapped == False & mate_is_unmapped == False
 
 ## DL training
 

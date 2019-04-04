@@ -4,4 +4,4 @@ dependencies:
 - pigz
 - bioconda::samtools
 - bioconda::bowtie2
-- bioconda::bedtools
+- bioconda::pysam

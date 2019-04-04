@@ -1,30 +1,32 @@
 # Input
-genomes_file: tests/data/genome_download_n8.tsv
+genomes_file: tests/data/genome_download_n10.tsv
 
 # Output location
-output_dir: tests/output_n8/
+output_dir: tests/output_n10/
 
 
 # software parameters
 # Use "Skip" to skip  steps. If no params for rule, use ""
 params:
   # simulating metagenomes
-  reps: 2
+  reps: 1
   MGSIM:
     genome_download: ""
-    communities: --richness 0.8
+    communities: --richness 1
     reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
   # assemblying metagenomes
   assemblers:
     metaspades: -k auto --only-assembler
-    megahit: --min-count 3 --min-contig-len 500 --presets meta-sensitive
-    idba_ud: Skip --mink 20 --maxk 100
+    megahit: --min-count 3 --min-contig-len 1000 --presets meta-sensitive
+    idba_ud: Skip #--mink 20 --maxk 100
+    ray: Skip 
+  # assembly filtering
+  contig_length_cutoff: 1000     # bp 
   # assessing assembly errors
   minimap2: ""
   metaquast: --min-identity 95 --no-icarus
   # mapping reads to contigs
-  samtools: -q 0
-  mpileup: --max-depth 0
+  samtools: ""
   # creating DL features
   make_features: ""
   

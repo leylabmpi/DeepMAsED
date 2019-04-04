@@ -58,7 +58,7 @@ rule all:
         # genome fasta files
         config['genomes_tbl']['Fasta'],
 	# assemblies
-	expand(asmbl_dir + '{rep}/{assembler}/contigs.fasta',
+	expand(asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta',
 	       rep = config['reps'],
 	       assembler = config['assemblers']),
 	# true mis-assemblies
@@ -77,9 +77,10 @@ rule all:
 	expand(map_dir + '{rep}/{assembler}.bam.bai',
 	       rep = config['reps'],
 	       assembler = config['assemblers']),
-	expand(map_dir + '{rep}/{assembler}_mpileup.tsv.gz',
+	# feature table
+        expand(map_dir + '{rep}/{assembler}/features.tsv.gz',
 	       rep = config['reps'],
-	       assembler = config['assemblers'])	     
+	       assembler = config['assemblers'])
 
 
 # notifications (only first & last N lines)

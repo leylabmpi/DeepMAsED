@@ -6,10 +6,10 @@ dependencies:
 - conda-forge::docopt
 - conda-forge::configobj
 - conda-forge::numpy
-- conda-forge::pandas
-- conda-forge::scipy
+- conda-forge::pandas=0.23
+- conda-forge::scipy=1.1
 - bioconda::biopython
-- bioconda::pyfasta
+- bioconda::pyfasta=0.5
 - bioconda::art
 - pip:
   - MGSIM>=0.1.3
