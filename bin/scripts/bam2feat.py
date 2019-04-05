@@ -128,7 +128,6 @@ def main(args):
     contigs = []
     with pysam.AlignmentFile(args.bam_file, x) as inF:
         contigs = inF.references
-        contigs = contigs[:30]
     msg = 'Number of contigs in the bam file: {}'
     logging.info(msg.format(len(contigs)))
         

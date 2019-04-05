@@ -32,8 +32,11 @@ rule combine_ref_genomes:
         benchmark_dir + '{rep}/combine_ref_genomes.txt'
     shell:
         """
+        OUTDIR=`dirname {output}`
+        mkdir -p $OUTDIR 2> {log}
+        
         {params.exe} {input.fna} {input.comm} {params.genomes_dir} \
-           > {output} 2> {log}
+           > {output} 2>> {log}
         """
 
 rule minimap2_contigs_vs_refs:
