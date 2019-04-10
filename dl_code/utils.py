@@ -13,6 +13,7 @@ def load_features(data_path, max_len=3000, test_size=0.2):
     x = np.expand_dims(x, -1)
     y = np.array(y)
 
-    x_tr, x_te, y_tr, y_te = train_test_split(x, y, test_size=test_size)
+    x_tr, x_te, y_tr, y_te = train_test_split(x, y, test_size=test_size, 
+                                              random_state=1)
 
     return x_tr, x_te, y_tr, y_te
