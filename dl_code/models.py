@@ -6,6 +6,10 @@ from keras.layers import Conv2D, Flatten
 import utils
 
 class chimera_net(object):
+    """
+    Implements a convolutional network for chimera prediction. 
+    """
+
     def __init__(self, config):
 
         max_len = config.max_len
@@ -40,6 +44,9 @@ class chimera_net(object):
         recall_1 = utils.class_recall(1)
         self.net.compile(loss='binary_crossentropy', optimizer=optimizer,
 						 metrics=[recall_0, recall_1])
+
+        self.reduce_lr = keras.callbacks.ReduceLROnPlateau(
+          monitor='val_loss', factor=0.5, patience=5, min_lr = 0.01 * lr_init)
 
     def predict(self, x):
         return self.net.predict(x)
