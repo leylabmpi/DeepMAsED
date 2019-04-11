@@ -120,6 +120,7 @@ rule metaquast:
         read1 = mgsim_dir + '{rep}/1/R1.fq',
 	read2 = mgsim_dir + '{rep}/1/R2.fq'
     output:
+        info = true_errors_dir + '{rep}/{assembler}/combined_reference/contigs_reports/contigs_report_contigs_filtered.mis_contigs.info',
         done = touch(true_errors_dir + '{rep}/{assembler}/metaquast.done')
     params:
         config['params']['metaquast']
@@ -146,3 +147,19 @@ rule metaquast:
           {input.contigs} 2>&1 > {log}
         """
  
+rule metaquast_mis_summary_table:
+    """
+    Create a table of MetaQUAST-identified misassemblies for each 'bad' contig
+    """
+    input:
+        true_errors_dir + '{rep}/{assembler}/combined_reference/contigs_reports/contigs_report_contigs_filtered.mis_contigs.info'
+    output:
+        true_errors_dir + '{rep}/{assembler}/combined_reference/contigs_report_contigs_filtered.mis_contigs.tsv'
+    params:
+        exe = config['pipeline']['script_folder'] + 'metaquast_misass_report_parse.py'
+    log:
+        log_dir + 'metaquast_mis_summary_table/{rep}/{assembler}.log'
+    shell:
+        """
+        {params.exe} {input} > {output} 2> {log}
+        """

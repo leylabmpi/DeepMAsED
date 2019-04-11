@@ -24,7 +24,7 @@ params:
   contig_length_cutoff: 1000     # bp 
   # assessing assembly errors
   minimap2: ""
-  metaquast: --min-identity 95 --no-icarus
+  metaquast: --min-identity 95 --extensive-mis-size 100 --no-icarus
   # mapping reads to contigs
   samtools: ""
   # creating DL features

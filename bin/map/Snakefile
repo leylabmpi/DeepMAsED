@@ -152,8 +152,7 @@ rule feature_true_est_join:
     output:
         temp(config['tmp_dir'] + '{rep}/{assembler}/features_j.tsv')
     params:
-        exe = config['pipeline']['script_folder'] + 'table_join.R',
-        assembler = lambda wildcards: wildcards.assembler
+        exe = config['pipeline']['script_folder'] + 'table_join.R'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 12
@@ -169,12 +168,38 @@ rule feature_true_est_join:
           {input.feats} {input.err} 2> {log}
         """
 
+rule feature_metaquast_summary_join:
+    """
+    Joining metaquast mis-assembly summary info with the bam-generated feature table
+    """
+    input:
+        tbl = config['tmp_dir'] + '{rep}/{assembler}/features_j.tsv',
+        mis = true_errors_dir + '{rep}/{assembler}/combined_reference/contigs_report_contigs_filtered.mis_contigs.tsv'
+    output:
+        temp(config['tmp_dir'] + '{rep}/{assembler}/features_j_j.tsv')
+    params:
+        exe = config['pipeline']['script_folder'] + 'table_join.R'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 12
+    conda:
+        '../envs/R.yaml'
+    log:
+        log_dir + 'feature_true_est_join/{rep}/{assembler}.log'
+    benchmark:
+        benchmark_dir + 'feature_true_est_join/{rep}/{assembler}.txt'
+    shell:
+        """
+        {params.exe} -x contig -y Contig -o {output} \
+          {input.tbl} {input.mis} 2> {log}
+        """
+
 rule features_compress:
     """
     Compressing table
     """
     input:
-        config['tmp_dir'] + '{rep}/{assembler}/features_j.tsv'
+        config['tmp_dir'] + '{rep}/{assembler}/features_j_j.tsv'
     output:
         map_dir + '{rep}/{assembler}/features.tsv.gz'
     resources:
