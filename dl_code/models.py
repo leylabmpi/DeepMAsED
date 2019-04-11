@@ -19,6 +19,7 @@ class chimera_net(object):
         pool_window = config.pool_window
         dropout = config.dropout
         lr_init = config.lr_init
+        mode = config.mode
 
         self.net = Sequential()
 
@@ -36,14 +37,27 @@ class chimera_net(object):
         
         self.net.add(AveragePooling2D((pool_window, 1)))
         self.net.add(Flatten())
-        self.net.add(Dense(1, activation='sigmoid'))
-        self.net.add(Dropout(rate=dropout))
 
         optimizer = keras.optimizers.adam(lr=lr_init)
-        recall_0 = utils.class_recall(0)
-        recall_1 = utils.class_recall(1)
-        self.net.compile(loss='binary_crossentropy', optimizer=optimizer,
-						 metrics=[recall_0, recall_1])
+
+        if mode == 'chimera':
+            self.net.add(Dense(1, activation='sigmoid'))
+            self.net.add(Dropout(rate=dropout))
+
+            recall_0 = utils.class_recall(0)
+            recall_1 = utils.class_recall(1)
+            self.net.compile(loss='binary_crossentropy', optimizer=optimizer,
+                             metrics=[recall_0, recall_1])
+        elif mode == 'edit':
+            self.net.add(Dense(20, activation='relu'))
+            self.net.add(Dropout(rate=dropout))
+            self.net.add(Dense(20, activation='relu'))
+            self.net.add(Dropout(rate=dropout))
+            self.net.add(Dense(1, activation='linear'))
+            self.net.compile(loss='mean_absolute_error', optimizer=optimizer,
+                             metrics=[utils.explained_var])
+        else:
+            raise('Training mode not supported.')
 
         self.reduce_lr = keras.callbacks.ReduceLROnPlateau(
           monitor='val_loss', factor=0.5, patience=5, min_lr = 0.01 * lr_init)

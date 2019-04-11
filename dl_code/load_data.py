@@ -17,7 +17,7 @@ parser.add_argument('--features_out', type=str, default='features.pkl',
                     help='Name of output file for features.')
 args = parser.parse_args()
 
-feat_contig, target_contig = [], []
+feat_contig, target_contig, target_contig_edit = [], [], []
 name_to_id = {}
 
 idx = 0
@@ -28,8 +28,9 @@ with gzip.open(os.path.join(args.data_path, args.features_in), 'rt') as f:
 
     col_names = next(tsv)
     w_chimera = col_names.index('chimeric')
+    w_edit = col_names.index('edit_dist_norm')
 
-    prev_name, tgt = None, None
+    prev_name, tgt, tgt_ed = None, None, None
     feat = []
 
     for row in tsv:
@@ -37,15 +38,25 @@ with gzip.open(os.path.join(args.data_path, args.features_in), 'rt') as f:
             prev_name = row[0]
         if tgt is None: 
             tgt = row[w_chimera]
+            tgt_ed = row[w_edit]
 
         if row[0] != prev_name:
+
             prev_name = row[0]
+            if tgt == '':
+                tgt = None
+                tgt_edit = None
+                feat = []
+                continue
+
             feat_contig.append(np.concatenate(feat, 0))
 
             if tgt == 'FALSE':
                 target_contig.append(0)
             else:
                 target_contig.append(1)
+
+            target_contig_edit.append(float(tgt_ed))
 
             feat = []
             tgt = None
@@ -58,5 +69,5 @@ with gzip.open(os.path.join(args.data_path, args.features_in), 'rt') as f:
 
 # Save processed data into pickle file
 with open(os.path.join(args.data_path, args.features_out), 'wb') as f:
-    pickle.dump([feat_contig, target_contig, name_to_id], f)
+    pickle.dump([feat_contig, target_contig, target_contig_edit, name_to_id], f)
 

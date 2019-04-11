@@ -38,6 +38,8 @@ parser.add_argument('--test_size', default=0.3, type=float,
                     help='Size of test set.')
 parser.add_argument('--lr_init', default=0.001, type=float, 
                     help='Size of test set.')
+parser.add_argument('--mode', default='chimera', type=str, 
+                    help='Chimera or edit distance.')
 args = parser.parse_args()
 
 class Config(object):
@@ -48,6 +50,7 @@ class Config(object):
     pool_window = args.pool_window
     dropout = args.dropout
     lr_init = args.lr_init
+    mode = args.mode
 
 # Build model
 config = Config()
@@ -62,20 +65,32 @@ save_path = args.save_path
 
 # Load and process data
 x_tr, x_te, y_tr, y_te = utils.load_features(args.data_path, max_len=args.max_len, 
-                                             test_size=args.test_size)
+                                             test_size=args.test_size, 
+                                             mode = config.mode)
+from sklearn.preprocessing import StandardScaler
+st = StandardScaler()
+y_tr = st.fit_transform(y_tr)
+y_te = st.transform(y_te)
 
 #Train model
-w_one = int(len(np.where(y_tr == 0)[0])  / len(np.where(y_tr == 1)[0]))
-class_weight = {0 : 1 , 1: w_one}
-
 tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs'), 
                                      histogram_freq=0, 
                                      write_graph=True, write_images=True)
 
-chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
-               class_weight=class_weight, 
-               callbacks=[tb_logs, chi_net.reduce_lr])
+if config.mode == 'chimera':
+    w_one = int(len(np.where(y_tr == 0)[0])  / len(np.where(y_tr == 1)[0]))
+    class_weight = {0 : 1 , 1: w_one}
 
+
+    chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
+                   class_weight=class_weight, 
+                   callbacks=[tb_logs, chi_net.reduce_lr])
+
+elif config.mode == 'edit':
+    chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
+                   callbacks=[tb_logs, chi_net.reduce_lr])
+
+IPython.embed()
 chi_net.save(os.path.join(save_path, 'model.h5'))
 """
 # Run predictions
