@@ -55,7 +55,7 @@ rule MGSIM_communities:
     shell:
         """       
         MGSIM communities {params.params} --n-comm 1 \
-          {input.tbl} {params.prefix} 2>&1 > {log}
+          {input.tbl} {params.prefix} 2> {log} 1>&2
         """
 
 rule MGSIM_reads:
@@ -90,5 +90,5 @@ rule MGSIM_reads:
         MGSIM reads {params.params} -n {threads} \
           --tmp-dir {params.tmp_dir} \
           {input.tbl} {input.wAbund} {params.out_dir} \
-          2>&1 > {log}
+          2> {log} 1>&2
         """

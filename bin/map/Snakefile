@@ -108,7 +108,7 @@ rule samtools_faidx:
         benchmark_dir + 'samtools_faidx/{rep}/{assembler}.txt'
     shell:
         """
-        samtools faidx {input} 2>&1 > {log}
+        samtools faidx {input} 2> {log} 1>&2
         """
 
 rule bam_to_DL_features:
@@ -165,7 +165,7 @@ rule feature_true_est_join:
     shell:
         """
         {params.exe} -x contig -y query -o {output} \
-          {input.feats} {input.err} 2> {log}
+          {input.feats} {input.err} 2> {log} 1>&2
         """
 
 rule feature_metaquast_summary_join:
@@ -191,7 +191,7 @@ rule feature_metaquast_summary_join:
     shell:
         """
         {params.exe} -x contig -y Contig -o {output} \
-          {input.tbl} {input.mis} 2> {log}
+          {input.tbl} {input.mis} 2> {log} 1>&2
         """
 
 rule features_compress:

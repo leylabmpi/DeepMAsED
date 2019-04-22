@@ -35,7 +35,8 @@ rule combine_ref_genomes:
         OUTDIR=`dirname {output}`
         mkdir -p $OUTDIR 2> {log}
         
-        {params.exe} {input.fna} {input.comm} {params.genomes_dir} \
+        {params.exe} {input.fna} \
+           {input.comm} {params.genomes_dir} \
            > {output} 2>> {log}
         """
 
@@ -144,7 +145,7 @@ rule metaquast:
         metaquast.py {params} -t {threads} \
           --reads1 {input.read1} --reads2 {input.read2} \
           -o $OUTDIR -R $REFS \
-          {input.contigs} 2>&1 > {log}
+          {input.contigs} 2> {log} 1>&2
         """
  
 rule metaquast_mis_summary_table:

@@ -35,7 +35,7 @@ rule metaSPAdes:
           -t {threads} -m {resources.mem_gb} \
 	  --tmp-dir {params.tmp_dir} -o $OUTDIR \
           -1 {input.read1} -2 {input.read2} \
-          >> {log} 2>&1
+          2>> {log} 1>&2
         """
 	
 rule megahit:
@@ -77,7 +77,7 @@ rule megahit:
 	  -o $OUTDIR \
           -1 {input.read1} \
           -2 {input.read2} \
-          >> {log} 2>&1
+          2>> {log} 1>&2
 
         mv -f $OUTDIR"/final.contigs.fa" {output.contigs} 2>> {log}
         """
