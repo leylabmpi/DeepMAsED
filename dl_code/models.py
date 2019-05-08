@@ -40,7 +40,7 @@ class chimera_net(object):
 
         optimizer = keras.optimizers.adam(lr=lr_init)
 
-        if mode == 'chimera':
+        if mode in ['chimera', 'extensive']:
             self.net.add(Dense(1, activation='sigmoid'))
             self.net.add(Dropout(rate=dropout))
 

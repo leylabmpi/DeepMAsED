@@ -1,8 +1,8 @@
 # Input
-genomes_file: tests/data/genome_download_n10.tsv
+genomes_file: tests/data/genome_download_n50.tsv
 
 # Output location
-output_dir: tests/output_n10/
+output_dir: tests/output_n50/
 
 
 # software parameters
@@ -13,7 +13,7 @@ params:
   MGSIM:
     genome_download: ""
     communities: --richness 1
-    reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
+    reads: --sr-seq-depth 1e7 --art-paired --art-mflen 250
   # assemblying metagenomes
   assemblers:
     metaspades: -k auto --only-assembler
