@@ -44,6 +44,26 @@ the assembly of new genomes is as follows:
   \item Process the reads and output the genomes assembled by the chosen assembler. 
 \end{itemize}
 
+We can simulate large amounts of data by replacing the first step in this pipeline by generating reads synthetically from known genomes. 
+The resulting, reassembled genomes can then be compared to the corresponding ground truth in order to assess the quality of the 
+process. 
+
+\section{Experiments}
+\subsection{Small scale}
+We start from a dataset containing 
+\begin{itemize}
+  \item $40$ genomes obtained from NCBI. 
+  \item Reads generated using MGSIM at $10^7$ depth. 
+  \item Contigs assembled with MetaSPAdes and MEGAHIT. 
+  \item We consider three metrics. First, we consider a binary variable indicating whether the contig is chimeric. Second, we 
+    consider a continuous variable, the edit distance. Third, we consider the ``extensive missassembly'' label provided by 
+    metaQUAST. 
+\end{itemize}
+
+This results roughly in datasets with $12,000$ contigs. 
+
+
+
 \bibliography{biblio}
 
 \end{document}
