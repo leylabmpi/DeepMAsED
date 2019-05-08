@@ -2,16 +2,12 @@ import numpy as np
 import keras
 from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.metrics import recall_score
-
+from sklearn.preprocessing import StandardScaler
 import argparse
 import IPython
 
 import models
 import utils
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 import os
 
@@ -64,34 +60,36 @@ if not os.path.exists(args.save_path):
 save_path = args.save_path
 
 # Load and process data
+print("Loading data...")
 x_tr, x_te, y_tr, y_te = utils.load_features(args.data_path, max_len=args.max_len, 
                                              test_size=args.test_size, 
                                              mode = config.mode)
-from sklearn.preprocessing import StandardScaler
-st = StandardScaler()
-y_tr = st.fit_transform(y_tr)
-y_te = st.transform(y_te)
 
 #Train model
 tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs'), 
                                      histogram_freq=0, 
                                      write_graph=True, write_images=True)
 
-if config.mode == 'chimera':
+print("Training network...")
+if config.mode in ['chimera', 'extensive']:
     w_one = int(len(np.where(y_tr == 0)[0])  / len(np.where(y_tr == 1)[0]))
     class_weight = {0 : 1 , 1: w_one}
-
 
     chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
                    class_weight=class_weight, 
                    callbacks=[tb_logs, chi_net.reduce_lr])
 
 elif config.mode == 'edit':
+    st = StandardScaler()
+    y_tr = st.fit_transform(y_tr)
+    y_te = st.transform(y_te)
     chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
                    callbacks=[tb_logs, chi_net.reduce_lr])
 
-IPython.embed()
+print("Saving trained model...")
 chi_net.save(os.path.join(save_path, 'model.h5'))
+
+
 """
 # Run predictions
 scores_tr = chi_net.predict(x_tr)
