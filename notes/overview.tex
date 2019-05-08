@@ -1,0 +1,69 @@
+\documentclass{scrartcl}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{xspace}
+\usepackage{wrapfig}
+\usepackage{subcaption}
+\usepackage{nicefrac}
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+\usepackage[format=plain]{caption}
+\usepackage{enumitem}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2.5pt}
+\setlist[enumerate]{leftmargin=*}
+
+\title{\LARGE DeepMAsED: Evaluating the quality of metagenomic assembly}
+
+\author{\large Mateo Rojas-Carulla
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+The goal of this project is to evaluate the quality of metagenomic assemblers from metagenomes. 
+Thousands of genomes are being assembled to metagenomes~\citep{pasolli2019extensive}, but it remains unclear 
+how good these assemblies actually are. Indeed, we lack a ground truth to compare against. We aim to develop a 
+deep learning tool assigning a score to an assembled genome.
+
+\section{Training protocol}
+
+This issue is particularly well suited for a machine learning procedure since we can simulate data similar to real data. Indeed, 
+the assembly of new genomes is as follows:
+\begin{itemize}
+  \item Sequence the DNA from a biological sample. This results in a large number of \emph{reads}, short sequences of DNA belonging 
+    to the organisms present in the sample. 
+  \item Select a Next Generation Sequencing (NGS) assembler, such as MEGAHIT~\citep{li2015megahit} or MetaSPAdes~\citep{nurk2017metaspades}. 
+  \item Process the reads and output the genomes assembled by the chosen assembler. 
+\end{itemize}
+
+We can simulate large amounts of data by replacing the first step in this pipeline by generating reads synthetically from known genomes. 
+The resulting, reassembled genomes can then be compared to the corresponding ground truth in order to assess the quality of the 
+process. 
+
+\section{Experiments}
+\subsection{Small scale}
+We start from a dataset containing 
+\begin{itemize}
+  \item $40$ genomes obtained from NCBI. 
+  \item Reads generated using MGSIM at $10^7$ depth. 
+  \item Contigs assembled with MetaSPAdes and MEGAHIT. 
+  \item We consider three metrics. First, we consider a binary variable indicating whether the contig is chimeric. Second, we 
+    consider a continuous variable, the edit distance. Third, we consider the ``extensive missassembly'' label provided by 
+    metaQUAST. 
+\end{itemize}
+
+This results roughly in datasets with $12,000$ contigs. 
+
+
+
+\bibliography{biblio}
+
+\end{document}
