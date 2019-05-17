@@ -43,6 +43,41 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 `./snakemake_sge.sh <MY_CONFIG.yaml_FILE> cluster.json <PATH_FOR_SGE_LOGS> <NUMBER_OF_PARALLEL_JOBS> [additional snakemake options]`
 
 
+# Output
+
+> Assuming output directory is `./output/`
+
+## `./output/genomes/`
+
+Reference genomes
+
+## `./output/MGSIM/`
+
+Simulated metagenomes
+
+## `./output/assembly/`
+
+Metagenome assemblies
+
+## `./output/true_errors/`
+
+Metagenome assembly errors determined by using the references
+
+## `./output/map/`
+
+Metagenome assembly error ML features (not determined with references).
+
+The "true errors" from `./output/true_errors/` have been joined to the
+ML feature table to provide the ground truth labels. 
+
+## `./output/logs/`
+
+Shell process log files (also see the SGE job log files)
+
+## `./output/benchmarks/`
+
+Job resource usage info
+
 
 # Algorithm
 
