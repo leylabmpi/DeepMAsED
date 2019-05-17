@@ -1,6 +1,8 @@
 DeepMAsED
 =========
 
+version: 0.1.0
+
 Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 
@@ -107,6 +109,9 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 # Similar work
   * [SuRankCo](https://doi.org/10.1186/s12859-015-0644-7)
     * random forests to rank contig quality
+    * validation method:
+      * Human Microbiome Project mock community
+      * GAGE study bacterial assemblies
   * ALE (CGAL, LAP, or REAPR)
     * provide log-likelihoods based on probabilistic assumptions
   

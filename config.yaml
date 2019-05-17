@@ -1,8 +1,9 @@
 # Input
-genomes_file: tests/data/genome_download_n50.tsv
+#genomes_file: tests/data/genome_download_n50.tsv
+genomes_file: tests/data/genomes_n10.tsv
 
 # Output location
-output_dir: tests/output_n50/
+output_dir: tests/output_n10/
 
 
 # software parameters
@@ -13,7 +14,7 @@ params:
   MGSIM:
     genome_download: ""
     communities: --richness 1
-    reads: --sr-seq-depth 1e7 --art-paired --art-mflen 250
+    reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
   # assemblying metagenomes
   assemblers:
     metaspades: -k auto --only-assembler
@@ -21,7 +22,7 @@ params:
     idba_ud: Skip #--mink 20 --maxk 100
     ray: Skip 
   # assembly filtering
-  contig_length_cutoff: 1000     # bp 
+  contig_length_cutoff: 1000       # length in bp 
   # assessing assembly errors
   minimap2: ""
   metaquast: --min-identity 95 --extensive-mis-size 100 --no-icarus

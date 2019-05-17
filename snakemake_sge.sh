@@ -49,7 +49,15 @@ JOB_SCRIPT=$SGE_LOG_DIR'/jobscript.sh'
 cat > $JOB_SCRIPT <<EOF
 #!/bin/bash
 # properties = {properties}
-export PATH=$CONDAPATH:\$PATH
+
+if [[ -f ~/.bashrc &&  \$(grep -c "__conda_setup=" ~/.bashrc) -gt 0 && \$(grep -c "unset __conda_setup" ~/.bashrc) -gt 0 ]]; then
+   echo "Sourcing .bashrc" 1>&2
+   . ~/.bashrc
+else
+   echo "Exporting conda PATH" 1>&2
+   export PATH=$CONDAPATH:\$PATH
+fi 
+
 {exec_job}
 EOF
 

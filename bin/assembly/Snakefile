@@ -3,13 +3,13 @@ rule metaSPAdes:
     metaSPAdes assembly 
     """
     input:
-        read1 = mgsim_dir + '{rep}/1/R1.fq',
-	read2 = mgsim_dir + '{rep}/1/R2.fq'
+    	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
+	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
         contigs = temp(asmbl_dir + '{rep}/metaspades/contigs.fasta')
     params:
         params = config['params']['assemblers']['metaspades'],
-	tmp_dir = os.path.join(config['tmp_dir'], '{rep}')
+	tmp_dir = os.path.join(config['tmp_dir'], '{rep}', 'metaspades_tmp')
     conda:
         '../envs/assembly.yaml'
     threads:
@@ -20,17 +20,23 @@ rule metaSPAdes:
         mem_gb = lambda wildcards, attempt: attempt * 32,
         mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 32 / 8 * 1.1, 0))
     log:
-        log_dir + 'metaspades/{rep}.log'
+        log_dir + '{rep}/metaspades.log'
     benchmark:
-        benchmark_dir + 'metaspades/{rep}.txt'
+        benchmark_dir + '{rep}/metaspades.txt'
     shell:
         """
+        # tmp dir
+        rm -rf {params.tmp_dir} 2> {log} 1>&2
+        mkdir -p {params.tmp_dir} 2>> {log} 1>&2
+
+        # output dir
         OUTDIR=`dirname {output.contigs}`
         if [ -d "$OUTDIR" ]; then
-          echo "Removing directory: $OUTDIR" > {log}
+          echo "Removing directory: $OUTDIR" >> {log}
           rm -rf $OUTDIR 2>> {log}
         fi
 
+        # spades run
         spades.py --meta {params.params} \
           -t {threads} -m {resources.mem_gb} \
 	  --tmp-dir {params.tmp_dir} -o $OUTDIR \
@@ -43,13 +49,12 @@ rule megahit:
     metahit assembly 
     """
     input:
-        read1 = mgsim_dir + '{rep}/1/R1.fq',
-	read2 = mgsim_dir + '{rep}/1/R2.fq'
+    	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
+	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
         contigs = temp(asmbl_dir + '{rep}/megahit/contigs.fasta')
     params:
         params = config['params']['assemblers']['megahit'],
-	tmp_dir = os.path.join(config['tmp_dir'], '{rep}')
     conda:
         '../envs/assembly.yaml'
     threads:
@@ -60,9 +65,9 @@ rule megahit:
         mem_bytes = lambda wildcards, attempt: int(attempt * 3.2e10),
         mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 32 / 8 * 1.1, 0))
     log:
-        log_dir + 'metaspades/{rep}.log'
+        log_dir + '{rep}/megahit.log'
     benchmark:
-        benchmark_dir + 'metaspades/{rep}.txt'
+        benchmark_dir + '{rep}/megahit.txt'
     shell:
         """
         OUTDIR=`dirname {output.contigs}`
@@ -99,9 +104,9 @@ rule contig_length_filter:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 2
     log:
-        log_dir + 'contig_length_filter/{rep}/{assembler}.log',    
+        log_dir + '{rep}/{assembler}/contig_length_filter.log',    
     benchmark:
-        benchmark_dir + 'contig_length_filter/{rep}/{assembler}.txt'
+        benchmark_dir + '{rep}/{assembler}/contig_length_filter.txt'
     shell:
         """
         {params.exe} --length {params.cutoff} {input} > {output} 2> {log}

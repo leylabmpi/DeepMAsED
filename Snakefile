@@ -1,6 +1,7 @@
 # import 
 from __future__ import print_function
 import os
+import re
 import sys
 import getpass
 import socket
@@ -27,9 +28,14 @@ for x in ['Taxon']:
         msg = 'Column "{}" not found in genomes file'
         print(msg.format(x))
         sys.exit(1)
+func = lambda x: re.sub('[^A-Za-z0-9_]+', '_', x)
+config['genomes_tbl']['Taxon'] = config['genomes_tbl']['Taxon'].apply(func)
+
 if 'Fasta' not in config['genomes_tbl'].columns:
     F = lambda x: os.path.join(genomes_dir, x + '.fna')
     config['genomes_tbl']['Fasta'] = config['genomes_tbl']['Taxon'].apply(F)
+else:
+    config['params']['MGSIM']['genome_download'] = 'Skip'
 
 ## output directories
 config['output_dir'] = config['output_dir'].rstrip('/') + '/'

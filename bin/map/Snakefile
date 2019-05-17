@@ -33,8 +33,8 @@ rule map_bowtie2:
     input:
         ref = asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta',
 	done = asmbl_dir + '{rep}/{assembler}/map_bowtie2_build.done',
-        read1 = mgsim_dir + '{rep}/1/R1.fq',
-	read2 = mgsim_dir + '{rep}/1/R2.fq'
+	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
+	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
         bam = map_dir + '{rep}/{assembler}.bam'
     params:
@@ -128,8 +128,8 @@ rule bam_to_DL_features:
     threads:
         12
     resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 8,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 1
     conda:
         '../envs/bowtie2.yaml'
     log:

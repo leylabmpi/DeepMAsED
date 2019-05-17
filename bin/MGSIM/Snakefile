@@ -20,26 +20,53 @@ if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
         threads:
             12
         log:
-            log_dir + 'MGSIM_download/all.log'
+            log_dir + 'MGSIM_genome_download.log'
+        benchmark:
+            benchmark_dir + 'MGSIM_genome_download.txt'
         shell:
             """
             OUTDIR=`dirname {output.tbl}`
-            if [ ! -d $OUTDIR ]; then
-              mkdir -p $OUTDIR
-            fi
+	    rm -rf $OUTDIR 2> {log}
+            mkdir -p $OUTDIR 2>> {log}
 
             MGSIM genome_download {params} \
               -n {threads} -d $OUTDIR -r \
-              {input.tbl} > {output.tbl} 2> {log}
+              {input.tbl} > {output.tbl} 2>> {log}
             """
+
+else:
+    rule MGSIM_genome_rename:
+        """
+        Renaming genome fasta file names & sequence headers
+        """
+        input:
+            tbl = config['genomes_file'],
+            fna = config['genomes_tbl']['Fasta']
+        output:
+            tbl = genomes_dir + 'genomes.tsv',
+        params:
+            exe = config['pipeline']['script_folder'] + 'rename_genomes.py'
+        conda:
+            '../envs/MGSIM.yaml'
+        log:
+            log_dir + 'MGSIM_genome_rename.log'
+        benchmark:
+            benchmark_dir + 'MGSIM_genome_rename.txt'
+        shell:
+            """
+            OUTDIR=`dirname {output.tbl}`
+	    rm -rf $OUTDIR 2> {log}
+            mkdir -p $OUTDIR >> {log}
+
+            {params.exe} {input.tbl} $OUTDIR > {output.tbl} 2>> {log}
+            """    
 
 rule MGSIM_communities:
     """
     Using MGSIM to simulate communities
     """
     input:
-        tbl = genomes_dir + 'genomes.tsv',
-        fna = config['genomes_tbl']['Fasta']
+        genomes_dir + 'genomes.tsv'
     output:
         abund = mgsim_dir + '{rep}/comm_abund.txt',
         wAbund = mgsim_dir + '{rep}/comm_wAbund.txt'
@@ -51,11 +78,13 @@ rule MGSIM_communities:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + '{rep}/MGSIM_communities/all.log'
+        log_dir + '{rep}/MGSIM_communities.log'
+    benchmark:
+        benchmark_dir + '{rep}/MGSIM_communities.txt'
     shell:
         """       
         MGSIM communities {params.params} --n-comm 1 \
-          {input.tbl} {params.prefix} 2> {log} 1>&2
+          {input} {params.prefix} 2> {log} 1>&2
         """
 
 rule MGSIM_reads:
@@ -67,11 +96,11 @@ rule MGSIM_reads:
         tbl = genomes_dir + 'genomes.tsv',     
     output:
         done = touch(mgsim_dir + '{rep}/reads.done'),
-	read1 = mgsim_dir + '{rep}/1/R1.fq',
-	read2 = mgsim_dir + '{rep}/1/R2.fq'	
+	read1 = temp(config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq'),
+	read2 = temp(config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq')
     params:
-        tmp_dir = os.path.join(config['tmp_dir'], '{rep}'),
-	out_dir = os.path.join(mgsim_dir, '{rep}'),
+        out_dir = os.path.join(config['tmp_dir'], '{rep}', 'sim_reads'),
+        tmp_dir = os.path.join(config['tmp_dir'], '{rep}', 'sim_reads_tmp'),
         params = config['params']['MGSIM']['reads']
     conda:
         '../envs/MGSIM.yaml'
@@ -82,9 +111,9 @@ rule MGSIM_reads:
         n = lambda wildcards, attempt: 8,
         mem_gb_pt = lambda wildcards, attempt: attempt * 2
     log:
-        log_dir + 'MGSIM_reads/{rep}.log'
+        log_dir + '{rep}/MGSIM_reads.log'
     benchmark:
-        benchmark_dir + 'MGSIM_reads/{rep}.txt'
+        benchmark_dir + '{rep}/MGSIM_reads.txt'
     shell:
         """
         MGSIM reads {params.params} -n {threads} \

@@ -67,6 +67,10 @@
         "time" : "{resources.time}",
         "mem" : "{resources.mem_gb_pt}"
     },
+    "feature_metaquast_summary_join" : {
+        "time" : "{resources.time}",
+        "mem" : "{resources.mem_gb_pt}"
+    },
     "features_compress" : {
         "time" : "{resources.time}",
         "mem" : "{resources.mem_gb_pt}"
