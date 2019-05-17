@@ -10,16 +10,44 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 > Middle English term: Bewildered, amazed, perplexed, or misled
 
+# Setup
+
+* Install miniconda or anaconda
+* Setup conda
+* Create a conda env that includes `snakemake`
+  * eg., `conda create -n snakemake_env snakemake`
+* Activate conda env
+  * eg., `conda activate snakemake_env`
+
+# Run
+
+# Input 
+
+* Refernce genomes. Two possible formats:
+  * Genome-accession: `<genome_label>\t<genome_accession>`
+     * The genomes will be downloaded based on the accession
+     * Column names: `<genome_label> = Taxon`, `<genome_accession> = Accession`
+  * Genome-fasta: `<genome_label>\t<genome_fasta>`
+     * The genome fasta files are provided (uncompressed or gzip'ed)
+     * Column names: `<genome_label> = Taxon`, `<genome_fasta> = Fasta`
+* Config file (eg., `config.yaml`). This includes:
+  * Config params on MG communities
+  * Config params on assemblers & parameters
+
+## Running locally 
+
+`snakemake --use-conda -j <NUMBER_OF_THREADS> --configfile <MY_CONFIG.yaml_FILE>`
+
+## Running on SGE cluster 
+
+`./snakemake_sge.sh <MY_CONFIG.yaml_FILE> cluster.json <PATH_FOR_SGE_LOGS> <NUMBER_OF_PARALLEL_JOBS> [additional snakemake options]`
+
+
 
 # Algorithm
 
 ## Simulating metagenome assemblies (via MGSIM)
 
-### Input 
-
-* Genome pool: `<genome_label>\t<genome_fasta>`
-* Config params on MG communities
-* Config params on assemblers & parameters
 
 ### Simuating reads
 
