@@ -1,7 +1,7 @@
 DeepMAsED
 =========
 
-version: 0.1.0
+version: 0.1.1
 
 Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 

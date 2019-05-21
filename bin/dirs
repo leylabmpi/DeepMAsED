@@ -2,6 +2,7 @@ import os
 
 genomes_dir = os.path.join(config['output_dir'], 'genomes/')
 mgsim_dir = os.path.join(config['output_dir'], 'MGSIM/')
+coverage_dir = os.path.join(config['output_dir'], 'coverage/')
 asmbl_dir = os.path.join(config['output_dir'], 'assembly/')
 true_errors_dir = os.path.join(config['output_dir'], 'true_errors/')
 map_dir = os.path.join(config['output_dir'], 'map/')

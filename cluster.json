@@ -24,6 +24,10 @@
         "n" : "{resources.n}",
         "mem" : "{resources.mem_gb_pt}"
     },
+    "contig_length_filter" : {
+        "time" : "{resources.time}",
+        "mem" : "{resources.mem_gb_pt}"
+    },
     "combine_ref_genomes" : {
         "time" : "{resources.time}"
     },
@@ -73,6 +77,11 @@
     },
     "features_compress" : {
         "time" : "{resources.time}",
+        "mem" : "{resources.mem_gb_pt}"
+    },
+    "nonpareil" : {
+        "time" : "{resources.time}",
+	"n"   : 8,
         "mem" : "{resources.mem_gb_pt}"
     }
 }

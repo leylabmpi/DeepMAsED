@@ -15,6 +15,9 @@ params:
     genome_download: ""
     communities: --richness 1
     reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
+  # coverage
+  nonpareil: -T kmer
+  nonpareil_summary: 1e9   # this is target seq. depth
   # assemblying metagenomes
   assemblers:
     metaspades: -k auto --only-assembler
@@ -25,7 +28,7 @@ params:
   contig_length_cutoff: 1000       # length in bp 
   # assessing assembly errors
   minimap2: ""
-  metaquast: --min-identity 95 --extensive-mis-size 100 --no-icarus
+  metaquast: --min-identity 95 --extensive-mis-size 100 --no-icarus --max-ref-number 0
   # mapping reads to contigs
   samtools: ""
   # creating DL features

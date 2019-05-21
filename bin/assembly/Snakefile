@@ -6,19 +6,19 @@ rule metaSPAdes:
     	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
 	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
-        contigs = temp(asmbl_dir + '{rep}/metaspades/contigs.fasta')
+        contigs = temp(config['tmp_dir'] + '{rep}/metaspades/contigs.fasta')
     params:
         params = config['params']['assemblers']['metaspades'],
-	tmp_dir = os.path.join(config['tmp_dir'], '{rep}', 'metaspades_tmp')
+	tmp_dir = config['tmp_dir'] + '{rep}/metaspades_tmp/'
     conda:
         '../envs/assembly.yaml'
     threads:
         12     
     resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 60 * 4,
+        time = lambda wildcards, attempt: attempt * 60 * 24,
         n = lambda wildcards, attempt: 12,
-        mem_gb = lambda wildcards, attempt: attempt * 32,
-        mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 32 / 8 * 1.1, 0))
+        mem_gb = lambda wildcards, attempt: attempt * 44,
+        mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 44 / 12.0 * 1.1, 0))
     log:
         log_dir + '{rep}/metaspades.log'
     benchmark:
@@ -32,7 +32,7 @@ rule metaSPAdes:
         # output dir
         OUTDIR=`dirname {output.contigs}`
         if [ -d "$OUTDIR" ]; then
-          echo "Removing directory: $OUTDIR" >> {log}
+          echo "Removing existing directory: $OUTDIR" >> {log}
           rm -rf $OUTDIR 2>> {log}
         fi
 
@@ -43,7 +43,26 @@ rule metaSPAdes:
           -1 {input.read1} -2 {input.read2} \
           2>> {log} 1>&2
         """
-	
+
+# localrules: metaSPAdes_cp_contigs
+
+# rule metaSPAdes_cp_contigs:
+#     """
+#     Copy over metaspades contigs
+#     """
+#     input:
+#         contigs = config['tmp_dir'] + '{rep}/metaspades/contigs.fasta'
+#     output:
+#         contigs = temp(asmbl_dir + '{rep}/metaspades/contigs.fasta')
+#     resources:
+#         time = lambda wildcards, attempt: attempt ** 2 * 59
+#     log:
+#         log_dir + '{rep}/metaspades_cp_contigs.log'
+#     shell:
+#         """
+#         cat {input.contigs} > {output.contigs} 2> {log}
+#         """
+
 rule megahit:
     """
     metahit assembly 
@@ -52,15 +71,15 @@ rule megahit:
     	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
 	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
-        contigs = temp(asmbl_dir + '{rep}/megahit/contigs.fasta')
+        contigs = temp(config['tmp_dir'] + '{rep}/megahit/final.contigs.fa')
     params:
-        params = config['params']['assemblers']['megahit'],
+        params = config['params']['assemblers']['megahit']
     conda:
         '../envs/assembly.yaml'
     threads:
         12     
     resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 60 * 4,
+        time = lambda wildcards, attempt: attempt * 60 * 24,
         n = lambda wildcards, attempt: 12,
         mem_bytes = lambda wildcards, attempt: int(attempt * 3.2e10),
         mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 32 / 8 * 1.1, 0))
@@ -87,12 +106,31 @@ rule megahit:
         mv -f $OUTDIR"/final.contigs.fa" {output.contigs} 2>> {log}
         """
 
+# localrules: megahit_cp_contigs
+
+# rule megahit_cp_contigs:
+#     """
+#     Copy over megahit contigs
+#     """
+#     input:
+#         contigs = temp(config['tmp_dir'] + '{rep}/megahit/final.contigs.fa')
+#     output:
+#         contigs = temp(asmbl_dir + '{rep}/megahit/contigs.fasta')
+#     resources:
+#         time = lambda wildcards, attempt: attempt ** 2 * 59
+#     log:
+#         log_dir + '{rep}/megahit_cp_contigs.log'
+#     shell:
+#         """
+#         cat {input.contigs} > {output.contigs} 2> {log}
+#         """
+
 rule contig_length_filter:
     """
     Filtering out short length contigs
     """
     input:
-        asmbl_dir + '{rep}/{assembler}/contigs.fasta'
+        config['tmp_dir'] + '{rep}/{assembler}/contigs.fasta'
     output:
         asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta'
     params:
@@ -101,7 +139,7 @@ rule contig_length_filter:
     conda:
         '../envs/MGSIM.yaml'
     resources:
-        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 6,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 2
     log:
         log_dir + '{rep}/{assembler}/contig_length_filter.log',    

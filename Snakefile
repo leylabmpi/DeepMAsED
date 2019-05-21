@@ -50,6 +50,7 @@ config['assemblers'] = [k for k,v in config['params']['assemblers'].items() if n
 
 ## modular snakefiles
 include: snake_dir + 'bin/MGSIM/Snakefile'
+include: snake_dir + 'bin/coverage/Snakefile'
 include: snake_dir + 'bin/assembly/Snakefile'
 include: snake_dir + 'bin/true_errors/Snakefile'
 include: snake_dir + 'bin/map/Snakefile'
@@ -57,36 +58,98 @@ include: snake_dir + 'bin/map/Snakefile'
 
 ## local rules
 localrules: all
-    
-# rules
-rule all:
-    input:
-        # genome fasta files
-        config['genomes_tbl']['Fasta'],
-	# assemblies
-	expand(asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta',
-	       rep = config['reps'],
-	       assembler = config['assemblers']),
-	# true mis-assemblies
-	## minimap2
-        expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln.paf.gz',
-	       rep = config['reps'],
-	       assembler = config['assemblers']),
-        expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln_summary.tsv',
-	       rep = config['reps'],
-	       assembler = config['assemblers']),        
-	## metaquast
-        expand(true_errors_dir + '{rep}/{assembler}/metaquast.done',
-	       rep = config['reps'],
-	       assembler = config['assemblers']),
-	# read mapping to contigs
-	expand(map_dir + '{rep}/{assembler}.bam.bai',
-	       rep = config['reps'],
-	       assembler = config['assemblers']),
-	# feature table
-        expand(map_dir + '{rep}/{assembler}/features.tsv.gz',
+
+
+def all_which_input(wildcards):
+    input_files = []
+
+    # genome fasta files
+    #input_files += config['genomes_tbl']['Fasta']
+
+    # coverage
+    if not config['params']['nonpareil'].startswith('Skip'):
+        x = expand(coverage_dir + '{rep}/nonpareil.npo',
+                   rep = config['reps'])
+        input_files += x
+        if not config['params']['nonpareil_summary'].startswith('Skip'):
+            input_files.append(coverage_dir + 'nonpareil/all_summary.RDS')
+            input_files.append(coverage_dir + 'nonpareil/all_summary.txt')
+            input_files.append(coverage_dir + 'nonpareil/all_curve.pdf')
+
+    # MG assemblies
+    x = expand(asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta',
+               rep = config['reps'],
+               assembler = config['assemblers'])
+    input_files += x
+
+    # true mis-assemblies
+    ## minimap2
+    x = expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln.paf.gz',
 	       rep = config['reps'],
 	       assembler = config['assemblers'])
+    input_files += x
+
+    x = expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln_summary.tsv',
+	       rep = config['reps'],
+	       assembler = config['assemblers'])
+    input_files += x
+
+    ## metaquast
+    x = expand(true_errors_dir + '{rep}/{assembler}/metaquast.done',
+	       rep = config['reps'],
+	       assembler = config['assemblers'])
+    input_files += x
+
+    # read mapping to contigs
+    x = expand(map_dir + '{rep}/{assembler}.bam.bai',
+	       rep = config['reps'],
+	       assembler = config['assemblers'])
+    input_files += x
+
+    # feature table
+    x = expand(map_dir + '{rep}/{assembler}/features.tsv.gz',
+	       rep = config['reps'],
+	       assembler = config['assemblers'])
+    input_files += x
+
+    return input_files
+
+
+rule all:
+    input:
+        all_which_input
+
+
+# rules
+# rule all:
+#     input:
+#         # genome fasta files
+#         config['genomes_tbl']['Fasta']
+# 	# assemblies
+#         expand(asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta',
+#                rep = config['reps'],
+#                assembler = config['assemblers']),
+# 	# true mis-assemblies
+# 	## minimap2
+#         expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln.paf.gz',
+# 	       rep = config['reps'],
+# 	       assembler = config['assemblers']),
+#         expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln_summary.tsv',
+# 	       rep = config['reps'],
+# 	       assembler = config['assemblers']),        
+# 	## metaquast
+#         expand(true_errors_dir + '{rep}/{assembler}/metaquast.done',
+# 	       rep = config['reps'],
+# 	       assembler = config['assemblers']),
+# 	# read mapping to contigs
+# 	expand(map_dir + '{rep}/{assembler}.bam.bai',
+# 	       rep = config['reps'],
+# 	       assembler = config['assemblers']),
+# 	# feature table
+#         expand(map_dir + '{rep}/{assembler}/features.tsv.gz',
+# 	       rep = config['reps'],
+# 	       assembler = config['assemblers'])
+
 
 
 # notifications (only first & last N lines)

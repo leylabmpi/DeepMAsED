@@ -1,0 +1,89 @@
+localrules: nonpareil_precheck
+
+rule nonpareil_precheck:
+    """
+    nonpareil conda env check
+    """
+    output:
+        touch(coverage_dir + 'precheck_nonpareil.done')
+    params:
+        exe = config['pipeline']['script_folder'] + 'r_javareconf_patch.py'
+    conda:
+        '../envs/nonpareil.yaml'
+    log:
+        log_dir + 'nonpareil_precheck.log'
+    shell:
+        """
+        P=`command -v R 2> {log}`
+        if [ P == "" ]; then
+           echo "ERROR: R command not found" >> {log}
+           exit 1
+        fi
+        P=`dirname $P`
+        P=`dirname $P`
+
+        {params.exe} $P 2>> {log} 1>&2
+        """
+
+rule nonpareil:
+    """
+    Running nonpariel to determine sample coverage
+    """
+    input:
+        check = coverage_dir + 'precheck_nonpareil.done',
+	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq'
+    output:
+        npo = coverage_dir + '{rep}/nonpareil.npo'
+    params:
+        params = config['params']['nonpareil'],
+        basename = coverage_dir + '{rep}/nonpareil'
+    conda:
+        '../envs/nonpareil.yaml'
+    threads:
+        8
+    resources:
+        time = lambda wildcards, attempt: attempt * 59 * 8,
+        mem_mb_pt = lambda wildcards, attempt: attempt * 3000,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 3
+    log:
+        log_dir + '{rep}/nonpareil.log'
+    benchmark:
+        benchmark_dir + '{rep}/nonpareil.txt'
+    shell:
+        """
+        nonpareil {params.params} \
+           -R {resources.mem_mb_pt} \
+           -t {threads} \
+           -f fastq \
+           -s {input.read1} \
+           -b {params.basename} \
+           2>> {log} 1>&2 || touch {output.npo} 
+        """
+
+rule nonpareil_summary:
+    """
+    Summarizing nonpareil data
+    """
+    input:
+        expand(coverage_dir + '{rep}/nonpareil.npo',
+               rep = config['reps'])
+    output:
+        curves = coverage_dir + 'nonpareil/all_curve.pdf',
+        rds = coverage_dir + 'nonpareil/all_summary.RDS',
+        txt = coverage_dir + 'nonpareil/all_summary.txt' 
+    params:
+        exe = config['pipeline']['script_folder'] + 'nonpareil_summary.R',
+        basename = coverage_dir + 'nonpareil/all',
+        params = config['params']['nonpareil_summary'],
+    conda:
+        '../envs/nonpareil.yaml'
+    log:
+        log_dir + 'nonpareil_summary.log'
+    benchmark:
+        benchmark_dir + 'nonpareil_summary.txt'
+    shell:
+        """
+        {params.exe} {params.params} {params.basename} \
+           {input} 2> {log} 1>&2 
+        """
+
