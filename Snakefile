@@ -43,6 +43,7 @@ config['tmp_dir'] = os.path.join(config['pipeline']['temp_folder'],
 		                 'DeepMAsED_' + str(os.stat('.').st_ino) + '/')
 if not os.path.isdir(config['tmp_dir']):
     os.makedirs(config['tmp_dir'])
+print('\33[33mUsing temporary directory: {} \x1b[0m'.format(config['tmp_dir']))
 
 # config calculated parameters
 config['reps'] = [x+1 for x in range(config['params']['reps'])]
@@ -54,10 +55,6 @@ include: snake_dir + 'bin/coverage/Snakefile'
 include: snake_dir + 'bin/assembly/Snakefile'
 include: snake_dir + 'bin/true_errors/Snakefile'
 include: snake_dir + 'bin/map/Snakefile'
-
-
-## local rules
-localrules: all
 
 
 def all_which_input(wildcards):
@@ -114,6 +111,8 @@ def all_which_input(wildcards):
 
     return input_files
 
+
+localrules: all
 
 rule all:
     input:

@@ -6,7 +6,7 @@ rule metaSPAdes:
     	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
 	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
-        contigs = temp(config['tmp_dir'] + '{rep}/metaspades/contigs.fasta')
+        contigs = temp(config['tmp_dir'] + 'asmbl/{rep}/metaspades/contigs.fasta')
     params:
         params = config['params']['assemblers']['metaspades'],
 	tmp_dir = config['tmp_dir'] + '{rep}/metaspades_tmp/'
@@ -44,25 +44,6 @@ rule metaSPAdes:
           2>> {log} 1>&2
         """
 
-# localrules: metaSPAdes_cp_contigs
-
-# rule metaSPAdes_cp_contigs:
-#     """
-#     Copy over metaspades contigs
-#     """
-#     input:
-#         contigs = config['tmp_dir'] + '{rep}/metaspades/contigs.fasta'
-#     output:
-#         contigs = temp(asmbl_dir + '{rep}/metaspades/contigs.fasta')
-#     resources:
-#         time = lambda wildcards, attempt: attempt ** 2 * 59
-#     log:
-#         log_dir + '{rep}/metaspades_cp_contigs.log'
-#     shell:
-#         """
-#         cat {input.contigs} > {output.contigs} 2> {log}
-#         """
-
 rule megahit:
     """
     metahit assembly 
@@ -71,7 +52,7 @@ rule megahit:
     	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
 	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
-        contigs = temp(config['tmp_dir'] + '{rep}/megahit/final.contigs.fa')
+        contigs = temp(config['tmp_dir'] + 'asmbl/{rep}/megahit/contigs.fasta')
     params:
         params = config['params']['assemblers']['megahit']
     conda:
@@ -106,31 +87,12 @@ rule megahit:
         mv -f $OUTDIR"/final.contigs.fa" {output.contigs} 2>> {log}
         """
 
-# localrules: megahit_cp_contigs
-
-# rule megahit_cp_contigs:
-#     """
-#     Copy over megahit contigs
-#     """
-#     input:
-#         contigs = temp(config['tmp_dir'] + '{rep}/megahit/final.contigs.fa')
-#     output:
-#         contigs = temp(asmbl_dir + '{rep}/megahit/contigs.fasta')
-#     resources:
-#         time = lambda wildcards, attempt: attempt ** 2 * 59
-#     log:
-#         log_dir + '{rep}/megahit_cp_contigs.log'
-#     shell:
-#         """
-#         cat {input.contigs} > {output.contigs} 2> {log}
-#         """
-
 rule contig_length_filter:
     """
     Filtering out short length contigs
     """
     input:
-        config['tmp_dir'] + '{rep}/{assembler}/contigs.fasta'
+        config['tmp_dir'] + 'asmbl/{rep}/{assembler}/contigs.fasta'
     output:
         asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta'
     params:

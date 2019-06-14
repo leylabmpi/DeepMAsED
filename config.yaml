@@ -10,7 +10,7 @@ output_dir: tests/output_n10/
 # Use "Skip" to skip  steps. If no params for rule, use ""
 params:
   # simulating metagenomes
-  reps: 1
+  reps: 2
   MGSIM:
     genome_download: ""
     communities: --richness 1

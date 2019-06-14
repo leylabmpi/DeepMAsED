@@ -121,7 +121,7 @@ rule bam_to_DL_features:
         bam = map_dir + '{rep}/{assembler}.bam',
         bai = map_dir + '{rep}/{assembler}.bam.bai'
     output:
-        temp(config['tmp_dir'] + '{rep}/{assembler}/features.tsv')
+        temp(config['tmp_dir'] + 'feats/{rep}/{assembler}/features.tsv')
     params:
         exe = config['pipeline']['script_folder'] + 'bam2feat.py',
         assembler = lambda wildcards: wildcards.assembler
@@ -147,10 +147,10 @@ rule feature_true_est_join:
     Joining 'true' contig assembly info with the bam-generated feature table
     """
     input:
-        feats = config['tmp_dir'] + '{rep}/{assembler}/features.tsv',
+        feats = config['tmp_dir'] + 'feats/{rep}/{assembler}/features.tsv',
         err = true_errors_dir + '{rep}/{assembler}/minimap2_aln_summary.tsv'
     output:
-        temp(config['tmp_dir'] + '{rep}/{assembler}/features_j.tsv')
+        temp(config['tmp_dir'] + 'feats/{rep}/{assembler}/features_j.tsv')
     params:
         exe = config['pipeline']['script_folder'] + 'table_join.R'
     resources:
@@ -173,10 +173,10 @@ rule feature_metaquast_summary_join:
     Joining metaquast mis-assembly summary info with the bam-generated feature table
     """
     input:
-        tbl = config['tmp_dir'] + '{rep}/{assembler}/features_j.tsv',
+        tbl = config['tmp_dir'] + 'feats/{rep}/{assembler}/features_j.tsv',
         mis = true_errors_dir + '{rep}/{assembler}/combined_reference/contigs_report_contigs_filtered.mis_contigs.tsv'
     output:
-        temp(config['tmp_dir'] + '{rep}/{assembler}/features_j_j.tsv')
+        temp(config['tmp_dir'] + 'feats/{rep}/{assembler}/features_j_j.tsv')
     params:
         exe = config['pipeline']['script_folder'] + 'table_join.R'
     resources:
@@ -199,7 +199,7 @@ rule features_compress:
     Compressing table
     """
     input:
-        config['tmp_dir'] + '{rep}/{assembler}/features_j_j.tsv'
+        config['tmp_dir'] + 'feats/{rep}/{assembler}/features_j_j.tsv'
     output:
         map_dir + '{rep}/{assembler}/features.tsv.gz'
     resources:
