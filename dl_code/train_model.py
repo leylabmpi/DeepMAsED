@@ -20,10 +20,16 @@ parser.add_argument('--save_path', default='model', type=str,
                     help='Where to save training weights and logs.')
 parser.add_argument('--filters', default=8, type=int, 
                     help='N of filters for first conv layer. Then x2.')
+parser.add_argument('--n_hid', default=20, type=int, 
+                    help='N of units in fully connected layers.')
 parser.add_argument('--n_conv', default=2, type=int, 
                     help='N of conv layers.')
-parser.add_argument('--n_epochs', default=10, type=int, 
+parser.add_argument('--n_fc', default=1, type=int, 
+                    help='N of fully connected layers.')
+parser.add_argument('--n_epochs', default=50, type=int, 
                     help='N of training epochs.')
+parser.add_argument('--standard', default=1, type=int, 
+                    help='Binary, whether or not to standardize the features.')
 parser.add_argument('--max_len', default=3000, type=int, 
                     help='Max contig len, fixed input for CNN.')
 parser.add_argument('--dropout', default=0.1, type=float, 
@@ -42,7 +48,9 @@ class Config(object):
     max_len = args.max_len
     filters = args.filters
     n_conv = args.n_conv
-    n_features = 9
+    n_fc = args.n_fc
+    n_hid = args.n_hid
+    n_features = 7
     pool_window = args.pool_window
     dropout = args.dropout
     lr_init = args.lr_init
@@ -63,6 +71,7 @@ save_path = args.save_path
 print("Loading data...")
 x_tr, x_te, y_tr, y_te = utils.load_features(args.data_path, max_len=args.max_len, 
                                              test_size=args.test_size, 
+                                             standard=args.standard,
                                              mode = config.mode)
 
 #Train model
@@ -73,6 +82,7 @@ tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs'),
 print("Training network...")
 if config.mode in ['chimera', 'extensive']:
     w_one = int(len(np.where(y_tr == 0)[0])  / len(np.where(y_tr == 1)[0]))
+    w_one = 1
     class_weight = {0 : 1 , 1: w_one}
 
     chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
