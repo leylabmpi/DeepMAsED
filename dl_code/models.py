@@ -20,10 +20,12 @@ class chimera_net(object):
         dropout = config.dropout
         lr_init = config.lr_init
         mode = config.mode
+        n_fc = config.n_fc
+        n_hid = config.n_hid
 
         self.net = Sequential()
 
-        self.net.add(Conv2D(filters, kernel_size=(2, 9), 
+        self.net.add(Conv2D(filters, kernel_size=(2, 7), 
                             input_shape=(max_len, n_features, 1), 
                             activation='relu', padding='same'))
         self.net.add(BatchNormalization(axis=-1))
@@ -41,6 +43,10 @@ class chimera_net(object):
         optimizer = keras.optimizers.adam(lr=lr_init)
 
         if mode in ['chimera', 'extensive']:
+            for _ in range(n_fc - 1):
+                self.net.add(Dense(n_hid, activation='relu'))
+                self.net.add(Dropout(rate=dropout))
+
             self.net.add(Dense(1, activation='sigmoid'))
             self.net.add(Dropout(rate=dropout))
 
