@@ -9,8 +9,50 @@ import csv
 import gzip
 import IPython
 
+def compute_mean_std(x_tr):
 
-def load_features(data_path, max_len=3000, test_size=0.2, mode='chimera'):
+    n_feat = x_tr[0].shape[1]
+    feat_sum = np.zeros(n_feat)
+    feat_sq_sum = np.zeros(n_feat)
+    n_el = 0
+
+    for xi in x_tr:
+        sum_xi = np.sum(xi, 0)
+        sum_sq = np.sum(xi ** 2, 0)
+        feat_sum += sum_xi
+        feat_sq_sum += sum_sq
+        n_el += xi.shape[0]
+
+    mean = feat_sum / n_el
+    std = np.sqrt(feat_sq_sum / n_el - mean ** 2)
+
+    return mean, std
+
+def normalize(x, mean, std, max_len):
+    """
+    Given mean and std vector computed from training data, 
+    normalize and return in shape (n, p, 1)
+    """
+    n_feat = x[0].shape[1]
+
+    for i in range(len(x)):
+        x[i] = (x[i] - mean) / std
+        num_timesteps = x[i].shape[0]
+        if num_timesteps < max_len:
+            x[i] = np.concatenate((x[i], 
+                                   np.zeros((max_len - num_timesteps, n_feat))), 
+                                   0)
+        else:
+            x[i] = x[i][0:max_len]
+        x[i] = np.expand_dims(x[i], 0)
+    
+    x = np.concatenate(x, 0)
+    x = np.expand_dims(x, -1)
+    return x
+
+
+def load_features(data_path, max_len=3000, test_size=0.2,
+                  standard=1, mode='chimera', technology='megahit'):
     """
     Loads features, pre-process them and returns training and test data. 
 
@@ -25,36 +67,76 @@ def load_features(data_path, max_len=3000, test_size=0.2, mode='chimera'):
     """
 
     # Pre-process once if not done already
-    if not os.path.exists(os.path.join(data_path, 'features.pkl')):
-        print("Populating pickle file...")
-        pickle_data(data_path, 'features.tsv.gz', 'features.pkl')
+    dirs = os.listdir(data_path)
+    for i, f in enumerate(dirs):#os.listdir(data_path):
 
-    with open(os.path.join(data_path, 'features.pkl'), 'rb') as f:
-        x, y, ye, yext, n2i = pickle.load(f)
+        current_path = os.path.join(data_path, f, technology)
+
+        if not os.path.exists(os.path.join(current_path, 'features.pkl')):
+            print("Populating pickle file...")
+            pickle_data(current_path, 'features.tsv.gz', 'features.pkl')
+
+    x, y, ye, yext, n2i = [], [], [], [], []
+
+    for i, f in enumerate(dirs):
+        current_path = os.path.join(data_path, f, technology)
+        with open(os.path.join(current_path, 'features.pkl'), 'rb') as f:
+            xi, yi, yei, yexti, n2ii = pickle.load(f)
+
+            if mode == 'extensive':
+                yi = yexti
+
+            # Remove two last features, always zero
+            # Subsample data, eq number of 1 and 0
+            yi = np.array(yi)
+            where_one = np.where(yi == 1)[0]
+            where_zero = np.where(yi == 0)[0]
+            len_ones = len(where_one)
+
+            for idx in where_one:
+                x.append(xi[idx][:, 0:-2])
+
+            for j, idx in enumerate(where_zero):
+                if j == len_ones:
+                    break
+                x.append(xi[idx][:, 0:-2])
+
+            yinew = np.array(len_ones * [1] + len_ones * [0])
+            yext.append(yinew)
+
+    #y = np.concatenate(y)
+    #ye = np.concatenate(ye)
+    yext = np.concatenate(yext)
 
     if mode == 'edit':
         y = 100 * np.array(ye)
     elif mode == 'extensive':
         y = yext
 
-    x = keras.preprocessing.sequence.pad_sequences(x, maxlen=max_len)
-    y = np.array(y)
+    #Split in train/test
+    n_ex = len(x)
+    idx = np.arange(n_ex)
+    np.random.shuffle(idx)
+    test_idx = idx[0:int(test_size * n_ex)]
+    train_idx = idx[int(test_size * n_ex):]
 
-    x_tr, x_te, y_tr, y_te = train_test_split(x, y, test_size=test_size, 
-                                              random_state=1)
+    x_tr, y_tr, x_te, y_te = [], [], [], []
+    for i in train_idx:
+        x_tr.append(x[i])
+        y_tr.append(y[i])
+    for i in test_idx:
+        x_te.append(x[i])
+        y_te.append(y[i])
 
-    std_sc = StandardScaler()
-    x_tr_shape = x_tr.shape
-    x_tr = x_tr.reshape((x_tr_shape[0] * x_tr_shape[1], x_tr_shape[-1]))
-    x_tr = std_sc.fit_transform(x_tr)
-    x_tr = x_tr.reshape(x_tr_shape)
-    x_tr = np.expand_dims(x_tr, -1)
+    y_tr = np.array(y_tr)
+    y_te = np.array(y_te)
 
-    x_te_shape = x_te.shape
-    x_te = x_te.reshape((x_te_shape[0] * x_te_shape[1], x_te_shape[-1]))
-    x_te = std_sc.transform(x_te)
-    x_te = x_te.reshape(x_te_shape)
-    x_te = np.expand_dims(x_te, -1)
+    #Compute normalization (mean and std)
+    mean, std = compute_mean_std(x_tr)
+
+    #Normalize
+    x_tr = normalize(x_tr, mean, std, max_len)
+    x_te = normalize(x_te, mean, std, max_len)
 
     y_tr = y_tr[:, None]
     y_te = y_te[:, None]
@@ -124,7 +206,7 @@ def pickle_data(data_path, features_in, features_out):
                 tgt = None
                 tgt_ext = None
 
-            feat.append(np.array([int(ri) for ri in row[4:w_chimera]])[None, :])
+            feat.append(np.array([int(ri) for ri in row[4:w_chimera]])[None, :].astype(np.uint8))
 
             if row[0] not in name_to_id:
                 name_to_id[row[0]] = idx
