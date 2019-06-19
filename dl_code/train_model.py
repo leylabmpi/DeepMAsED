@@ -5,6 +5,7 @@ from sklearn.metrics import recall_score
 from sklearn.preprocessing import StandardScaler
 import argparse
 import IPython
+import _pickle as pickle
 
 import models
 import utils
@@ -30,13 +31,13 @@ parser.add_argument('--n_epochs', default=50, type=int,
                     help='N of training epochs.')
 parser.add_argument('--standard', default=1, type=int, 
                     help='Binary, whether or not to standardize the features.')
-parser.add_argument('--max_len', default=3000, type=int, 
+parser.add_argument('--max_len', default=10000, type=int, 
                     help='Max contig len, fixed input for CNN.')
 parser.add_argument('--dropout', default=0.1, type=float, 
                     help='Rate of dropout.')
 parser.add_argument('--pool_window', default=40, type=int, 
                     help='Window size for average pooling.')
-parser.add_argument('--test_size', default=0.3, type=float, 
+parser.add_argument('--test_size', default=0.2, type=float, 
                     help='Size of test set.')
 parser.add_argument('--lr_init', default=0.001, type=float, 
                     help='Size of test set.')
@@ -50,7 +51,7 @@ class Config(object):
     n_conv = args.n_conv
     n_fc = args.n_fc
     n_hid = args.n_hid
-    n_features = 7
+    n_features = 11
     pool_window = args.pool_window
     dropout = args.dropout
     lr_init = args.lr_init
@@ -69,10 +70,18 @@ save_path = args.save_path
 
 # Load and process data
 print("Loading data...")
-x_tr, x_te, y_tr, y_te = utils.load_features(args.data_path, max_len=args.max_len, 
-                                             test_size=args.test_size, 
-                                             standard=args.standard,
-                                             mode = config.mode)
+x, y = utils.load_features(args.data_path,
+                           test_size=args.test_size, 
+                           max_len=args.max_len,
+                           standard=args.standard,
+                            mode = config.mode)
+
+x_tr, x_val, y_tr, y_val = utils.leave_one_out(x, y, 0)
+
+#Construct generator
+dataGen = models.Generator(x_tr, y_tr, args.max_len)
+
+#x_tr, x_val, y_tr, y_val = utils.leave_one_out(x, y, 0, max_len=args.max_len)
 
 #Train model
 tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs'), 
@@ -82,12 +91,12 @@ tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs'),
 print("Training network...")
 if config.mode in ['chimera', 'extensive']:
     w_one = int(len(np.where(y_tr == 0)[0])  / len(np.where(y_tr == 1)[0]))
-    w_one = 1
     class_weight = {0 : 1 , 1: w_one}
-
-    chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
-                   class_weight=class_weight, 
-                   callbacks=[tb_logs, chi_net.reduce_lr])
+    chi_net.net.fit_generator(generator=dataGen, epochs=10)
+    #exit()
+    #chi_net.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
+    #               class_weight=class_weight, 
+    #               callbacks=[tb_logs, chi_net.reduce_lr])
 
 elif config.mode == 'edit':
     st = StandardScaler()
@@ -99,27 +108,4 @@ elif config.mode == 'edit':
 print("Saving trained model...")
 chi_net.save(os.path.join(save_path, 'model.h5'))
 
-
-"""
-# Run predictions
-scores_tr = chi_net.predict(x_tr)
-scores_te = chi_net.predict(x_te)
-
-pred_tr = (scores_tr > 0.5).astype(int)
-pred_te = (scores_te > 0.5).astype(int)
-
-print("Training: confusion matrix and accuracy")
-c_tr = confusion_matrix(y_tr, pred_tr)
-norm_c_tr = (c_tr.T / np.sum(c_tr, axis=1)).T
-print(norm_c_tr)
-print("%.2f" % np.mean(pred_tr == y_tr))
-
-
-print()
-print("Test: confusion matrix and accuracy")
-c_te = confusion_matrix(y_te, pred_te)
-norm_c_te = (c_te.T / np.sum(c_te, axis=1)).T
-print(norm_c_te)
-print("%.2f" % np.mean(pred_te == y_te))
-"""
 
