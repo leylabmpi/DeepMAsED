@@ -119,8 +119,9 @@ def find_sm_job(D, jobID):
                         return rule_name, input_files, attempt_cnt
                 except KeyError:
                     pass
-    msg = 'Cannot find fule for snakemake jobID: {}'
-    raise ValueError(msg.format(jobID))
+    msg = 'WARNING: Cannot find rule for snakemake jobID: {}'
+    logging.warning(msg.format(jobID))
+    return 'NA', 'NA', 'NA'
             
 def parse_section(inF, D, time_stamp):
     """Parsing section of log file (eg., rule or error)
@@ -149,8 +150,11 @@ def parse_section(inF, D, time_stamp):
         rule_name,input_files,attempt_cnt = find_sm_job(D, sm_job)
         D[rule_name][input_files][attempt_cnt]['pass_fail'] = 'finished'
         D[rule_name][input_files][attempt_cnt]['date_end'] = time_stamp
+    elif regex_date.search(line):
+        time_stamp = regex_date.search(line).group(1)
     else:
-        raise ValueError('Cannot parse: "{}"'.format(line))    
+        msg = 'WARNING: Cannot parse: "{}"'
+        logging.warning(msg.format(line))
 
 def parse_log(log_file, D):
     """Parsing log file
@@ -218,7 +222,9 @@ def get_qacct_info(D):
                     try:
                         x = qacct_info[clust_job]
                     except KeyError:
-                        continue            
+                        continue
+                    except TypeError:
+                        x = ['NA'] * 6
                     D[rule_name][input_files][attempt_cnt]['exit_status'] = x[0]
                     D[rule_name][input_files][attempt_cnt]['ru_wallclock'] = x[1]
                     D[rule_name][input_files][attempt_cnt]['ru_utime'] = x[2]
