@@ -10,6 +10,8 @@ tmp/
 ._*
 tests/output*/
 screenlog.*
+bin/misc_*
+logs/
 
 # hg
 **/.hg/

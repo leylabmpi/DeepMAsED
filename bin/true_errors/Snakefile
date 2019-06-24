@@ -130,7 +130,7 @@ rule metaquast:
     resources:
         time = lambda wildcards, attempt: attempt * 60 * 24,
         n = lambda wildcards, attempt: 12,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 2 + 3
+        mem_gb_pt = lambda wildcards, attempt: int(attempt ** 2.6 + 3)
     conda:
         '../envs/quast.yaml'	
     log:

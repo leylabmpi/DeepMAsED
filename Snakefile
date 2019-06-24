@@ -50,6 +50,7 @@ config['reps'] = [x+1 for x in range(config['params']['reps'])]
 config['assemblers'] = [k for k,v in config['params']['assemblers'].items() if not v.startswith('Skip')]
 
 ## modular snakefiles
+include: snake_dir + 'bin/Snakefile'
 include: snake_dir + 'bin/MGSIM/Snakefile'
 include: snake_dir + 'bin/coverage/Snakefile'
 include: snake_dir + 'bin/assembly/Snakefile'
@@ -118,46 +119,3 @@ rule all:
     input:
         all_which_input
 
-
-# rules
-# rule all:
-#     input:
-#         # genome fasta files
-#         config['genomes_tbl']['Fasta']
-# 	# assemblies
-#         expand(asmbl_dir + '{rep}/{assembler}/contigs_filtered.fasta',
-#                rep = config['reps'],
-#                assembler = config['assemblers']),
-# 	# true mis-assemblies
-# 	## minimap2
-#         expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln.paf.gz',
-# 	       rep = config['reps'],
-# 	       assembler = config['assemblers']),
-#         expand(true_errors_dir + '{rep}/{assembler}/minimap2_aln_summary.tsv',
-# 	       rep = config['reps'],
-# 	       assembler = config['assemblers']),        
-# 	## metaquast
-#         expand(true_errors_dir + '{rep}/{assembler}/metaquast.done',
-# 	       rep = config['reps'],
-# 	       assembler = config['assemblers']),
-# 	# read mapping to contigs
-# 	expand(map_dir + '{rep}/{assembler}.bam.bai',
-# 	       rep = config['reps'],
-# 	       assembler = config['assemblers']),
-# 	# feature table
-#         expand(map_dir + '{rep}/{assembler}/features.tsv.gz',
-# 	       rep = config['reps'],
-# 	       assembler = config['assemblers'])
-
-
-
-# notifications (only first & last N lines)
-onsuccess:
-    print("Workflow finished, no error")
-    cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED finished successfully' " + config['pipeline']['email']
-    shell(cmd)
-
-onerror:
-    print("An error occurred")
-    cmd = "(head -n 1000 {log} && tail -n 1000 {log}) | fold -w 900 | mail -s 'DeepMAsED => error occurred' " + config['pipeline']['email']
-    shell(cmd)
