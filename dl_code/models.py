@@ -72,6 +72,9 @@ class chimera_net(object):
     def predict(self, x):
         return self.net.predict(x)
 
+    def predict_generator(self, x):
+        return self.net.predict_generator(x)
+
     def print_summary(self):
         print(self.net.summary())
 

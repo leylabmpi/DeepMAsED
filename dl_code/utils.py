@@ -6,10 +6,15 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import csv
+from collections import defaultdict
 import gzip
 import IPython
 
 def compute_mean_std(x_tr):
+    """
+    Given training data (list of contigs), compute mean and std 
+    feature-wise. 
+    """
 
     n_feat = x_tr[0].shape[1]
     feat_sum = np.zeros(n_feat)
@@ -30,6 +35,7 @@ def compute_mean_std(x_tr):
 
 def normalize(x, mean, std, max_len):
     """
+    DETERIORATED
     Given mean and std vector computed from training data, 
     normalize and return in shape (n, p, 1)
     """
@@ -48,10 +54,10 @@ def normalize(x, mean, std, max_len):
     
     x = np.concatenate(x, 0)
     x = np.expand_dims(x, -1)
+
     return x
 
-
-def load_features(data_path, max_len=3000, test_size=0.2,
+def load_features(data_path, test_size=0.2, max_len=10000, 
                   standard=1, mode='chimera', technology='megahit'):
     """
     Loads features, pre-process them and returns training and test data. 
@@ -62,8 +68,7 @@ def load_features(data_path, max_len=3000, test_size=0.2,
         test_size: portion of the data kept for testing
 
     Outputs:
-        x_tr, x_te : train and test features
-        y_tr, y_te: train and test targets. 
+        x, y: lists, where each element comes from one metagenome
     """
 
     # Pre-process once if not done already
@@ -80,41 +85,76 @@ def load_features(data_path, max_len=3000, test_size=0.2,
 
     for i, f in enumerate(dirs):
         current_path = os.path.join(data_path, f, technology)
+
         with open(os.path.join(current_path, 'features.pkl'), 'rb') as f:
             xi, yi, yei, yexti, n2ii = pickle.load(f)
 
             if mode == 'extensive':
                 yi = yexti
 
-            # Remove two last features, always zero
-            # Subsample data, eq number of 1 and 0
+            for j in range(len(xi)):
+                xi[j] = xi[j][0:max_len, 1:]
+        
+            # Each element is a metagenome
+            x.append(xi)
             yi = np.array(yi)
-            where_one = np.where(yi == 1)[0]
-            where_zero = np.where(yi == 0)[0]
-            len_ones = len(where_one)
-
-            for idx in where_one:
-                x.append(xi[idx][:, 0:-2])
-
-            for j, idx in enumerate(where_zero):
-                if j == len_ones:
-                    break
-                x.append(xi[idx][:, 0:-2])
-
-            yinew = np.array(len_ones * [1] + len_ones * [0])
-            yext.append(yinew)
+            yext.append(yi)
 
     #y = np.concatenate(y)
     #ye = np.concatenate(ye)
-    yext = np.concatenate(yext)
+    #yext = np.concatenate(yext)
 
     if mode == 'edit':
         y = 100 * np.array(ye)
     elif mode == 'extensive':
         y = yext
+    else:
+        raise("Mode currently not supported")
+
+    return x, y
+
+def kfold(x, y, idx_lo, k=5):
+
+    # Define validation data
+    x_tr, y_tr = [], []
+    x_val, y_val = [], []
+
+    meta_per_fold = int(len(x) / k)
+    lower = idx_lo * meta_per_fold
+    upper = (idx_lo + 1) * meta_per_fold
+
+    for i, xi in enumerate(x):
+        if i < lower or i >= upper: # idx_lo:
+            x_tr = x_tr + xi
+            y_tr.append(y[i])
+        else:
+            x_val = x_val + xi
+            y_val.append(y[i])
+
+    y_tr = np.concatenate(y_tr)
+    y_val = np.concatenate(y_val)
+
+    return x_tr, x_val, y_tr, y_val
+
+def leave_one_out(x, y, idx_lo):
+
+    # Define validation data
+    x_val, y_val = x[idx_lo], y[idx_lo]
+    x_tr, y_tr = [], []
+
+    for i, xi in enumerate(x):
+        if i == idx_lo:
+            continue
+        x_tr = x_tr + xi
+        y_tr.append(y[i])
+
+    y_tr = np.concatenate(y_tr)
+
+    return x_tr, x_val, y_tr, y_val
 
     #Split in train/test
-    n_ex = len(x)
+    """
+    n_ex = len(x_tr)
     idx = np.arange(n_ex)
     np.random.shuffle(idx)
     test_idx = idx[0:int(test_size * n_ex)]
@@ -130,18 +170,18 @@ def load_features(data_path, max_len=3000, test_size=0.2,
 
     y_tr = np.array(y_tr)
     y_te = np.array(y_te)
-
+    """
     #Compute normalization (mean and std)
     mean, std = compute_mean_std(x_tr)
 
     #Normalize
-    x_tr = normalize(x_tr, mean, std, max_len)
-    x_te = normalize(x_te, mean, std, max_len)
+    x_tr = normalize(x_tr, mean, std, max_len)[:, :,1:]
+    x_val = normalize(x_val, mean, std, max_len)[:, :, 1:]
 
     y_tr = y_tr[:, None]
-    y_te = y_te[:, None]
+    y_val = y_val[:, None]
 
-    return x_tr, x_te, y_tr, y_te
+    return x_tr, x_val, y_tr, y_val
 
 def pickle_data(data_path, features_in, features_out):  
     """
@@ -165,11 +205,14 @@ def pickle_data(data_path, features_in, features_out):
 
         prev_name, tgt, tgt_ed = None, None, None
         feat = []
-        check_size = set([])
+
+        letter_idx = defaultdict(int)
+        # Idx of letter in feature vector
+        idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+        for k, v in idx_tmp:
+            letter_idx[k] = v
 
         for row in tsv:
-
-            check_size.add(row[0])
 
             if prev_name is None: 
                 prev_name = row[0]
@@ -206,16 +249,15 @@ def pickle_data(data_path, features_in, features_out):
                 tgt = None
                 tgt_ext = None
 
-            feat.append(np.array([int(ri) for ri in row[4:w_chimera]])[None, :].astype(np.uint8))
+            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
+            feat[-1][0][letter_idx[row[3]]] = 1
 
             if row[0] not in name_to_id:
                 name_to_id[row[0]] = idx
                 idx += 1
 
     # Save processed data into pickle file
-    print("Total number of contigs: %d" % (len(check_size) - 2))
     print("Number of processed labels: %d" % len(target_contig_ext))
-
     with open(os.path.join(data_path, features_out), 'wb') as f:
         pickle.dump([feat_contig, target_contig, target_contig_edit, target_contig_ext, name_to_id], f)
 
