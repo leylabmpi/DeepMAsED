@@ -48,60 +48,34 @@ x, y = utils.load_features(args.data_path,
                            max_len=args.max_len,
                             mode = args.mode)
 
-#x_tr, x_val, y_tr, y_val = utils.leave_one_out(x, y, 0)
-x = [xi for xmeta in x for xi in xmeta]
-y = np.concatenate(y)
-print(len(x))
-
-dataGen = models.Generator(x, y, args.max_len, batch_size=32,  shuffle=False)
-#dataGen_tr = models.Generator(x_tr, y_tr, args.max_len, batch_size=32,  shuffle=False)
 
 # Provide objective to load
 recall_0 = utils.class_recall(0)
 recall_1 = utils.class_recall(1)
 custom_obj = {'metr' : recall_0}
 
-print("Saving ROC curves...")
 path_to_models = os.listdir(args.save_path)
-path_to_models = ['nfilter_8_nconv_3_lr_0.0001_dropout_0.5_pool_40_nhid_40_nfc_3']
+#path_to_models = ['nfilter_8_nconv_3_lr_0.0001_dropout_0.5_pool_20_nhid_20_nfc_3']
 
 for model_path in path_to_models:
-    if not os.path.exists((os.path.join(args.save_path, model_path, '0_model.h5'))):
-        continue
-    model = load_model(os.path.join(args.save_path, model_path, '0_model.h5'), 
-                       custom_objects=custom_obj)
+    print(model_path)
+    val_cv = []
 
-    score_val = model.predict_generator(dataGen)
-    #score_tr = model.predict(x_tr)
-    #score_te = model.predict(x_te)
-    print(roc_auc_score(y[0:score_val.size], score_val))
+    for i in range(5):
+        x_tr, x_val, y_tr, y_val = utils.kfold(x, y, 0)
 
-    #f_tr, t_tr, th_tr  = roc_curve(y_tr[0 : score_tr.size], score_tr)
-    f_val, t_val, th_val  = roc_curve(y[0 : score_val.size], score_val)
+        dataGen = models.Generator(x_val, y_val, args.max_len, batch_size=64,  
+                                   shuffle=False)
 
-    fig, ax = plt.subplots(1, 1, figsize=(15, 5))
-    #ax.plot(f_tr, t_tr, 'o--')
-    ax.plot(f_val, t_val, 'o--')
+        if not os.path.exists((os.path.join(args.save_path, 
+                                            model_path, str(i) + '_model.h5'))):
+            continue
 
-    # Set ticks
-    ticks = np.arange(0, 1.1, 0.2)
-    ax.set_xticks(ticks)
-    ax.set_yticks(ticks)
-    ticks = [r"$" + str(t) + "$" for t in ticks]
-    ax.set_xticklabels(ticks, fontsize=22)
-    ax.set_yticklabels(ticks, fontsize=22)
-    ax.set_xlabel(r'False positives', fontsize=22)
-    ax.set_ylabel(r'True positives', fontsize=22)
+        model = load_model(os.path.join(args.save_path, model_path, 
+                           str(i) + '_model.h5'), 
+                           custom_objects=custom_obj)
 
-    ax.grid(True, axis='y', linestyle=':')
-    ax.grid(True, axis='x', linestyle=':')
+        score_val = model.predict_generator(dataGen)
 
-    plt.legend([r'Test data'], fontsize=18, 
-                loc='lower right')
-
-    if not os.path.exists(save_plot):
-        os.makedirs(save_plot)
-
-    plt.savefig(os.path.join(save_plot, 'roc_curve' + model_path + '.pdf'), 
-                bbox_inches='tight', format='pdf', dpi=5000)
-
+        val_cv.append(roc_auc_score(y_val[0:score_val.size], score_val))
+    print(np.mean(val_cv))
