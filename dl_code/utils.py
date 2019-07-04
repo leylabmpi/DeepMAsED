@@ -57,15 +57,15 @@ def normalize(x, mean, std, max_len):
 
     return x
 
-def load_features(data_path, test_size=0.2, max_len=10000, 
-                  standard=1, mode='chimera', technology='megahit'):
+def load_features(data_path, max_len=10000, 
+                  standard=1, mode='chimera', technology='megahit', 
+                  pickle_only=False):
     """
     Loads features, pre-process them and returns training and test data. 
 
     Inputs: 
         data_path: path to directory containing features.pkl
         max_len: fixed length of contigs
-        test_size: portion of the data kept for testing
 
     Outputs:
         x, y: lists, where each element comes from one metagenome
@@ -73,13 +73,16 @@ def load_features(data_path, test_size=0.2, max_len=10000,
 
     # Pre-process once if not done already
     dirs = os.listdir(data_path)
-    for i, f in enumerate(dirs):#os.listdir(data_path):
 
+    for i, f in enumerate(dirs):#os.listdir(data_path):
         current_path = os.path.join(data_path, f, technology)
 
         if not os.path.exists(os.path.join(current_path, 'features.pkl')):
             print("Populating pickle file...")
             pickle_data(current_path, 'features.tsv.gz', 'features.pkl')
+
+    if pickle_only: 
+        exit()
 
     x, y, ye, yext, n2i = [], [], [], [], []
 
