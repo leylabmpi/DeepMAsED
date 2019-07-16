@@ -47,6 +47,8 @@ parser.add_argument('--technology', default='megahit', type=str,
                     help='Megahit or metaspades.')
 parser.add_argument('--pickle_only', default=False, type=bool, 
                     help='Only pickle files.')
+parser.add_argument('--norm_raw', default=1, type=int, 
+                    help='Whether to normalize the four one-hot feature of raw.')
 args = parser.parse_args()
 
 class Config(object):
@@ -95,8 +97,12 @@ if args.n_folds > -1:
         chi_net = models.chimera_net(config)
 
         #Construct generator
-        dataGen = models.Generator(x_tr, y_tr, args.max_len, batch_size=64)
-        dataGen_val = models.Generator(x_val, y_val, args.max_len, batch_size=64)
+        dataGen = models.Generator(x_tr, y_tr, args.max_len, batch_size=64, norm_raw=bool(args.norm_raw))
+        # Init validation generator and 
+        dataGen_val = models.Generator(x_val, y_val, args.max_len, batch_size=64, 
+                                       shuffle=False, norm_raw=bool(args.norm_raw), 
+                                       mean_tr=dataGen.mean, std_tr=dataGen.std)
+
         #x_tr, x_val, y_tr, y_val = utils.leave_one_out(x, y, 0, max_len=args.max_len)
 
         #Train model
@@ -136,7 +142,7 @@ if args.n_folds > -1:
             pickle.dump(auc_scores, f)
 
 else:
-    dataGen = models.Generator(x, y, args.max_len, batch_size=64)
+    dataGen = models.Generator(x, y, args.max_len, batch_size=64, norm_raw=bool(args.norm_raw))
     chi_net = models.chimera_net(config)
     print("Training network...")
     if config.mode in ['chimera', 'extensive']:
@@ -149,3 +155,6 @@ else:
                                   callbacks=[chi_net.reduce_lr])
     #print("Saving trained model...")
     chi_net.save(os.path.join(save_path, 'final_model.h5'))
+
+    with open(os.path.join(save_path, 'mean_std_final_model.pkl'), 'wb') as f:
+        pickle.dump([dataGen.mean, dataGen.std], f)

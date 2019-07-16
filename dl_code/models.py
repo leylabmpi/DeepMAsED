@@ -83,7 +83,8 @@ class chimera_net(object):
 
 
 class Generator(keras.utils.Sequence):
-    def __init__(self, x, y, max_len, batch_size=32, shuffle=True): 
+    def __init__(self, x, y, max_len, batch_size=32, shuffle=True, norm_raw=True,
+                 mean_tr=None, std_tr=None): 
         'Initialization'
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -93,9 +94,16 @@ class Generator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.n_feat = x[0].shape[1]
 
-        mean, std = utils.compute_mean_std(self.x)
-        self.mean = mean
-        self.std = std
+        if mean_tr is None:
+            mean, std = utils.compute_mean_std(self.x)
+            self.mean = mean
+            self.std = std
+            if not norm_raw:
+                self.mean[0:4] = 0
+                self.std[0:4] = 1
+        else:
+            self.mean = mean_tr
+            self.std = std_tr
 
         # Shuffle data
         self.indices = np.arange(len(x))
