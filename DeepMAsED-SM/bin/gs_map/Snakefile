@@ -1,0 +1,205 @@
+rule ref_genome_rename:
+    """
+    Renaming genome fasta file names & sequence headers
+    """
+    input:
+        fna = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Taxon == wildcards.genome,'Fasta'].unique().tolist()
+    output:
+        fna = config['tmp_dir'] + '{genome}.fna'
+    params:
+        exe = config['pipeline']['script_folder'] + 'rename_genome.py'
+    log:
+        log_dir + 'ref_genome_rename/{genome}.log'
+    benchmark:
+        benchmark_dir + 'ref_genome_rename/{genome}.txt'
+    shell:
+        """        
+        {params.exe} {input.fna} > {output.fna} 2> {log}
+        """
+
+localrules: symlink_reads
+
+rule symlink_reads:
+    """
+    Uncompressing reads
+    """
+    input:
+        read1 = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read1'].unique().tolist(),
+        read2 = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read2'].unique().tolist(),
+    output:
+        read1 = temp(config['tmp_dir'] + '{sample}_R1.fq.gz'),
+        read2 = temp(config['tmp_dir'] + '{sample}_R2.fq.gz')
+    log:
+        log_dir + 'symlink_reads/{sample}.log'
+    benchmark:
+        benchmark_dir + 'symlink_reads/{sample}.txt'
+    shell:
+        """
+        ln -s -f {input.read1} {output.read1} 2> {log}
+        ln -s -f {input.read2} {output.read2} 2>> {log}
+        """
+
+rule map_bowtie2_build:
+    """
+    Building bowtie2 index for each genome
+    """
+    input:
+        fna = config['tmp_dir'] + '{genome}.fna'
+    output:
+        touch(config['tmp_dir'] + '{genome}.bt2.index.done')
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt * 59,
+        n = lambda wildcards, attempt: 12,
+	mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 1
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'map_bowtie2_build/{genome}.log'
+    benchmark:
+        benchmark_dir + 'map_bowtie2_build/{genome}.log'
+    shell:
+        """
+	PREF=`echo {input.fna} | perl -pe 's/\.[^.]+$//'`
+
+        bowtie2-build --threads {threads} \
+          {input.fna} $PREF 2> {log} 1>&2
+        """
+
+rule map_bowtie2:
+    """
+    Mapping reads from origin sample to the ref genome(s)
+    """
+    input:
+        ref = config['tmp_dir'] + '{genome}.fna',
+        done = config['tmp_dir'] + '{genome}.bt2.index.done',
+        read1 = config['tmp_dir'] + '{sample}_R1.fq.gz',
+        read2 = config['tmp_dir'] + '{sample}_R2.fq.gz'
+    output:
+        bam = map_dir + '{genome}/{sample}.bam'
+    params:
+        samtools = config['params']['samtools']
+    conda:
+        '../envs/bowtie2.yaml'
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt * 59 * 12,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 2
+    log:
+        bt2 = log_dir + 'map_bowtie2/{genome}/{sample}.log',    
+        sam = log_dir + 'map_bowtie2_samtools/{genome}/{sample}.log'
+    benchmark:
+        benchmark_dir + 'map_bowtie2/{genome}/{sample}.txt'
+    shell:
+        """
+        rm -f {log.sam}
+
+	PREF=`echo {input.ref} | perl -pe 's/\.[^.]+$//'`
+        TMPDIR=`dirname {output.bam}`
+ 
+        bowtie2 -p {threads} -q --no-unal \
+          -x $PREF -1 {input.read1} -2 {input.read2} 2> {log.bt2} | \
+          samtools view {params.samtools} -h -o - 2>> {log.sam}| \
+          samtools sort -@ {threads} -T $TMPDIR -o - \
+          > {output.bam} 2>> {log.sam}
+        """
+
+rule map_bowtie2_index_bam:
+    """
+    Mapping reads from all samples to the metagenome assembly contigs
+    """
+    input:
+        bam = map_dir + '{genome}/{sample}.bam'
+    output:
+        bai = map_dir + '{genome}/{sample}.bam.bai'
+    threads:
+        8
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'map_bowtie2_index_bam/{genome}/{sample}.log'
+    benchmark:
+        benchmark_dir + 'map_bowtie2_index_bam/{genome}/{sample}.txt'
+    shell:
+        """
+        samtools index -@ {threads} {input.bam} 2> {log}
+        """
+
+rule samtools_faidx:
+    """
+    Running samtools faidx on ref genome (indexing)
+    """
+    input:
+        config['tmp_dir'] + '{genome}.fna'        
+    output:
+        config['tmp_dir'] + '{genome}.fna.fai'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 12
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'samtools_faidx/{genome}.log'
+    benchmark:
+        benchmark_dir + 'samtools_faidx/{genome}.txt'
+    shell:
+        """
+        samtools faidx {input} 2> {log} 1>&2
+        """
+
+rule bam_to_DL_features:
+    """
+    Converting bam to features
+    """
+    input:
+        ref = config['tmp_dir'] + '{genome}.fna',
+	fai = config['tmp_dir'] + '{genome}.fna.fai',
+        bam = map_dir + '{genome}/{sample}.bam',
+        bai = map_dir + '{genome}/{sample}.bam.bai'
+    output:
+        temp(config['tmp_dir'] + 'feats/{genome}/{sample}/features.tsv')
+    params:
+        exe = config['pipeline']['script_folder'] + 'bam2feat.py'
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 8,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 1
+    conda:
+        '../envs/bowtie2.yaml'
+    log:
+        log_dir + 'bam_to_DL_features/{genome}/{sample}.log'
+    benchmark:
+        benchmark_dir + 'bam_to_DL_features/{genome}/{sample}.txt'
+    shell:
+        """
+        {params.exe} -p {threads} \
+          {input.bam} {input.ref} \
+          > {output} 2> {log}
+        """
+
+rule features_compress:
+    """
+    Compressing table
+    """
+    input:
+        config['tmp_dir'] + 'feats/{genome}/{sample}/features.tsv'
+    output:
+        map_dir + '{genome}/{sample}/features.tsv.gz'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
+    log:
+        log_dir + 'features_compress/{genome}/{sample}.log'
+    benchmark:
+        benchmark_dir + 'features_compress/{genome}/{sample}.txt'
+    shell:
+        """
+        gzip -c {input} > {output} 2> {log}
+        """
+

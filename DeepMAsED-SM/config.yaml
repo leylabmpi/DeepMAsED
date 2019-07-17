@@ -1,9 +1,9 @@
 # Input
-#genomes_file: tests/data/genome_download_n50.tsv
-genomes_file: tests/data/genomes_n10.tsv
+#genomes_file: tests/data/genomes_n10.tsv
+genomes_file: tests/data/MAG-n2.tsv
 
 # Output location
-output_dir: tests/output_n10/
+output_dir: tests/output_MAG-n2/
 
 
 # software parameters

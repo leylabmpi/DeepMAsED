@@ -27,9 +27,9 @@ rule combine_ref_genomes:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + '{rep}/combine_ref_genomes.log'
+        log_dir + 'combine_ref_genomes/{rep}.log'
     benchmark:
-        benchmark_dir + '{rep}/combine_ref_genomes.txt'
+        benchmark_dir + 'combine_ref_genomes/{rep}.txt'
     shell:
         """
         OUTDIR=`dirname {output}`
@@ -60,9 +60,9 @@ rule minimap2_contigs_vs_refs:
     conda:
         '../envs/quast.yaml'
     log:
-        log_dir + '{rep}/{assembler}/minimap2.log'
+        log_dir + 'minimap2/{rep}/{assembler}.log'
     benchmark:
-        benchmark_dir + '{rep}/{assembler}/minimap2.txt'
+        benchmark_dir + 'minimap2/{rep}/{assembler}.txt'
     shell:
         """
         echo "" > {log}
@@ -82,9 +82,9 @@ rule paf_compress:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + '{rep}/{assembler}/paf_compress.log'
+        log_dir + 'paf_compress/{rep}/{assembler}.log'
     benchmark:
-        benchmark_dir + '{rep}/{assembler}/paf_compress.txt'
+        benchmark_dir + 'paf_compress/{rep}/{assembler}.txt'
     shell:
         """
         gzip -c {input} > {output} 2> {log}
@@ -103,9 +103,9 @@ rule minimap2_contigs_vs_refs_summary:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + '{rep}/{assembler}/minimap2_contigs_vs_refs_summary.log'
+        log_dir + 'minimap2_contigs_vs_refs_summary/{rep}/{assembler}.log'
     benchmark:
-        benchmark_dir + '{rep}/{assembler}/minimap2_contigs_vs_refs_summary.txt'
+        benchmark_dir + 'minimap2_contigs_vs_refs_summary/{rep}/{assembler}.txt'
     shell:
         """
         {params.exe} {input.aln} > {output} 2> {log}
@@ -134,9 +134,9 @@ rule metaquast:
     conda:
         '../envs/quast.yaml'	
     log:
-        log_dir + '{rep}/{assembler}/metaquast.log'
+        log_dir + 'metaquast/{rep}/{assembler}.log'
     benchmark:
-        benchmark_dir + '{rep}/{assembler}/metaquast.txt'
+        benchmark_dir + 'metaquast/{rep}/{assembler}.txt'
     shell:
         """
         OUTDIR=`dirname {output.done}`
@@ -159,7 +159,7 @@ rule metaquast_mis_summary_table:
     params:
         exe = config['pipeline']['script_folder'] + 'metaquast_misass_report_parse.py'
     log:
-        log_dir + '{rep}/{assembler}/metaquast_mis_summary_table.log'
+        log_dir + 'metaquast_mis_summary_table/{rep}/{assembler}.log'
     shell:
         """
         {params.exe} {input} > {output} 2> {log}

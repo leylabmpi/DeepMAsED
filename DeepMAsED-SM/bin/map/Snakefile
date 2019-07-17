@@ -67,7 +67,7 @@ rule map_bowtie2:
 
 rule map_bowtie2_index_bam:
     """
-    Mapping reads from all samples to the metagenome assembly contigs
+    Mapping reads from origin sample to the metagenome assembly contigs
     """
     input:
         bam = map_dir + '{rep}/{assembler}.bam'

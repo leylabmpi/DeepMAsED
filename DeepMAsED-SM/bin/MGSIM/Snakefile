@@ -78,9 +78,9 @@ rule MGSIM_communities:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + '{rep}/MGSIM_communities.log'
+        log_dir + 'MGSIM_communities/{rep}.log'
     benchmark:
-        benchmark_dir + '{rep}/MGSIM_communities.txt'
+        benchmark_dir + 'MGSIM_communities/{rep}.txt'
     shell:
         """       
         MGSIM communities {params.params} --n-comm 1 \
@@ -111,9 +111,9 @@ rule MGSIM_reads:
         n = lambda wildcards, attempt: 8,
         mem_gb_pt = lambda wildcards, attempt: attempt * 2
     log:
-        log_dir + '{rep}/MGSIM_reads.log'
+        log_dir + 'MGSIM_reads/{rep}.log'
     benchmark:
-        benchmark_dir + '{rep}/MGSIM_reads.txt'
+        benchmark_dir + 'MGSIM_reads/{rep}.txt'
     shell:
         """
         MGSIM reads {params.params} -n {threads} \

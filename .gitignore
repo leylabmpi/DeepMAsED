@@ -12,6 +12,10 @@ tests/output*/
 screenlog.*
 bin/misc_*
 logs/
+DeepMAsED-SM/bin/misc_r_functions/
+DeepMAsED-SM/tests/output_*
+*/archive/
+
 
 # hg
 **/.hg/

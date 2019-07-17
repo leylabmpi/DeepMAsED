@@ -20,9 +20,9 @@ rule metaSPAdes:
         mem_gb = lambda wildcards, attempt: attempt * 44,
         mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 44 / 12.0 * 1.1, 0))
     log:
-        log_dir + '{rep}/metaspades.log'
+        log_dir + 'metaspades/{rep}.log'
     benchmark:
-        benchmark_dir + '{rep}/metaspades.txt'
+        benchmark_dir + 'metaspades/{rep}.txt'
     shell:
         """
         # tmp dir
@@ -65,9 +65,9 @@ rule megahit:
         mem_bytes = lambda wildcards, attempt: int(attempt * 3.2e10),
         mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 32 / 8 * 1.1, 0))
     log:
-        log_dir + '{rep}/megahit.log'
+        log_dir + 'megahit/{rep}.log'
     benchmark:
-        benchmark_dir + '{rep}/megahit.txt'
+        benchmark_dir + 'megahit/{rep}.txt'
     shell:
         """
         OUTDIR=`dirname {output.contigs}`
@@ -104,9 +104,9 @@ rule contig_length_filter:
         time = lambda wildcards, attempt: attempt ** 2 * 60 * 6,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 + 2
     log:
-        log_dir + '{rep}/{assembler}/contig_length_filter.log',    
+        log_dir + 'contig_length_filter/{rep}/{assembler}.log',    
     benchmark:
-        benchmark_dir + '{rep}/{assembler}/contig_length_filter.txt'
+        benchmark_dir + 'contig_length_filter/{rep}/{assembler}.txt'
     shell:
         """
         {params.exe} --length {params.cutoff} {input} > {output} 2> {log}

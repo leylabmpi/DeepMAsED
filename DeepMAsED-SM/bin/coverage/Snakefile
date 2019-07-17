@@ -46,9 +46,9 @@ rule nonpareil:
         mem_mb_pt = lambda wildcards, attempt: attempt * 3000,
         mem_gb_pt = lambda wildcards, attempt: attempt * 3
     log:
-        log_dir + '{rep}/nonpareil.log'
+        log_dir + 'nonpareil/{rep}.log'
     benchmark:
-        benchmark_dir + '{rep}/nonpareil.txt'
+        benchmark_dir + 'nonpareil/{rep}.txt'
     shell:
         """
         nonpareil {params.params} \
