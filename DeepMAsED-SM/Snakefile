@@ -90,6 +90,14 @@ def all_which_input(wildcards):
         # feature table
         input_files += all_feat_tables(config['genomes_tbl'])
     else:
+        # reads
+        if config['params']['keep_reads'] == True:
+            x = expand(mgsim_dir + 'sim_reads/{rep}/Read1.fq.gz',
+                       rep = config['reps'])
+            input_files += x
+            x = expand(mgsim_dir + 'sim_reads/{rep}/Read2.fq.gz',
+                       rep = config['reps'])
+            input_files += x
         # coverage
         if not config['params']['nonpareil'].startswith('Skip'):
             x = expand(coverage_dir + '{rep}/nonpareil.npo',

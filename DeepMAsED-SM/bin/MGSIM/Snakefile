@@ -121,3 +121,34 @@ rule MGSIM_reads:
           {input.tbl} {input.wAbund} {params.out_dir} \
           2> {log} 1>&2
         """
+
+rule MGSIM_compress_read1:
+    """
+    Compressing reads
+    """
+    input:
+        config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq'
+    output:
+        mgsim_dir + 'sim_reads/{rep}/Read1.fq.gz'
+    log:
+        log_dir + 'MGSIM_compress_read1/{rep}.log'
+    shell:
+        """
+        gzip -c {input} > {output} 2> {log}
+        """
+
+rule MGSIM_compress_read2:
+    """
+    Compressing reads
+    """
+    input:
+        config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
+    output:
+        mgsim_dir + 'sim_reads/{rep}/Read2.fq.gz'
+    log:
+        log_dir + 'MGSIM_compress_read2/{rep}.log'
+    shell:
+        """
+        gzip -c {input} > {output} 2> {log}
+        """
+

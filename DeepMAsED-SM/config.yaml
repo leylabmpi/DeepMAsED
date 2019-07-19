@@ -1,9 +1,10 @@
 # Input
-#genomes_file: tests/data/genomes_n10.tsv
-genomes_file: tests/data/MAG-n2.tsv
+genomes_file: tests/data/genomes_n10.tsv
+#genomes_file: tests/data/MAG-n2.tsv
 
 # Output location
-output_dir: tests/output_MAG-n2/
+output_dir: tests/output_n10/
+#output_dir: tests/output_MAG-n2/
 
 
 # software parameters
@@ -15,6 +16,7 @@ params:
     genome_download: ""
     communities: --richness 1
     reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
+  keep_reads: False
   # coverage
   nonpareil: -T kmer
   nonpareil_summary: 1e9   # this is target seq. depth
@@ -22,8 +24,6 @@ params:
   assemblers:
     metaspades: -k auto --only-assembler
     megahit: --min-count 3 --min-contig-len 1000 --presets meta-sensitive
-    idba_ud: Skip #--mink 20 --maxk 100
-    ray: Skip 
   # assembly filtering
   contig_length_cutoff: 1000       # length in bp 
   # assessing assembly errors
@@ -32,7 +32,7 @@ params:
   # mapping reads to contigs
   samtools: ""
   # creating DL features
-  make_features: ""
+  make_features: ""  
   
 # snakemake pipeline
 pipeline:
