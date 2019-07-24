@@ -76,7 +76,7 @@ save_path = args.save_path
 
 # Load and process data
 print("Loading data...")
-x, y = utils.load_features(args.data_path,
+x, y, n2i = utils.load_features(args.data_path,
                            max_len=args.max_len,
                            standard=args.standard,
                             mode = config.mode, 
@@ -90,6 +90,10 @@ if args.n_folds == -1:
 
 
 if args.n_folds > -1:
+
+    if os.path.exists(os.path.join(save_path, str(args.n_folds - 1) + '_model.h5')):
+        exit()
+
     auc_scores = []
     for val_idx in range(args.n_folds):
         x_tr, x_val, y_tr, y_val = utils.kfold(x, y, val_idx, k=args.n_folds)
@@ -144,6 +148,9 @@ if args.n_folds > -1:
 else:
     dataGen = models.Generator(x, y, args.max_len, batch_size=64, norm_raw=bool(args.norm_raw))
     chi_net = models.chimera_net(config)
+    tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs_final'), 
+                                         histogram_freq=0, 
+                                         write_graph=True, write_images=True)
     print("Training network...")
     if config.mode in ['chimera', 'extensive']:
         w_one = int(len(np.where(y == 0)[0])  / len(np.where(y == 1)[0]))
@@ -152,7 +159,7 @@ else:
                                   epochs=args.n_epochs, 
                                   use_multiprocessing=True,
                                   verbose=2,
-                                  callbacks=[chi_net.reduce_lr])
+                                  callbacks=[tb_logs, chi_net.reduce_lr])
     #print("Saving trained model...")
     chi_net.save(os.path.join(save_path, 'final_model.h5'))
 

@@ -68,40 +68,64 @@ def load_features(data_path, max_len=10000,
         max_len: fixed length of contigs
 
     Outputs:
-        x, y: lists, where each element comes from one metagenome
+        x, y, i2n: lists, where each element comes from one metagenome, and 
+          a dictionary with idx -> (metagenome, contig_name)
     """
 
     # Pre-process once if not done already
     dirs = os.listdir(data_path)
-
     for i, f in enumerate(dirs):#os.listdir(data_path):
         current_path = os.path.join(data_path, f, technology)
 
         if not os.path.exists(os.path.join(current_path, 'features.pkl')):
+        #if True:
             print("Populating pickle file...")
-            pickle_data(current_path, 'features.tsv.gz', 'features.pkl')
+            pickle_data_b(current_path, 'features.tsv.gz', 'features_new.pkl')
 
     if pickle_only: 
         exit()
 
     x, y, ye, yext, n2i = [], [], [], [], []
-
+    shift = 0
+    i2n_all = {}
     for i, f in enumerate(dirs):
         current_path = os.path.join(data_path, f, technology)
+        with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
+            #xi, yi, yei, yexti, n2ii = pickle.load(feat)
+            xi, yi, n2ii = pickle.load(feat)
+            i2ni = reverse_dict(n2ii)
 
-        with open(os.path.join(current_path, 'features.pkl'), 'rb') as f:
-            xi, yi, yei, yexti, n2ii = pickle.load(f)
+            #if mode == 'extensive':
+            #    yi = yexti
+            
+            x_in_contig, y_in_contig = [], []
 
-            if mode == 'extensive':
-                yi = yexti
-
+            n2i_keys = set([])
             for j in range(len(xi)):
-                xi[j] = xi[j][0:max_len, 1:]
-        
+                len_contig = xi[j].shape[0]
+                #xi[j] = xi[j][0:max_len, 1:]
+
+                idx_chunk = 0
+                while idx_chunk * max_len < len_contig:
+                    chunked = xi[j][idx_chunk * max_len : (idx_chunk + 1) * max_len, 1:]
+            
+                    x_in_contig.append(chunked)
+                    y_in_contig.append(yi[j])
+
+                    i2n_all[len(x_in_contig) - 1 + shift] = (int(f), i2ni[j][0])
+                    idx_chunk += 1
+                    n2i_keys.add(i2ni[j][0])
+
             # Each element is a metagenome
-            x.append(xi)
-            yi = np.array(yi)
-            yext.append(yi)
+            x.append(x_in_contig)
+            yext.append(np.array(y_in_contig))
+
+            #Sanity check
+            assert(len(n2i_keys - set(n2ii.keys())) == 0)
+            assert(len(set(n2ii.keys()) - n2i_keys) == 0)
+
+            shift = len(i2n_all)
+
 
     #y = np.concatenate(y)
     #ye = np.concatenate(ye)
@@ -114,7 +138,7 @@ def load_features(data_path, max_len=10000,
     else:
         raise("Mode currently not supported")
 
-    return x, y
+    return x, y, i2n_all
 
 def kfold(x, y, idx_lo, k=5):
 
@@ -212,6 +236,7 @@ def pickle_data(data_path, features_in, features_out):
         letter_idx = defaultdict(int)
         # Idx of letter in feature vector
         idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+
         for k, v in idx_tmp:
             letter_idx[k] = v
 
@@ -233,9 +258,15 @@ def pickle_data(data_path, features_in, features_out):
                     tgt_ext = None
                     feat = []
                     continue
+                
+                ## add name -> idx to dict
+                if row[0] not in name_to_id:
+                    name_to_id[row[0]] = idx
+                    idx += 1
 
                 feat_contig.append(np.concatenate(feat, 0))
 
+                # add features
                 if tgt == 'FALSE':
                     target_contig.append(0)
                 else:
@@ -255,14 +286,72 @@ def pickle_data(data_path, features_in, features_out):
             feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
             feat[-1][0][letter_idx[row[3]]] = 1
 
-            if row[0] not in name_to_id:
-                name_to_id[row[0]] = idx
-                idx += 1
 
     # Save processed data into pickle file
     print("Number of processed labels: %d" % len(target_contig_ext))
     with open(os.path.join(data_path, features_out), 'wb') as f:
         pickle.dump([feat_contig, target_contig, target_contig_edit, target_contig_ext, name_to_id], f)
+
+def pickle_data_b(data_path, features_in, features_out):
+    """
+    One time function parsing the csv file and dumping the 
+    values of interest into a pickle file. 
+    """
+    feat_contig, target_contig = [], []
+    name_to_id = {}
+
+    # Dictionary for one-hot encoding
+    letter_idx = defaultdict(int)
+    # Idx of letter in feature vector
+    idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+
+    for k, v in idx_tmp:
+        letter_idx[k] = v
+
+    idx = 0
+    #Read tsv and process features
+    with gzip.open(os.path.join(data_path, features_in), 'rt') as f:
+
+        tsv = csv.reader(f, delimiter='\t')
+        col_names = next(tsv)
+
+        w_ext = col_names.index('Extensive_misassembly')
+        w_chimera = col_names.index('chimeric')
+
+        for row in tsv:
+            name_contig = row[0]
+
+            # If name not in set, add previous contig and target to dataset
+            if name_contig not in name_to_id:
+                if idx != 0:
+                    feat_contig.append(np.concatenate(feat, 0))
+                    target_contig.append(float(tgt))
+
+                feat = []
+               
+                #Set target
+                tgt = row[w_ext]
+                if tgt == '':
+                    tgt = 0
+                else:
+                    tgt = 1
+
+                name_to_id[name_contig] = idx
+                idx += 1
+
+            # Feature vec
+            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
+            feat[-1][0][letter_idx[row[3]]] = 1
+
+    # Append last
+    feat_contig.append(np.concatenate(feat, 0))
+    target_contig.append(float(tgt))
+
+    assert(len(feat_contig) == len(name_to_id))
+
+    # Save processed data into pickle file
+    with open(os.path.join(data_path, features_out), 'wb') as f:
+        pickle.dump([feat_contig, target_contig, name_to_id], f)
 
 def class_recall(label):
     """
@@ -286,3 +375,18 @@ def explained_var(y_true, y_pred):
 
     """
     return 1  - K.mean((y_true - y_pred) ** 2) / K.var(y_true)
+
+def reverse_dict(d):
+
+    r_d = {}
+    for k, v in d.items():
+        if v not in r_d:
+            r_d[v] = [k]
+        else:
+            r_d[v].append(k)
+    return r_d
+
+
+
+
+

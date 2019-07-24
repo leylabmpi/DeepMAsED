@@ -23,19 +23,13 @@ parser.add_argument('--data_path', default='data', type=str,
                     help='Where to find feature table.')
 parser.add_argument('--save_path', default='model', type=str, 
                     help='Where to save training weights and logs.')
-parser.add_argument('--save_plot', default=None, type=str, 
-                    help='Where to save plots. Defaults to save_path if None.')
 parser.add_argument('--max_len', default=10000, type=int, 
                     help='Max contig len, fixed input for CNN.')
-parser.add_argument('--test_size', default=0.3, type=float, 
-                    help='Size of test set.')
 parser.add_argument('--mode', default='chimera', type=str, 
                     help='Chimera or edit distance.')
 args = parser.parse_args()
 
-save_plot = args.save_plot
-if save_plot is None:
-    save_plot = args.save_path
+n_folds = 5
 
 # Load and process data
 print("Loading data...")
@@ -44,7 +38,6 @@ print("Loading data...")
 #                                             mode=args.mode)
 
 x, y = utils.load_features(args.data_path,
-                           test_size=args.test_size, 
                            max_len=args.max_len,
                             mode = args.mode)
 
@@ -61,8 +54,8 @@ for model_path in path_to_models:
     print(model_path)
     val_cv = []
 
-    for i in range(5):
-        x_tr, x_val, y_tr, y_val = utils.kfold(x, y, 0)
+    for i in range(n_folds):
+        x_tr, x_val, y_tr, y_val = utils.kfold(x, y, i)
 
         dataGen = models.Generator(x_val, y_val, args.max_len, batch_size=64,  
                                    shuffle=False)
@@ -78,4 +71,8 @@ for model_path in path_to_models:
         score_val = model.predict_generator(dataGen)
 
         val_cv.append(roc_auc_score(y_val[0:score_val.size], score_val))
-    print(np.mean(val_cv))
+
+    with open(os.path.join(args.save_path, model_path, 'cv_scores.txt'), 'w') as auc:
+        auc.write(' '.join([str(v) for v in val_cv]) + '\n')
+        auc.write(str(np.mean(val_cv)))
+
