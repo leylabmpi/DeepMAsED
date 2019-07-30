@@ -169,7 +169,7 @@ rule bam_to_DL_features:
         12
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 60 * 8,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 1
+        mem_gb_pt = lambda wildcards, attempt: int(round(attempt ** 2.5 * 2 + 1, 0))
     conda:
         '../envs/bowtie2.yaml'
     log:

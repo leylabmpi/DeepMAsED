@@ -15,7 +15,8 @@ logs/
 DeepMAsED-SM/bin/misc_r_functions/
 DeepMAsED-SM/tests/output_*
 */archive/
-
+.RData
+.future
 
 # hg
 **/.hg/
