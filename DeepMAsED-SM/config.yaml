@@ -14,7 +14,7 @@ params:
   reps: 2
   MGSIM:
     genome_download: ""
-    communities: --richness 1
+    communities: --richness 1 #--shared-perc 80 --perm-perc 100
     reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
   keep_reads: False
   # coverage
