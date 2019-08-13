@@ -30,6 +30,8 @@ parser.add_argument('--technology', default='megahit', type=str,
                     help='Megahit or Metaspades.')
 parser.add_argument('--norm_raw', default=1, type=int, 
                     help='Whether to normalize the four one-hot feature of raw.')
+parser.add_argument('--is_synthetic', default=1, type=int, 
+                    help='Whether the data is synthetic and thus has ground truth.')
 args = parser.parse_args()
 
 
@@ -82,8 +84,8 @@ recall_1 = utils.class_recall(1)
 custom_obj = {'metr' : recall_0}
 
 path_to_models = os.listdir(args.save_path)
-fig, ax = plt.subplots(1, 1, figsize=(15, 5))
 auc = []
+
 for model_path in path_to_models:
     if not os.path.exists((os.path.join(args.save_path, model_path, 'final_model.h5'))):
         continue
@@ -104,14 +106,22 @@ for model_path in path_to_models:
     model = load_model(os.path.join(args.save_path, model_path, 'final_model.h5'), 
                        custom_objects=custom_obj)
 
+    print(model.summary())
+    exit()
+
     tech = args.technology
         
     print("Loading data...")
+    if args.is_synthetic == 1:
+        x, y, i2n = utils.load_features(args.data_path,
+                                   max_len=args.max_len,
+                                    mode = args.mode, 
+                                    technology=tech)
+    else:
+        x, y, i2n = utils.load_features_nogt(args.data_path,
+                                       max_len=args.max_len,
+                                        mode = args.mode)
 
-    x, y, i2n = utils.load_features(args.data_path,
-                               max_len=args.max_len,
-                                mode = args.mode, 
-                                technology=tech)
     print("Loaded %d contigs..." % len(set(i2n.values())))
 
     n2i = utils.reverse_dict(i2n)
@@ -132,4 +142,4 @@ for model_path in path_to_models:
     with open(os.path.join(args.save_path, model_path, 'predictions', 
                            args.data_path.split('/')[-1],  tech + '.pkl'), 'wb') as spred:
         pickle.dump(scores, spred) 
-    
+   

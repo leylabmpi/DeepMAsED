@@ -1,6 +1,5 @@
 import _pickle as pickle
 import os 
-import keras
 from keras import backend as K
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -57,6 +56,82 @@ def normalize(x, mean, std, max_len):
 
     return x
 
+def load_features_tr(data_path, max_len=10000, 
+                  standard=1, mode='chimera', 
+                  pickle_only=False):
+    """
+    Loads features, pre-process them and returns training and test data. 
+
+    Inputs: 
+        data_path: path to directory containing features.pkl
+        max_len: fixed length of contigs
+
+    Outputs:
+        x, y: lists, where each element comes from one metagenome, and 
+          a dictionary with idx -> (metagenome, contig_name)
+    """
+
+    # Pre-process once if not done already
+    dirs = os.listdir(data_path)
+    for i, f in enumerate(dirs):#os.listdir(data_path):
+        for technology in ['megahit', 'metaspades']:
+            current_path = os.path.join(data_path, f, technology)
+
+            if not os.path.exists(os.path.join(current_path, 'features.pkl')):
+            #if True:
+                print("Populating pickle file...")
+                pickle_data_b(current_path, 'features.tsv.gz', 'features_new.pkl')
+
+    if pickle_only: 
+        exit()
+
+    x, y, ye, yext, n2i = [], [], [], [], []
+    i2n_all = {}
+    for i, f in enumerate(dirs):
+        xtech, ytech = [], []
+        for tech in ['megahit', 'metaspades']:
+            current_path = os.path.join(data_path, f, tech)
+            with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
+                #xi, yi, yei, yexti, n2ii = pickle.load(feat)
+                xi, yi, n2ii = pickle.load(feat)
+                xtech.append(xi)
+                ytech.append(yi)
+
+        x_in_contig, y_in_contig = [], []
+        
+        for xi, yi in zip(xtech, ytech):
+            for j in range(len(xi)):
+                len_contig = xi[j].shape[0]
+                #xi[j] = xi[j][0:max_len, 1:]
+
+                idx_chunk = 0
+                while idx_chunk * max_len < len_contig:
+                    chunked = xi[j][idx_chunk * max_len : (idx_chunk + 1) * max_len, 1:]
+            
+                    x_in_contig.append(chunked)
+                    y_in_contig.append(yi[j])
+
+                    idx_chunk += 1
+
+        # Each element is a metagenome
+        x.append(x_in_contig)
+        yext.append(np.array(y_in_contig))
+
+
+    #y = np.concatenate(y)
+    #ye = np.concatenate(ye)
+    #yext = np.concatenate(yext)
+
+    if mode == 'edit':
+        y = 100 * np.array(ye)
+    elif mode == 'extensive':
+        y = yext
+    else:
+        raise("Mode currently not supported")
+
+    return x, y
+
+
 def load_features(data_path, max_len=10000, 
                   standard=1, mode='chimera', technology='megahit', 
                   pickle_only=False):
@@ -92,7 +167,108 @@ def load_features(data_path, max_len=10000,
         current_path = os.path.join(data_path, f, technology)
         with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
             #xi, yi, yei, yexti, n2ii = pickle.load(feat)
-            xi, yi, n2ii = pickle.load(feat)
+            features = pickle.load(feat)
+
+        xi, yi, n2ii = features
+        
+        i2ni = reverse_dict(n2ii)
+
+        #if mode == 'extensive':
+        #    yi = yexti
+        
+        x_in_contig, y_in_contig = [], []
+
+        n2i_keys = set([])
+        for j in range(len(xi)):
+            len_contig = xi[j].shape[0]
+            #xi[j] = xi[j][0:max_len, 1:]
+
+            idx_chunk = 0
+            while idx_chunk * max_len < len_contig:
+                chunked = xi[j][idx_chunk * max_len : (idx_chunk + 1) * max_len, 1:]
+        
+                x_in_contig.append(chunked)
+                y_in_contig.append(yi[j])
+
+                i2n_all[len(x_in_contig) - 1 + shift] = (int(f), i2ni[j][0])
+                idx_chunk += 1
+                n2i_keys.add(i2ni[j][0])
+
+        # Each element is a metagenome
+        x.append(x_in_contig)
+        yext.append(np.array(y_in_contig))
+
+        #Sanity check
+        assert(len(n2i_keys - set(n2ii.keys())) == 0)
+        assert(len(set(n2ii.keys()) - n2i_keys) == 0)
+
+        shift = len(i2n_all)
+
+
+    #y = np.concatenate(y)
+    #ye = np.concatenate(ye)
+    #yext = np.concatenate(yext)
+
+    if mode == 'edit':
+        y = 100 * np.array(ye)
+    elif mode == 'extensive':
+        y = yext
+    else:
+        raise("Mode currently not supported")
+
+    return x, y, i2n_all
+
+
+def load_features_nogt(data_path, max_len=10000, 
+                      mode='extensive', 
+                      pickle_only=False):
+    """
+    Loads features, pre-process them and returns training and test data. 
+
+    Inputs: 
+        data_path: path to directory containing features.pkl
+        max_len: fixed length of contigs
+
+    Outputs:
+        x, y, i2n: lists, where each element comes from one metagenome, and 
+          a dictionary with idx -> (metagenome, contig_name)
+    """
+
+    # Pre-process once if not done already
+    dirs = os.listdir(data_path)
+    for i, f in enumerate(dirs):#os.listdir(data_path):
+        for g in os.listdir(os.path.join(data_path, f)):
+            current_path = os.path.join(data_path, f, g)
+            if not os.path.isdir(current_path):
+                continue
+
+            if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
+            #if True:
+                print("Skipping, empty file...")
+                continue
+                pickle_data_feat_only(current_path, 'features.tsv.gz', 'features_new.pkl')
+
+    if pickle_only: 
+        exit()
+
+    x, y, ye, yext, n2i = [], [], [], [], []
+    shift = 0
+    i2n_all = {}
+
+    idx_coverage = -2
+    for i, f in enumerate(dirs):
+        for g in os.listdir(os.path.join(data_path, f)):
+            current_path = os.path.join(data_path, f, g)
+            if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
+                continue
+            with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
+                #xi, yi, yei, yexti, n2ii = pickle.load(feat)
+                features = pickle.load(feat)
+
+            # If no ground truth available
+            xi, n2ii = features
+            yi = [-1 for i in range(len(xi))]
+            
             i2ni = reverse_dict(n2ii)
 
             #if mode == 'extensive':
@@ -104,6 +280,10 @@ def load_features(data_path, max_len=10000,
             for j in range(len(xi)):
                 len_contig = xi[j].shape[0]
                 #xi[j] = xi[j][0:max_len, 1:]
+                
+                #Filter low coverage
+                if np.amin(xi[j][:, idx_coverage]) == 0:
+                    continue
 
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
@@ -112,17 +292,18 @@ def load_features(data_path, max_len=10000,
                     x_in_contig.append(chunked)
                     y_in_contig.append(yi[j])
 
-                    i2n_all[len(x_in_contig) - 1 + shift] = (int(f), i2ni[j][0])
+                    i2n_all[len(x_in_contig) - 1 + shift] = (f, i2ni[j][0])
                     idx_chunk += 1
                     n2i_keys.add(i2ni[j][0])
+
 
             # Each element is a metagenome
             x.append(x_in_contig)
             yext.append(np.array(y_in_contig))
 
             #Sanity check
-            assert(len(n2i_keys - set(n2ii.keys())) == 0)
-            assert(len(set(n2ii.keys()) - n2i_keys) == 0)
+            #assert(len(n2i_keys - set(n2ii.keys())) == 0)
+            #assert(len(set(n2ii.keys()) - n2i_keys) == 0)
 
             shift = len(i2n_all)
 
@@ -139,6 +320,11 @@ def load_features(data_path, max_len=10000,
         raise("Mode currently not supported")
 
     return x, y, i2n_all
+
+
+
+
+
 
 def kfold(x, y, idx_lo, k=5):
 
@@ -352,6 +538,59 @@ def pickle_data_b(data_path, features_in, features_out):
     # Save processed data into pickle file
     with open(os.path.join(data_path, features_out), 'wb') as f:
         pickle.dump([feat_contig, target_contig, name_to_id], f)
+
+
+def pickle_data_feat_only(data_path, features_in, features_out):
+    """
+    One time function parsing the csv file and dumping the 
+    values of interest into a pickle file. 
+
+    No target info, only features (for test without ground truth)
+    """
+    feat_contig = []
+    name_to_id = {}
+
+    # Dictionary for one-hot encoding
+    letter_idx = defaultdict(int)
+    # Idx of letter in feature vector
+    idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+
+    for k, v in idx_tmp:
+        letter_idx[k] = v
+
+    idx = 0
+    #Read tsv and process features
+    with gzip.open(os.path.join(data_path, features_in), 'rt') as f:
+
+        tsv = csv.reader(f, delimiter='\t')
+        col_names = next(tsv)
+
+        w_sec = col_names.index('num_secondary')
+
+        for row in tsv:
+            name_contig = row[1]
+
+            # If name not in set, add previous contig and target to dataset
+            if name_contig not in name_to_id:
+                if idx != 0:
+                    feat_contig.append(np.concatenate(feat, 0))
+
+                feat = []
+                name_to_id[name_contig] = idx
+                idx += 1
+
+            # Feature vec
+            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_sec - 1)]])[None, :].astype(np.uint8))
+            feat[-1][0][letter_idx[row[3]]] = 1
+
+    # Append last
+    feat_contig.append(np.concatenate(feat, 0))
+
+    assert(len(feat_contig) == len(name_to_id))
+
+    # Save processed data into pickle file
+    with open(os.path.join(data_path, features_out), 'wb') as f:
+        pickle.dump([feat_contig, name_to_id], f)
 
 def class_recall(label):
     """

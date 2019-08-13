@@ -6,7 +6,7 @@ from keras.layers import MaxPooling2D, Dropout
 from keras.layers import Conv2D, Flatten
 import utils
 
-class chimera_net(object):
+class deepmased(object):
     """
     Implements a convolutional network for chimera prediction. 
     """
@@ -26,9 +26,9 @@ class chimera_net(object):
 
         self.net = Sequential()
 
-        self.net.add(Conv2D(filters, kernel_size=(2, 7), 
-                            input_shape=(max_len, n_features, 1), 
-                            activation='relu', padding='same'))
+        self.net.add(Conv2D(filters, kernel_size=(2, n_features), 
+                            input_shape=(max_len, n_features, 1),
+                            activation='relu', padding='valid'))
         self.net.add(BatchNormalization(axis=-1))
 
         for i in range(1, n_conv):
