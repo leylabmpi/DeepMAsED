@@ -98,12 +98,12 @@ if args.n_folds > -1:
 
         #Construct generator
         dataGen = models.Generator(x_tr, y_tr, args.max_len, batch_size=64, norm_raw=bool(args.norm_raw))
+
         # Init validation generator and 
         dataGen_val = models.Generator(x_val, y_val, args.max_len, batch_size=64, 
                                        shuffle=False, norm_raw=bool(args.norm_raw), 
                                        mean_tr=dataGen.mean, std_tr=dataGen.std)
 
-        #x_tr, x_val, y_tr, y_val = utils.leave_one_out(x, y, 0, max_len=args.max_len)
 
         #Train model
         tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs'), 
@@ -119,11 +119,6 @@ if args.n_folds > -1:
                                       use_multiprocessing=True,
                                       verbose=2,
                                       callbacks=[tb_logs, deepmased.reduce_lr])
-            #exit()
-            #deepmased.net.fit(x_tr, y_tr, validation_data=(x_te, y_te), epochs=args.n_epochs, 
-            #               class_weight=class_weight, 
-            #               callbacks=[tb_logs, deepmased.reduce_lr])
-
         elif config.mode == 'edit':
             st = StandardScaler()
             y_tr = st.fit_transform(y_tr)
@@ -135,7 +130,6 @@ if args.n_folds > -1:
 
         ap_scores.append(average_precision_score(y_val[0 : scores_val.size], scores_val))
 
-        #print("Saving trained model...")
         deepmased.save(os.path.join(save_path, str(val_idx) + '_model.h5'))
 
         with open(os.path.join(save_path, 'scores.pkl'), 'wb') as f:
@@ -156,6 +150,7 @@ else:
                                   use_multiprocessing=True,
                                   verbose=2,
                                   callbacks=[tb_logs, deepmased.reduce_lr])
+
     #print("Saving trained model...")
     deepmased.save(os.path.join(save_path, 'final_model.h5'))
 

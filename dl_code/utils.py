@@ -57,10 +57,11 @@ def normalize(x, mean, std, max_len):
     return x
 
 def load_features_tr(data_path, max_len=10000, 
-                  standard=1, mode='chimera', 
+                  standard=1, mode='extensive', 
                   pickle_only=False):
     """
-    Loads features, pre-process them and returns training and test data. 
+    Loads features, pre-process them and returns training. 
+    Fuses data from both assemblers. 
 
     Inputs: 
         data_path: path to directory containing features.pkl
@@ -92,7 +93,6 @@ def load_features_tr(data_path, max_len=10000,
         for tech in ['megahit', 'metaspades']:
             current_path = os.path.join(data_path, f, tech)
             with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
-                #xi, yi, yei, yexti, n2ii = pickle.load(feat)
                 xi, yi, n2ii = pickle.load(feat)
                 xtech.append(xi)
                 ytech.append(yi)
@@ -102,7 +102,6 @@ def load_features_tr(data_path, max_len=10000,
         for xi, yi in zip(xtech, ytech):
             for j in range(len(xi)):
                 len_contig = xi[j].shape[0]
-                #xi[j] = xi[j][0:max_len, 1:]
 
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
@@ -117,11 +116,6 @@ def load_features_tr(data_path, max_len=10000,
         x.append(x_in_contig)
         yext.append(np.array(y_in_contig))
 
-
-    #y = np.concatenate(y)
-    #ye = np.concatenate(ye)
-    #yext = np.concatenate(yext)
-
     if mode == 'edit':
         y = 100 * np.array(ye)
     elif mode == 'extensive':
@@ -133,14 +127,17 @@ def load_features_tr(data_path, max_len=10000,
 
 
 def load_features(data_path, max_len=10000, 
-                  standard=1, mode='chimera', technology='megahit', 
+                  standard=1, mode='extensive', technology='megahit', 
                   pickle_only=False):
     """
-    Loads features, pre-process them and returns training and test data. 
+    Loads features, pre-process them and returns validation data. 
 
     Inputs: 
         data_path: path to directory containing features.pkl
         max_len: fixed length of contigs
+        standard: whether to standardise features.
+        technology: assembler, megahit or metaspades.
+        pickle_only: only perform pickling prior to testing. One time call. 
 
     Outputs:
         x, y, i2n: lists, where each element comes from one metagenome, and 
@@ -166,7 +163,6 @@ def load_features(data_path, max_len=10000,
     for i, f in enumerate(dirs):
         current_path = os.path.join(data_path, f, technology)
         with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
-            #xi, yi, yei, yexti, n2ii = pickle.load(feat)
             features = pickle.load(feat)
 
         xi, yi, n2ii = features
@@ -181,7 +177,6 @@ def load_features(data_path, max_len=10000,
         n2i_keys = set([])
         for j in range(len(xi)):
             len_contig = xi[j].shape[0]
-            #xi[j] = xi[j][0:max_len, 1:]
 
             idx_chunk = 0
             while idx_chunk * max_len < len_contig:
@@ -204,11 +199,6 @@ def load_features(data_path, max_len=10000,
 
         shift = len(i2n_all)
 
-
-    #y = np.concatenate(y)
-    #ye = np.concatenate(ye)
-    #yext = np.concatenate(yext)
-
     if mode == 'edit':
         y = 100 * np.array(ye)
     elif mode == 'extensive':
@@ -223,7 +213,7 @@ def load_features_nogt(data_path, max_len=10000,
                       mode='extensive', 
                       pickle_only=False):
     """
-    Loads features, pre-process them and returns training and test data. 
+    Loads features for real datasets. Filters contigs with low coverage. 
 
     Inputs: 
         data_path: path to directory containing features.pkl
@@ -243,7 +233,6 @@ def load_features_nogt(data_path, max_len=10000,
                 continue
 
             if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
-            #if True:
                 print("Skipping, empty file...")
                 continue
                 pickle_data_feat_only(current_path, 'features.tsv.gz', 'features_new.pkl')
@@ -262,24 +251,18 @@ def load_features_nogt(data_path, max_len=10000,
             if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
                 continue
             with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
-                #xi, yi, yei, yexti, n2ii = pickle.load(feat)
                 features = pickle.load(feat)
 
-            # If no ground truth available
             xi, n2ii = features
             yi = [-1 for i in range(len(xi))]
             
             i2ni = reverse_dict(n2ii)
 
-            #if mode == 'extensive':
-            #    yi = yexti
-            
             x_in_contig, y_in_contig = [], []
 
             n2i_keys = set([])
             for j in range(len(xi)):
                 len_contig = xi[j].shape[0]
-                #xi[j] = xi[j][0:max_len, 1:]
                 
                 #Filter low coverage
                 if np.amin(xi[j][:, idx_coverage]) == 0:
@@ -301,16 +284,7 @@ def load_features_nogt(data_path, max_len=10000,
             x.append(x_in_contig)
             yext.append(np.array(y_in_contig))
 
-            #Sanity check
-            #assert(len(n2i_keys - set(n2ii.keys())) == 0)
-            #assert(len(set(n2ii.keys()) - n2i_keys) == 0)
-
             shift = len(i2n_all)
-
-
-    #y = np.concatenate(y)
-    #ye = np.concatenate(ye)
-    #yext = np.concatenate(yext)
 
     if mode == 'edit':
         y = 100 * np.array(ye)
@@ -320,10 +294,6 @@ def load_features_nogt(data_path, max_len=10000,
         raise("Mode currently not supported")
 
     return x, y, i2n_all
-
-
-
-
 
 
 def kfold(x, y, idx_lo, k=5):
@@ -349,139 +319,12 @@ def kfold(x, y, idx_lo, k=5):
 
     return x_tr, x_val, y_tr, y_val
 
-def leave_one_out(x, y, idx_lo):
-
-    # Define validation data
-    x_val, y_val = x[idx_lo], y[idx_lo]
-    x_tr, y_tr = [], []
-
-    for i, xi in enumerate(x):
-        if i == idx_lo:
-            continue
-        x_tr = x_tr + xi
-        y_tr.append(y[i])
-
-    y_tr = np.concatenate(y_tr)
-
-    return x_tr, x_val, y_tr, y_val
-
-    #Split in train/test
-    """
-    n_ex = len(x_tr)
-    idx = np.arange(n_ex)
-    np.random.shuffle(idx)
-    test_idx = idx[0:int(test_size * n_ex)]
-    train_idx = idx[int(test_size * n_ex):]
-
-    x_tr, y_tr, x_te, y_te = [], [], [], []
-    for i in train_idx:
-        x_tr.append(x[i])
-        y_tr.append(y[i])
-    for i in test_idx:
-        x_te.append(x[i])
-        y_te.append(y[i])
-
-    y_tr = np.array(y_tr)
-    y_te = np.array(y_te)
-    """
-    #Compute normalization (mean and std)
-    mean, std = compute_mean_std(x_tr)
-
-    #Normalize
-    x_tr = normalize(x_tr, mean, std, max_len)[:, :,1:]
-    x_val = normalize(x_val, mean, std, max_len)[:, :, 1:]
-
-    y_tr = y_tr[:, None]
-    y_val = y_val[:, None]
-
-    return x_tr, x_val, y_tr, y_val
-
-def pickle_data(data_path, features_in, features_out):  
-    """
-    One time function parsing the csv file and dumping the 
-    values of interest into a pickle file. 
-    """
-    feat_contig, target_contig, target_contig_edit = [], [], []
-    target_contig_ext = []
-    name_to_id = {}
-
-    idx = 0
-    #Read tsv and process features
-    with gzip.open(os.path.join(data_path, features_in), 'rt') as f:
-
-        tsv = csv.reader(f, delimiter='\t')
-        col_names = next(tsv)
-
-        w_chimera = col_names.index('chimeric')
-        w_edit = col_names.index('edit_dist_norm')
-        w_ext = col_names.index('Extensive_misassembly')
-
-        prev_name, tgt, tgt_ed = None, None, None
-        feat = []
-
-        letter_idx = defaultdict(int)
-        # Idx of letter in feature vector
-        idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
-
-        for k, v in idx_tmp:
-            letter_idx[k] = v
-
-        for row in tsv:
-
-            if prev_name is None: 
-                prev_name = row[0]
-            if tgt is None: 
-                tgt = row[w_chimera]
-                tgt_ed = row[w_edit]
-                tgt_ext = row[w_ext]
-
-            if row[0] != prev_name:
-
-                prev_name = row[0]
-                if tgt == '':
-                    tgt = None
-                    tgt_edit = None
-                    tgt_ext = None
-                    feat = []
-                    continue
-                
-                ## add name -> idx to dict
-                if row[0] not in name_to_id:
-                    name_to_id[row[0]] = idx
-                    idx += 1
-
-                feat_contig.append(np.concatenate(feat, 0))
-
-                # add features
-                if tgt == 'FALSE':
-                    target_contig.append(0)
-                else:
-                    target_contig.append(1)
-
-                target_contig_edit.append(float(tgt_ed))
-
-                if tgt_ext == '':
-                    target_contig_ext.append(0)
-                else:
-                    target_contig_ext.append(1)
-
-                feat = []
-                tgt = None
-                tgt_ext = None
-
-            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
-            feat[-1][0][letter_idx[row[3]]] = 1
-
-
-    # Save processed data into pickle file
-    print("Number of processed labels: %d" % len(target_contig_ext))
-    with open(os.path.join(data_path, features_out), 'wb') as f:
-        pickle.dump([feat_contig, target_contig, target_contig_edit, target_contig_ext, name_to_id], f)
 
 def pickle_data_b(data_path, features_in, features_out):
     """
     One time function parsing the csv file and dumping the 
     values of interest into a pickle file. 
+
     """
     feat_contig, target_contig = [], []
     name_to_id = {}

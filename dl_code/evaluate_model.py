@@ -77,7 +77,6 @@ if save_plot is None:
 
 
 # Load and process data
-#dataGen_tr = models.Generator(x_tr, y_tr, args.max_len, batch_size=32,  shuffle=False)
 # Provide objective to load
 recall_0 = utils.class_recall(0)
 recall_1 = utils.class_recall(1)
@@ -106,9 +105,6 @@ for model_path in path_to_models:
     model = load_model(os.path.join(args.save_path, model_path, 'final_model.h5'), 
                        custom_objects=custom_obj)
 
-    print(model.summary())
-    exit()
-
     tech = args.technology
         
     print("Loading data...")
@@ -131,10 +127,7 @@ for model_path in path_to_models:
     dataGen = models.Generator(x, y, args.max_len, batch_size=64,  shuffle=False, 
                                norm_raw=bool(args.norm_raw),
                                mean_tr=mean_tr, std_tr=std_tr)
-    #dataGen.mean = mean_tr
-    #dataGen.std = std_tr
 
-    
     print("Computing predictions for " + tech + " ...")
 
     scores = compute_predictions(y, n2i)
