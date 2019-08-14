@@ -1,3 +1,4 @@
+import numpy as np
 import keras
 from keras.models import Model, Sequential
 from keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
@@ -5,7 +6,7 @@ from keras.layers import MaxPooling2D, Dropout
 from keras.layers import Conv2D, Flatten
 import utils
 
-class chimera_net(object):
+class deepmased(object):
     """
     Implements a convolutional network for chimera prediction. 
     """
@@ -20,12 +21,14 @@ class chimera_net(object):
         dropout = config.dropout
         lr_init = config.lr_init
         mode = config.mode
+        n_fc = config.n_fc
+        n_hid = config.n_hid
 
         self.net = Sequential()
 
-        self.net.add(Conv2D(filters, kernel_size=(2, 9), 
-                            input_shape=(max_len, n_features, 1), 
-                            activation='relu', padding='same'))
+        self.net.add(Conv2D(filters, kernel_size=(2, n_features), 
+                            input_shape=(max_len, n_features, 1),
+                            activation='relu', padding='valid'))
         self.net.add(BatchNormalization(axis=-1))
 
         for i in range(1, n_conv):
@@ -41,6 +44,10 @@ class chimera_net(object):
         optimizer = keras.optimizers.adam(lr=lr_init)
 
         if mode in ['chimera', 'extensive']:
+            for _ in range(n_fc - 1):
+                self.net.add(Dense(n_hid, activation='relu'))
+                self.net.add(Dropout(rate=dropout))
+
             self.net.add(Dense(1, activation='sigmoid'))
             self.net.add(Dropout(rate=dropout))
 
@@ -65,8 +72,88 @@ class chimera_net(object):
     def predict(self, x):
         return self.net.predict(x)
 
+    def predict_generator(self, x):
+        return self.net.predict_generator(x)
+
     def print_summary(self):
         print(self.net.summary())
 
     def save(self, path):
         self.net.save(path)
+
+
+class Generator(keras.utils.Sequence):
+    def __init__(self, x, y, max_len, batch_size=32, shuffle=True, norm_raw=True,
+                 mean_tr=None, std_tr=None): 
+        'Initialization'
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.max_len = max_len
+        self.x = x
+        self.y = y
+        self.shuffle = shuffle
+        self.n_feat = x[0].shape[1]
+
+        if mean_tr is None:
+            mean, std = utils.compute_mean_std(self.x)
+            self.mean = mean
+            self.std = std
+            if not norm_raw:
+                self.mean[0:4] = 0
+                self.std[0:4] = 1
+        else:
+            self.mean = mean_tr
+            self.std = std_tr
+
+        # Shuffle data
+        self.indices = np.arange(len(x))
+        if self.shuffle: 
+            np.random.shuffle(self.indices)
+
+        self.on_epoch_end()
+
+    def on_epoch_end(self):
+        """
+        Reshuffle when epoch ends 
+        """
+        if self.shuffle: 
+            np.random.shuffle(self.indices)
+
+
+    def generate(self, indices_tmp):
+        """
+        Generate new mini-batch
+        """
+
+        x_mb = np.zeros((self.batch_size, self.max_len, self.n_feat, 1))
+        y_mb = np.zeros((self.batch_size, 1))
+
+        for i, idx in enumerate(indices_tmp):
+            x_mb[i, 0:self.x[idx].shape[0]] = np.expand_dims(
+              (self.x[idx] - self.mean) / self.std, -1)
+            y_mb[i] = self.y[idx]
+
+        return x_mb, y_mb
+
+    def __len__(self):
+        return int(np.floor(len(self.indices) / self.batch_size))
+
+    def __getitem__(self, index):
+        """
+        Get new mb
+        """
+        indices_tmp = \
+          self.indices[self.batch_size * index : self.batch_size * (index + 1)]
+        x_mb, y_mb = self.generate(indices_tmp)
+        return x_mb, y_mb
+
+
+
+            
+
+
+
+
+
+
+

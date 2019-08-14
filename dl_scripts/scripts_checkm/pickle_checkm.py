@@ -1,0 +1,34 @@
+import csv
+import os
+import _pickle as pickle
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--checkm_path', default='data', type=str, 
+                    help='Where to find checkM csv.')
+args = parser.parse_args()
+
+if 'Almeida' in args.checkm_path:
+    idx_complete = 1
+    idx_contam = 2
+    delim = '\t'
+elif 'Pasolli' in args.checkm_path:
+    idx_complete = 7
+    idx_contam = 8
+    delim = ';'
+
+checkm = {}
+
+with open(args.checkm_path, 'r') as f:
+    csv_it = csv.reader(f, delimiter=delim)
+    next(csv_it)
+
+    for line in csv_it:
+        name = line[0].replace('.', '_')
+        checkm[name] = {'comp' : float(line[idx_complete].replace(',', '.')), 
+                        'cont' : float(line[idx_contam].replace(',', '.'))}
+
+with open(os.path.join('/'.join(args.checkm_path.split('/')[:-1]), 'checkm_parsed.pkl'), 'wb') as f:
+    pickle.dump(checkm, f)
+
+

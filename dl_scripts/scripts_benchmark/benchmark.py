@@ -11,6 +11,8 @@ import _pickle as pickle
 import models
 import utils
 
+import time
+
 import os
 
 np.random.seed(12)
@@ -35,48 +37,13 @@ parser.add_argument('--is_synthetic', default=1, type=int,
 args = parser.parse_args()
 
 
-def compute_predictions(y, n2i):
-    """
-    Computes predictions for a model and generator, aggregating scores for long contigs.
-
-    Inputs: 
-        n2i: dictionary with contig_name -> list of idx corresponding to that contig.
-    Output:
-        score_agg: scores for individual contigs
-        y_agg: corresponding true labels
-    """
-
-    score_val = model.predict_generator(dataGen)
-
-    # Compute predictions by aggregating scores for longer contigs
-    score_val = score_val.flatten()
-    scores = {}
-    for k in n2i:
-        inf = n2i[k][0]
-        sup = n2i[k][-1] + 1
-        if k[0] not in scores:
-            scores[k[0]] = {}
-       
-        # Make sure contig doesnt appear more than once
-        assert(k[1] not in scores[k[0]])
-
-        # Make sure we have predictions for these indices
-        if sup > len(score_val):
-            continue
-
-        # Make sure all the labels for the contig coincide
-        assert((y[inf : sup] == y[inf]).all())
-        scores[k[0]][k[1]] = {'y' : int(y[inf]), 'pred' : score_val[inf : sup]}
-
-    return scores
-
-
 save_plot = args.save_plot
 if save_plot is None:
     save_plot = args.save_path
 
 
 # Load and process data
+#dataGen_tr = models.Generator(x_tr, y_tr, args.max_len, batch_size=32,  shuffle=False)
 # Provide objective to load
 recall_0 = utils.class_recall(0)
 recall_1 = utils.class_recall(1)
@@ -88,15 +55,6 @@ auc = []
 for model_path in path_to_models:
     if not os.path.exists((os.path.join(args.save_path, model_path, 'final_model.h5'))):
         continue
-
-    if not os.path.exists(os.path.join(args.save_path, model_path, 
-                                       'predictions')):
-        os.makedirs(os.path.join(args.save_path, model_path, 'predictions'))
-
-    if not os.path.exists(os.path.join(args.save_path, model_path, 
-                                       'predictions', args.data_path.split('/')[-1])):
-        os.makedirs(os.path.join(args.save_path, model_path, 
-                                       'predictions', args.data_path.split('/')[-1]))
 
     with open(os.path.join(args.save_path, model_path, 'mean_std_final_model.pkl'), 'rb') as mstd:
         mean_tr, std_tr = pickle.load(mstd)
@@ -127,12 +85,17 @@ for model_path in path_to_models:
     dataGen = models.Generator(x, y, args.max_len, batch_size=64,  shuffle=False, 
                                norm_raw=bool(args.norm_raw),
                                mean_tr=mean_tr, std_tr=std_tr)
+    #dataGen.mean = mean_tr
+    #dataGen.std = std_tr
 
+    
+    score_val = model.predict_generator(dataGen, steps=1)
     print("Computing predictions for " + tech + " ...")
-
-    scores = compute_predictions(y, n2i)
-
-    with open(os.path.join(args.save_path, model_path, 'predictions', 
-                           args.data_path.split('/')[-1],  tech + '.pkl'), 'wb') as spred:
-        pickle.dump(scores, spred) 
-   
+    times = []
+    for it in range(100):
+        ti = time.time()
+        score_val = model.predict_generator(dataGen, steps=1)
+        times.append(time.time() - ti)
+    print(np.mean(times))
+    print(np.std(times))
+    print(times)
