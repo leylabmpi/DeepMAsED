@@ -9,6 +9,7 @@ tmp/
 .envrc
 ._*
 tests/output*/
+tests/old_models/
 screenlog.*
 
 # hg
