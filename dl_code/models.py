@@ -83,7 +83,7 @@ class deepmased(object):
 
 
 class Generator(keras.utils.Sequence):
-    def __init__(self, x, y, max_len, batch_size=32, shuffle=True, norm_raw=True,
+    def __init__(self, x, y, max_len=10000, batch_size=32, shuffle=True, norm_raw=True,
                  mean_tr=None, std_tr=None): 
         'Initialization'
         self.batch_size = batch_size

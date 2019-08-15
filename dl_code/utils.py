@@ -231,10 +231,7 @@ def load_features_nogt(data_path, max_len=10000,
             current_path = os.path.join(data_path, f, g)
             if not os.path.isdir(current_path):
                 continue
-
             if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
-                print("Skipping, empty file...")
-                continue
                 pickle_data_feat_only(current_path, 'features.tsv.gz', 'features_new.pkl')
 
     if pickle_only: 
@@ -278,7 +275,6 @@ def load_features_nogt(data_path, max_len=10000,
                     i2n_all[len(x_in_contig) - 1 + shift] = (f, i2ni[j][0])
                     idx_chunk += 1
                     n2i_keys.add(i2ni[j][0])
-
 
             # Each element is a metagenome
             x.append(x_in_contig)
@@ -469,6 +465,46 @@ def reverse_dict(d):
     return r_d
 
 
+def compute_predictions(n2i, generator, model, save_path):
+    """
+    Computes predictions for a model and generator, aggregating scores for long contigs.
+
+    Inputs: 
+        n2i: dictionary with contig_name -> list of idx corresponding to that contig.
+        generator: deepmased data generator
+    Output:
+        scores: scores for individual contigs
+    """
+
+    score_val = model.predict_generator(generator)
+
+    # Compute predictions by aggregating scores for longer contigs
+    score_val = score_val.flatten()
+    scores = {}
+
+    write = open(os.path.join(save_path, 'predictions.csv'), 'w')
+    csv_writer = csv.writer(write, delimiter='\t')
+    csv_writer.writerow(['MAG', 'Contig', 'Deepmased score'])
+    
+    for k in n2i:
+        inf = n2i[k][0]
+        sup = n2i[k][-1] + 1
+        if k[0] not in scores:
+            scores[k[0]] = {}
+       
+        # Make sure contig doesnt appear more than once
+        assert(k[1] not in scores[k[0]])
+
+        # Make sure we have predictions for these indices
+        if sup > len(score_val):
+            continue
+
+        # Make sure all the labels for the contig coincide
+        #scores[k[0]][k[1]] = {'pred' : score_val[inf : sup]}
+        csv_writer.writerow([k[0], k[1], str(np.mean(score_val[inf : sup]))])
+    
+    write.close()
+    #return scores
 
 
 
