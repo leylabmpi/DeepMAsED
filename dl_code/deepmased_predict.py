@@ -20,8 +20,13 @@ parser.add_argument('--data_path', default='data', type=str,
                     help='Where to find feature table.')
 parser.add_argument('--save_path', default='model', type=str, 
                     help='Where to save training weights and logs.')
+parser.add_argument('--cpu_only', dest='cpu_only', action='store_true')
+
 args = parser.parse_args()
 
+if args.cpu_only:
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+    os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 
 # Load and process data
 # Provide objective to load
