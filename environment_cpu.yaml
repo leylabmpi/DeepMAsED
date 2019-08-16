@@ -1,4 +1,4 @@
-name: newdm_cpu
+name: deepmased_cpu
 channels:
   - conda-forge
   - defaults

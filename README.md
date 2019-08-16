@@ -24,8 +24,13 @@ The tool is divided into two main parts:
 
 ## DeepMAsED-DL
 
-> TODO
+### GPU setup
 
+Create conda env: `conda env create -f environment.yaml`
+
+### CPU setup
+
+Create conda env: `conda env create -f environment_cpu.yaml`
 
 ## DeepMAsED-SM
 
