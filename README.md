@@ -14,31 +14,40 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 The tool is divided into two main parts:
 
-* DeepMAsED-DL: deep learning for misassembly detection
 * DeepMAsED-SM: a snakemake pipeline for:
   * generating DeepMAsED train/test datasets from reference genomes
   * creating feature tables from "real" assemblies (fasta + bam files)
+* DeepMAsED-DL: deep learning for misassembly detection
 
 
 # Setup
 
-## DeepMAsED-DL
-
-### GPU setup
-
-Create conda env: `conda env create -f environment.yaml`
-
-### CPU setup
-
-Create conda env: `conda env create -f environment_cpu.yaml`
-
 ## DeepMAsED-SM
 
-* Install miniconda (or anaconda)
-* Create a conda env that includes `snakemake`
-  * e.g., `conda create -n snakemake_env bioconda::snakemake`
-* Activate conda env
-  * e.g., `conda activate snakemake_env`
+* [If needed] Install miniconda (or anaconda)
+* Create a conda env that includes `snakemake` & `pandas`
+  * e.g., `conda create -n snakemake conda-forge::pandas bioconda::snakemake`
+* To activate the conda env: `conda activate snakemake`
+
+## DeepMAsED-DL
+
+Either from the `environment.yaml` file:
+
+```
+conda create --name deepmased --file environment.yaml
+```
+
+...or just by creating a new env with the following packages:
+
+```
+conda create -n deepmased tensorflow=1.10 keras tensorboard scikit-learn ipython
+```
+
+Make sure to activate the correct environment when running the deep learning code:
+
+```
+conda activate deepmased
+```
 
 # Usage
 
