@@ -15,6 +15,16 @@ def get_desc():
 def parse_args(test_args=None, subparsers=None):
     desc = get_desc()
     epi = """DESCRIPTION:
+    Predict misassemblies based on a feature table.
+    The data_path must be structured as:
+      training_output/
+      ├── data
+      │   └── genome
+      │       └── metagenome
+      │           ├── features_new.pkl
+      │           └── features.tsv.gz
+      ├── deepmased.h5
+      ├── mean_std_final_model.pkl
     """
     if subparsers:
         parser = subparsers.add_parser('predict', description=desc, epilog=epi,
@@ -25,10 +35,11 @@ def parse_args(test_args=None, subparsers=None):
 
     # args
     parser.add_argument('--data_path', default='data', type=str, 
-                    help='Where to find feature table.')
+                        help='Where to find feature table (default: %(default)s)')
     parser.add_argument('--save_path', default='model', type=str, 
-                        help='Where to save training weights and logs.')
-    parser.add_argument('--cpu_only', dest='cpu_only', action='store_true')
+                        help='Where to save training weights and logs (default: %(default)s)')
+    parser.add_argument('--cpu_only', dest='cpu_only', action='store_true', default=False,
+                        help='Only use CPUs, and no GPUs (default: %(default)s)')
 
     # test args
     if test_args:
