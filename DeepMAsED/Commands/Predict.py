@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import sys
 import argparse
+import logging
 ## application
 from DeepMAsED import Predict
 
@@ -38,7 +39,7 @@ def parse_args(test_args=None, subparsers=None):
                         help='Where to find feature table (default: %(default)s)')
     parser.add_argument('--save_path', default='model', type=str, 
                         help='Where to save training weights and logs (default: %(default)s)')
-    parser.add_argument('--cpu_only', dest='cpu_only', action='store_true', default=False,
+    parser.add_argument('--cpu_only', action='store_true', default=False,
                         help='Only use CPUs, and no GPUs (default: %(default)s)')
 
     # test args
@@ -49,6 +50,7 @@ def parse_args(test_args=None, subparsers=None):
     return parser
 
 def main(args=None):
+    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
     # Input
     if args is None:
         args = parse_args()

@@ -4,6 +4,7 @@ import _pickle as pickle
 import os 
 import csv
 import gzip
+import logging
 from collections import defaultdict
 ## 3rd party
 from keras import backend as K
@@ -84,7 +85,7 @@ def load_features_tr(data_path, max_len=10000,
             current_path = os.path.join(data_path, f, technology)
 
             if not os.path.exists(os.path.join(current_path, 'features.pkl')):
-                print('Populating pickle file...')
+                logging.info('Populating pickle file...')
                 pickle_data_b(current_path, 'features.tsv.gz', 'features_new.pkl')
 
     if pickle_only: 
@@ -155,7 +156,7 @@ def load_features(data_path, max_len=10000,
 
         if not os.path.exists(os.path.join(current_path, 'features.pkl')):
         #if True:
-            print("Populating pickle file...")
+            logging.info('Populating pickle file...')
             pickle_data_b(current_path, 'features.tsv.gz', 'features_new.pkl')
 
     if pickle_only: 
@@ -510,7 +511,7 @@ def compute_predictions(n2i, generator, model, save_path):
         csv_writer.writerow([k[0], k[1], str(np.mean(score_val[inf : sup]))])
     
     write.close()
-    print('File written: {}'.format(outfile))
+    logging.info('File written: {}'.format(outfile))
     #return scores
 
 

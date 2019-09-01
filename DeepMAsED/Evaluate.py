@@ -91,7 +91,7 @@ def main(args):
     
         tech = args.technology
             
-        print("Loading data...")
+        logging.info('Loading data...')
         if args.is_synthetic == 1:
             x, y, i2n = Utils.load_features(args.data_path,
                                        max_len=args.max_len,
@@ -102,7 +102,7 @@ def main(args):
                                            max_len=args.max_len,
                                             mode = args.mode)
     
-        print("Loaded %d contigs..." % len(set(i2n.values())))
+        logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))
     
         n2i = Utils.reverse_dict(i2n)
         x = [xi for xmeta in x for xi in xmeta]
@@ -112,13 +112,14 @@ def main(args):
                                    norm_raw=bool(args.norm_raw),
                                    mean_tr=mean_tr, std_tr=std_tr)
     
-        print("Computing predictions for " + tech + " ...")
+        loggin.info('Computing predictions for {}...'.format(tech))
     
         scores = compute_predictions(y, n2i)
-    
-        with open(os.path.join(args.save_path, model_path, 'predictions', 
-                               args.data_path.split('/')[-1],  tech + '.pkl'), 'wb') as spred:
-            pickle.dump(scores, spred) 
+        outfile = os.path.join(args.save_path, model_path, 'predictions', 
+                               args.data_path.split('/')[-1],  tech + '.pkl')
+        with open(outfile, 'wb') as spred:
+            pickle.dump(scores, spred)
+        logging.info('File written: {}'.format(outfile))
        
     
 if __name__ == '__main__':

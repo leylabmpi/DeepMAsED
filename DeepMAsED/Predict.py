@@ -1,6 +1,7 @@
 # import
 ## batteries
 import os
+import logging
 ## 3rd party
 import numpy as np
 import keras
@@ -30,7 +31,7 @@ def main(args):
         
     auc = []
 
-    print("Loading model...")
+    logging.info('Loading model...')
     ## pkl
     F = os.path.join(args.data_path,  'mean_std_final_model.pkl')
     if not os.path.exists(F):
@@ -55,11 +56,11 @@ def main(args):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    print("Loading features...")
+    logging.info('Loading features...')
     args.data_path = os.path.join(args.data_path, 'data')
     x, y, i2n = Utils.load_features_nogt(args.data_path)
     
-    print("Loaded {} contigs...".format(len(set(i2n.values()))))    
+    logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))    
     n2i = Utils.reverse_dict(i2n)
     x = [xi for xmeta in x for xi in xmeta]
     y = np.concatenate(y)
@@ -67,7 +68,7 @@ def main(args):
     dataGen = Models.Generator(x, y, batch_size=64,  shuffle=False, 
                                norm_raw=0, mean_tr=mean_tr, std_tr=std_tr)
     
-    print("Computing predictions...")
+    logging.info('Computing predictions...')
     scores = Utils.compute_predictions(n2i, dataGen, model, outdir)
     
 

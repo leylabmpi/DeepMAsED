@@ -42,7 +42,7 @@ def main(args):
     save_path = args.save_path
 
     # Load and process data
-    print("Loading data...")
+    logging.info('Loading data...')
     x, y = Utils.load_features_tr(args.data_path,
                                   max_len=args.max_len,
                                   standard=args.standard,
@@ -78,7 +78,7 @@ def main(args):
             tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs'), 
                                                   histogram_freq=0, 
                                                   write_graph=True, write_images=True)
-            print("Training network...")
+            logging.info('Training network...')
             if config.mode in ['chimera', 'extensive']:
                 w_one = int(len(np.where(y_tr == 0)[0])  / len(np.where(y_tr == 1)[0]))
                 class_weight = {0 : 1 , 1: w_one}
@@ -95,7 +95,7 @@ def main(args):
                 deepmased.net.fit(x_tr, y_tr, validation_data=(x_te, y_te),
                                   epochs=args.n_epochs, 
                                   callbacks=[tb_logs, deepmased.reduce_lr])
-            print("Computing AUC scores...")
+            logging.info('Computing AUC scores...')
             scores_val = deepmased.predict_generator(dataGen_val)
 
             ap_scores.append(average_precision_score(y_val[0 : scores_val.size], scores_val))
@@ -112,7 +112,7 @@ def main(args):
         tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs_final'), 
                                               histogram_freq=0, 
                                               write_graph=True, write_images=True)
-        print("Training network...")
+        logging.info('Training network...')
         if config.mode in ['chimera', 'extensive']:
             w_one = int(len(np.where(y == 0)[0])  / len(np.where(y == 1)[0]))
             class_weight = {0 : 1 , 1: w_one}
@@ -122,11 +122,16 @@ def main(args):
                                         verbose=2,
                                         callbacks=[tb_logs, deepmased.reduce_lr])
 
-        #print("Saving trained model...")
-        deepmased.save(os.path.join(save_path, 'final_model.h5'))
+        logging.info('Saving trained model...')
+        outfile = os.path.join(save_path, 'final_model.h5')
+        deepmased.save(outfile)
+        logging.info('  File written: {}'.format(outfile))
 
-        with open(os.path.join(save_path, 'mean_std_final_model.pkl'), 'wb') as f:
+        outfile = os.path.join(save_path, 'mean_std_final_model.pkl')
+        with open(outfile, 'wb') as f:
             pickle.dump([dataGen.mean, dataGen.std], f)
+        logging.info('  File written: {}'.format(outfile))
+            
 
 if __name__ == '__main__':
     pass

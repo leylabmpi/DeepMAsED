@@ -59,6 +59,7 @@ def parse_args(test_args=None, subparsers=None):
     return parser
 
 def main(args=None):
+    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
     # Input
     if args is None:
         args = parse_args()
