@@ -1,13 +1,11 @@
 DeepMAsED
 =========
 
-version: 0.1.2
-
 Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 *"mased"*
 
-> Middle English term: Misled, bewildered, amazed, or perplexed
+> Middle English term: misled, bewildered, amazed, or perplexed
 
 
 # Main Description
@@ -48,6 +46,15 @@ Make sure to activate the correct environment when running the deep learning cod
 ```
 conda activate deepmased
 ```
+
+### Testing (optional)
+
+`pytest -s`
+
+### Install
+
+`python setup.py install`
+
 
 # Usage
 
@@ -99,14 +106,6 @@ See the following resources for help:
 * `./output/benchmarks/`
   * Job resource usage info
 
-
-
-### Miassembly classification with DeepMAsED-DL
-
-> TODO
-
-
-
 ### Creating custom train/test data from reference genomes
 
 This is useful for training DeepMAsED-DL with a custom
@@ -143,6 +142,19 @@ The output will the be same as for feature generation, but with extra directorie
   * Metagenome assembly errors determined by using the references
 
 
+## DeepMAsED-DL
 
-  
+Main interface: `DeepMAsED -h`
+
+### Predicting with existing model
+
+See `DeepMAsED predict -h` 
+
+### Training a new model
+
+See `DeepMAsED train -h` 
+
+### Evaluating a model
+
+See `DeepMAsED evalulate -h`
 

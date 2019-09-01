@@ -16,6 +16,7 @@ logs/
 DeepMAsED-SM/bin/misc_r_functions/
 DeepMAsED-SM/tests/output_*
 deepmased_trained/predictions/
+archive/
 */archive/
 .RData
 .future
