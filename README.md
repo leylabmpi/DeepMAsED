@@ -12,10 +12,12 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 The tool is divided into two main parts:
 
-* DeepMAsED-SM: a snakemake pipeline for:
-  * generating DeepMAsED train/test datasets from reference genomes
-  * creating feature tables from "real" assemblies (fasta + bam files)
-* DeepMAsED-DL: deep learning for misassembly detection
+* **DeepMAsED-SM**
+  * a snakemake pipeline for:
+    * generating DeepMAsED train/test datasets from reference genomes
+    * creating feature tables from "real" assemblies (fasta + bam files)
+* **DeepMAsED-DL**
+  * deep learning for misassembly detection
 
 
 # Setup
@@ -31,27 +33,21 @@ The tool is divided into two main parts:
 
 Either from the `environment.yaml` file:
 
-```
-conda create --name deepmased --file environment.yaml
-```
+`conda create --name deepmased --file environment.yaml`
 
 ...or just by creating a new env with the following packages:
 
-```
-conda create -n deepmased tensorflow=1.10 keras tensorboard scikit-learn ipython
-```
+`conda create -n deepmased tensorflow=1.10 keras tensorboard scikit-learn ipython`
 
 Make sure to activate the correct environment when running the deep learning code:
 
-```
-conda activate deepmased
-```
+`conda activate deepmased`
 
-### Testing (optional)
+### Testing the DeepMAsED package (optional)
 
 `pytest -s`
 
-### Install
+### Installing the DeepMAsED package into the conda environment
 
 `python setup.py install`
 
@@ -95,7 +91,7 @@ See the following resources for help:
 * [Snakemake docs on cluster config](https://snakemake.readthedocs.io/en/stable/snakefiles/configuration.html)
 * [Snakemake profiles](https://github.com/Snakemake-Profiles)
 
-### Output
+#### Output
 
 > Assuming output directory is `./output/`
 
@@ -128,7 +124,7 @@ train/test dataset (e.g., just biome-specific taxa).
 
 Note: the column order for the tables doesn't matter, but the column names must be exact.
 
-### Output
+#### Output
 
 The output will the be same as for feature generation, but with extra directories:
 
@@ -146,6 +142,8 @@ The output will the be same as for feature generation, but with extra directorie
 
 Main interface: `DeepMAsED -h`
 
+Note: `DeepMAsED` can be run without GPUs, but it will be much slower.
+
 ### Predicting with existing model
 
 See `DeepMAsED predict -h` 
@@ -157,4 +155,5 @@ See `DeepMAsED train -h`
 ### Evaluating a model
 
 See `DeepMAsED evalulate -h`
+
 
