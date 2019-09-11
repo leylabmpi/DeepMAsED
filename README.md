@@ -8,6 +8,11 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 > Middle English term: misled, bewildered, amazed, or perplexed
 
 
+# Citation
+
+Rojas-Carulla, Mateo, Ruth E. Ley, Bernhard Schoelkopf, and Nicholas D. Youngblut. 2019. “DeepMAsED: Evaluating the Quality of Metagenomic Assemblies.” bioRxiv. https://doi.org/10.1101/763813.
+
+
 # Main Description
 
 The tool is divided into two main parts:
