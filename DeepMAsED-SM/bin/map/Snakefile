@@ -124,6 +124,7 @@ rule bam_to_DL_features:
         temp(config['tmp_dir'] + 'feats/{rep}/{assembler}/features.tsv')
     params:
         exe = config['pipeline']['script_folder'] + 'bam2feat.py',
+	params = config['params']['make_features'],
         assembler = lambda wildcards: wildcards.assembler,
 	tmp_db = '/var/sge_tmp.$JOB_ID.0/'
     threads:
@@ -139,19 +140,9 @@ rule bam_to_DL_features:
         benchmark_dir + 'bam_to_DL_features/{rep}/{assembler}.txt'
     shell:
         """
-        {params.exe} -p {threads} -a {params.assembler} \
+        {params.exe} {params.params} -p {threads} -a {params.assembler} \
           {input.bam} {input.fasta} > {output} 2>> {log}
         """
-
-        # if [[ -d "{params.tmp_db}" ]]; then
-        #   JOBLIB_TEMP_FOLDER="{params.tmp_db}"
-        # else
-        #   JOBLIB_TEMP_FOLDER="/tmp/"
-        # fi
-        # echo "JOBLIB_TEMP_FOLDER set to: $JOBLIB_TEMP_FOLDER" > {log}
-	
-        # tmpfs = lambda wildcards, attempt: int(round(attempt ** 2.5 * 2 + 5, 0))
-
 
 rule feature_true_est_join:
     """

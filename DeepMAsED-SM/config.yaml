@@ -32,7 +32,7 @@ params:
   # mapping reads to contigs
   samtools: ""
   # creating DL features
-  make_features: ""  
+  make_features: --window 4
   
 # snakemake pipeline
 pipeline:
