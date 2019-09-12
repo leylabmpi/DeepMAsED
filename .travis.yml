@@ -14,10 +14,11 @@ before_install:
   - conda config --add channels bioconda
   
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION tensorflow=1.10 keras tensorboard scikit-learn ipython pytest
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION tensorflow=1.10 keras tensorboard scikit-learn ipython pytest snakemake
   - python setup.py build_ext --inplace
   - python setup.py build
   - python setup.py install
 
 script:
   - pytest
+  - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
