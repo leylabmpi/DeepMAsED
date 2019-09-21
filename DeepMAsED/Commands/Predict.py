@@ -19,13 +19,13 @@ def parse_args(test_args=None, subparsers=None):
     Predict misassemblies based on a feature table.
     The data_path must be structured as:
       training_output/
-      ├── data
-      │   └── genome
-      │       └── metagenome
-      │           ├── features_new.pkl
-      │           └── features.tsv.gz
-      ├── deepmased.h5
-      ├── mean_std_final_model.pkl
+      |_ data
+      |_  |_ genome
+      |_     |_ metagenome
+      |_         |_ features_new.pkl
+      |_         |_ features.tsv.gz
+      |_ deepmased.h5
+      |_ mean_std_final_model.pkl
     """
     if subparsers:
         parser = subparsers.add_parser('predict', description=desc, epilog=epi,
