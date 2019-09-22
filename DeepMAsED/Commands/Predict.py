@@ -35,11 +35,11 @@ def parse_args(test_args=None, subparsers=None):
                                          formatter_class=argparse.RawTextHelpFormatter)
 
     # args
-    parser.add_argument('--data_path', default='data', type=str, 
+    parser.add_argument('--data-path', default='data', type=str, 
                         help='Where to find feature table (default: %(default)s)')
-    parser.add_argument('--save_path', default='model', type=str, 
+    parser.add_argument('--save-path', default='model', type=str, 
                         help='Where to save training weights and logs (default: %(default)s)')
-    parser.add_argument('--cpu_only', action='store_true', default=False,
+    parser.add_argument('--cpu-only', action='store_true', default=False,
                         help='Only use CPUs, and no GPUs (default: %(default)s)')
 
     # test args

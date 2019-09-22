@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # import
 from __future__ import print_function
+__version__ = '0.2.0'
 ## batteries
 import os
 import sys
@@ -17,14 +18,17 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     
-    desc = 'Template python script'
+    desc = 'DeepMAsED: Deep learning for Metagenome Assembly Error Detection'
     epi = """DESCRIPTION:
-    Test
+    Usage: DeepMAsED <subcommand> <subcommand_params>
+    Example: DeepMAsED train -h
+
+    For general info, see https://github.com/leylabmpi/DeepMAsED/
     """
     parser = argparse.ArgumentParser(description=desc,
                                      epilog=epi,
                                      formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--version', action='version', version='0.0.1')
+    parser.add_argument('--version', action='version', version=__version__)
 
     # subparsers
     subparsers = parser.add_subparsers()

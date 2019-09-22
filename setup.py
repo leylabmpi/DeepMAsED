@@ -4,18 +4,27 @@ import os
 import glob
 import numpy
 
-    
+
 # dependencies
 install_reqs = [
     'numpy>=1.17.0',
     'scipy>=1.3.1'
 ]
 
+# getting version from __main__.py
+__version__ = None
+with open(os.path.join('DeepMAsED', '__main__.py')) as inF:
+    for x in inF:
+        if x.startswith('def main'):
+            break
+        if x.startswith('__version__'):
+            __version__ = x.split(' ')[2].rstrip().strip("'")
+            
 ## install main application
 desc = 'Deep learning for Metagenome Assembly Error Detection'
 setup(
     name = 'DeepMAsED',
-    version = '0.2.0',
+    version = __version__,
     description = desc,
     long_description = desc + '\n See README for more information.',
     author = 'Nick Youngblut',

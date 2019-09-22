@@ -34,21 +34,21 @@ def parse_args(test_args=None, subparsers=None):
                                          formatter_class=argparse.RawTextHelpFormatter)
 
     # args
-    parser.add_argument('--data_path', default='data', type=str, 
+    parser.add_argument('--data-path', default='data', type=str, 
                         help='Where to find feature table (default: %(default)s)')
-    parser.add_argument('--save_path', default='model', type=str, 
+    parser.add_argument('--save-path', default='model', type=str, 
                         help='Where to save training weights and logs (default: %(default)s)')
-    parser.add_argument('--save_plot', default=None, type=str, 
+    parser.add_argument('--save-plot', default=None, type=str, 
                         help='Where to save plots (default: %(default)s)')
-    parser.add_argument('--max_len', default=10000, type=int, 
+    parser.add_argument('--max-len', default=10000, type=int, 
                         help='Max contig len, fixed input for CNN (default: %(default)s)')
     parser.add_argument('--mode', default='chimera', type=str, 
                         help='Chimera or edit distance (default: %(default)s)')
     parser.add_argument('--technology', default='megahit', type=str, 
                         help='Megahit or Metaspades (default: %(default)s)')
-    parser.add_argument('--norm_raw', default=1, type=int, 
+    parser.add_argument('--norm-raw', default=1, type=int, 
                         help='Whether to normalize the four one-hot feature of raw (default: %(default)s)')
-    parser.add_argument('--is_synthetic', default=1, type=int, 
+    parser.add_argument('--is-synthetic', default=1, type=int, 
                         help='Whether the data is synthetic and thus has ground truth (default: %(default)s)')
         # running test args
     if test_args:
