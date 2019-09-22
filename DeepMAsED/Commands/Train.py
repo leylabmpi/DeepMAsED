@@ -12,6 +12,18 @@ from DeepMAsED import Train
 def parse_args(test_args=None, subparsers=None):
     desc = 'Train model'
     epi = """DESCRIPTION:
+    #-- Recommended training flow --#
+    * Select a grid search of hyper-parameters to consider
+      (learning rate, number of layers, etc).
+    * Train with kfold = 5 (for example) for each combination of 
+      hyper-parameters.
+    * For each combination of hyper-parameters, check scores.pkl, 
+      which contains the cross validation scores, and select the 
+      hyper-parameters leading to the highest average CV
+    * Re-launch the whole training with `--n-folds -1` and the best 
+      hyper-parameters (this is now one single run). 
+
+    #-- Feature table input --#
     The features table files should either be tab-delim & 
     gzip'ed (output from DeepMAsED-SM) and labeled "features.tsv.gz". 
     The directory structure of the feature tables should be:
