@@ -1,6 +1,7 @@
 # import
 ## batteries
 import os
+import sys
 import logging
 ## 3rd party
 import numpy as np
@@ -18,7 +19,8 @@ from DeepMAsED import Utils
 
 def main(args):
     np.random.seed(12)
-    
+
+    # CPU only instead of GPU
     if args.cpu_only:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
         os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
@@ -30,19 +32,19 @@ def main(args):
     custom_obj = {'metr' : recall_0}
         
     auc = []
-
+        
     logging.info('Loading model...')
     ## pkl
     F = os.path.join(args.data_path,  'mean_std_final_model.pkl')
     if not os.path.exists(F):
-        msg = 'Model file not available at --data_path: {}'
+        msg = 'Model file not available at data-path: {}'
         raise IOError(msg.format(F))        
     with open(F, 'rb') as mstd:
         mean_tr, std_tr = pickle.load(mstd)
     ## h5
     F = os.path.join(args.data_path, 'deepmased.h5')
     if not os.path.exists(F):
-        msg = 'Model file not available at --data_path: {}'
+        msg = 'Model file not available at data-path: {}'
         raise IOError(msg.format(F))    
     model = load_model(F, custom_objects=custom_obj)
     

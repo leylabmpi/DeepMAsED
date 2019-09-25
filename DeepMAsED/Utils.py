@@ -22,7 +22,6 @@ def compute_mean_std(x_tr):
     Given training data (list of contigs), compute mean and std 
     feature-wise. 
     """
-
     n_feat = x_tr[0].shape[1]
     feat_sum = np.zeros(n_feat)
     feat_sq_sum = np.zeros(n_feat)
@@ -64,7 +63,21 @@ def normalize(x, mean, std, max_len):
 
     return x
 
+def find_files(data_path, filename):
+    """
+    Recursively looks for `filename` in `data_path`
+    """
+    found_files = []
+    for dirpath, dirnames, files in os.walk(data_path):
+        for F in files:
+            if F == filename:
+                found_files.append(os.path.join(dirpath, F))
+    return found_files
+
 def splitall(path):
+    """
+    Fully split file path
+    """
     path = os.path.abspath(path)
     allparts = []
     while 1:
@@ -80,8 +93,10 @@ def splitall(path):
             allparts.insert(0, parts[1])
     return allparts
 
-def find_feature_files(data_path, filename):
-    """ Finds feature files & creates.
+def _find_feature_files(data_path, filename, technology=None):
+    """ 
+    Finding feature files.
+    Recursively looks for `filename` in `data_path`.
     Return: {metagenome_id : {assembler : filename}}
     """
     D = defaultdict(dict)
@@ -95,11 +110,65 @@ def find_feature_files(data_path, filename):
                     raise IOError(msg.format(data_path))
                 sim_rep = x[-2]     # simulation rep
                 asmbl = x[-1]       # assembler
+                # filter by techology (assembler)
+                if technology is not None and asmbl != technology:
+                    msg = 'Skipping file because assembler does'
+                    msg += ' not match user-seleted assembler:'
+                    msg += ' {} != {} for file "{}"'
+                    logging.info(msg.format(asmbl, technology,
+                                            os.path.join(dirpath, F)))
+                    continue
+                # loading dict & counting
                 D[sim_rep][asmbl] = os.path.join(dirpath, F)
                 n_feat_files += 1
                 
     return D, n_feat_files
+
+def find_feature_files(data_path, technology=None, force_overwrite=False):
+    """
+    Finding feature files in `data_path`. Searching for specific file naming.
+    Params:
+      data_path: base directory to feature files
+      techology: metagenome assembler
+      force_overwrite: re-create pkl files even if they exist?
+    Return: {simulation_rep : {assembler : file_path}}
+    """
+    # finding files
+    feature_gz_files, n_gz = _find_feature_files(data_path, 'features.tsv.gz', technology)
+    feature_tsv_files, n_tsv = _find_feature_files(data_path, 'features.tsv', technology)
+    feature_pkl_files, n_pkl = _find_feature_files(data_path, 'features.pkl', technology)
     
+    # which files to use?
+    if n_pkl > 1 and force_overwrite is True:
+        msg = 'Found {} pickled feature files. However, --force-overwrite used.'
+        msg += ' Re-creating pkl feature files'
+        logging.info(msg.format(n_pkl))
+    if n_pkl >= 1 and force_overwrite is False:
+        msg = 'Found {} pickled feature files. Using these files.'
+        logging.info(msg.format(n_pkl))
+    elif n_gz >= 1:
+        msg = 'Found {} gzip\'ed tsv feature files. Using these files.'
+        logging.info(msg.format(n_gz))
+        feature_pkl_files = defaultdict(dict)
+        for rep,v in feature_gz_files.items():
+            for asmbl,F in v.items():
+                pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
+                feature_pkl_files[rep][asmbl] = pickle_data_b(F, pklF)
+    elif n_tsv >= 1:
+        msg = 'Found {} uncompressed tsv feature files. Using these files.'
+        logging.info(msg.format(n_tsv))
+        feature_pkl_files = defaultdict(dict)
+        for rep,v in feature_tsv_files.items():
+            for asmbl,F in v.items():
+                pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
+                feature_pkl_files[rep][asmbl] = pickle_data_b(F, pklF)
+    else:
+        msg = 'Could not find any features files in data_path: {}'
+        raise IOError(msg.format(data_path))
+
+    return feature_pkl_files
+
+
 def load_features_tr(data_path, max_len=10000, 
                      standard=1, mode='extensive', 
                      pickle_only=False, force_overwrite=False):
@@ -141,42 +210,15 @@ def load_features_tr(data_path, max_len=10000,
                   |_ features.tsv.gz
     """
     # finding feature files
-    feature_gz_files, n_gz = find_feature_files(data_path, 'features.tsv.gz')
-    feature_tsv_files, n_tsv = find_feature_files(data_path, 'features.tsv')
-    feature_pkl_files, n_pkl = find_feature_files(data_path, 'features.pkl')
-    if n_pkl > 1 and force_overwrite is True:
-        msg = 'Found {} pickled feature files. However, --force-overwrite used.'
-        msg += ' Re-creating pkl feature files'
-        logging.info(msg.format(n_pkl))
-    if n_pkl >= 1 and force_overwrite is False:
-        msg = 'Found {} pickled feature files. Using these files.'
-        logging.info(msg.format(n_pkl))
-    elif n_gz >= 1:
-        msg = 'Found {} gzip\'ed tsv feature files. Using these files.'
-        logging.info(msg.format(n_gz))
-        feature_pkl_files = defaultdict(dict)
-        for rep,v in feature_gz_files.items():
-            for asmbl,F in v.items():
-                pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
-                feature_pkl_files[rep][asmbl] = pickle_data_b(F, pklF)
-    elif n_tsv >= 1:
-        msg = 'Found {} uncompressed tsv feature files. Using these files.'
-        logging.info(msg.format(n_tsv))
-        feature_pkl_files = defaultdict(dict)
-        for rep,v in feature_tsv_files.items():
-            for asmbl,F in v.items():
-                pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
-                feature_pkl_files[rep][asmbl] = pickle_data_b(F, pklF)
-    else:
-        msg = 'Could not find any features files in data_path: {}'
-        raise IOError(msg.format(data_path))
+    feature_pkl_files = find_feature_files(data_path,
+                                           force_overwrite=force_overwrite)
 
     # Pre-process once if not done already
     if pickle_only:
         logging.info('--pickle-only provided; exiting')        
         exit(0)
 
-    # for each simulation rep, combining features from each assembler together
+    # for each metagenome simulation rep, combining features from each assembler together
     ## "tech" = assembler
     x, y, ye, yext, n2i = [], [], [], [], []
     for rep,v in feature_pkl_files.items():
@@ -195,7 +237,8 @@ def load_features_tr(data_path, max_len=10000,
 
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
-                    chunked = xi[j][idx_chunk * max_len : (idx_chunk + 1) * max_len, 1:]
+                    chunked = xi[j][idx_chunk * max_len :
+                                    (idx_chunk + 1) * max_len, 1:]
             
                     x_in_contig.append(chunked)
                     y_in_contig.append(yi[j])
@@ -218,8 +261,10 @@ def load_features_tr(data_path, max_len=10000,
 
 
 def load_features(data_path, max_len=10000, 
-                  standard=1, mode='extensive', technology='megahit', 
-                  pickle_only=False):
+                  standard=1, mode='extensive',
+                  technology = 'megahit', 
+                  pickle_only = False,
+                  force_overwrite = False):
     """
     Loads features, pre-process them and returns validation data. 
 
@@ -236,69 +281,82 @@ def load_features(data_path, max_len=10000,
     """
 
     # Pre-process once if not done already
-    dirs = os.listdir(data_path)
-    for i, f in enumerate(dirs):#os.listdir(data_path):
-        current_path = os.path.join(data_path, f, technology)
+    #dirs = os.listdir(data_path)
+    #for i, f in enumerate(dirs):
+    #    current_path = os.path.join(data_path, f, technology)
 
-        if not os.path.exists(os.path.join(current_path, 'features.pkl')):
-            logging.info('Populating pickle file...')
-            pickle_data_b(current_path, 'features.tsv.gz', 'features_new.pkl')
+    #    if not os.path.exists(os.path.join(current_path, 'features.pkl')):
+    #        logging.info('Populating pickle file...')
+    #        pickle_data_b(current_path, 'features.tsv.gz', 'features_new.pkl')
 
+    # Finding feature files
+    feature_pkl_files = find_feature_files(data_path,
+                                           technology=technology,
+                                           force_overwrite=force_overwrite,)
+    
     if pickle_only: 
         exit()
 
     x, y, ye, yext, n2i = [], [], [], [], []
     shift = 0
     i2n_all = {}
-    for i, f in enumerate(dirs):
-        current_path = os.path.join(data_path, f, technology)
-        with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
-            features = pickle.load(feat)
+    #for i, f in enumerate(dirs):
+    for rep,v in feature_pkl_files.items():
+        for assembler,filename in v.items():
+            with open(filename, 'rb') as feat:
+                features = pickle.load(feat)
+            
+        #current_path = os.path.join(data_path, f, technology)
+        #with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
+        #    features = pickle.load(feat)
 
-        xi, yi, n2ii = features
+            xi, yi, n2ii = features
         
-        i2ni = reverse_dict(n2ii)
+            i2ni = reverse_dict(n2ii)
         
-        x_in_contig, y_in_contig = [], []
+            x_in_contig, y_in_contig = [], []
+            
+            n2i_keys = set([])
+            for j in range(len(xi)):
+                len_contig = xi[j].shape[0]
 
-        n2i_keys = set([])
-        for j in range(len(xi)):
-            len_contig = xi[j].shape[0]
-
-            idx_chunk = 0
-            while idx_chunk * max_len < len_contig:
-                chunked = xi[j][idx_chunk * max_len : (idx_chunk + 1) * max_len, 1:]
+                idx_chunk = 0
+                while idx_chunk * max_len < len_contig:
+                    chunked = xi[j][idx_chunk * max_len :
+                                    (idx_chunk + 1) * max_len, 1:]
         
-                x_in_contig.append(chunked)
-                y_in_contig.append(yi[j])
+                    x_in_contig.append(chunked)
+                    y_in_contig.append(yi[j])
 
-                i2n_all[len(x_in_contig) - 1 + shift] = (int(f), i2ni[j][0])
-                idx_chunk += 1
-                n2i_keys.add(i2ni[j][0])
+                    i2n_all[len(x_in_contig) - 1 + shift] = (int(rep), i2ni[j][0])
+                    idx_chunk += 1
+                    n2i_keys.add(i2ni[j][0])
 
-        # Each element is a metagenome
-        x.append(x_in_contig)
-        yext.append(np.array(y_in_contig))
+            # Each element is a metagenome
+            x.append(x_in_contig)
+            yext.append(np.array(y_in_contig))
 
-        #Sanity check
-        assert(len(n2i_keys - set(n2ii.keys())) == 0)
-        assert(len(set(n2ii.keys()) - n2i_keys) == 0)
+            #Sanity check
+            assert(len(n2i_keys - set(n2ii.keys())) == 0)
+            assert(len(set(n2ii.keys()) - n2i_keys) == 0)
 
-        shift = len(i2n_all)
+            shift = len(i2n_all)
 
+    # mode
     if mode == 'edit':
         y = 100 * np.array(ye)
     elif mode == 'extensive':
         y = yext
     else:
-        raise("Mode currently not supported")
+        raise('Mode currently not supported: {}'.format(mode))
 
     return x, y, i2n_all
 
 
 def load_features_nogt(data_path, max_len=10000, 
-                      mode='extensive', 
-                      pickle_only=False):
+                       mode='extensive', 
+                       pickle_only=False,
+                       force_overwrite=False):
     """
     Loads features for real datasets. Filters contigs with low coverage. 
 
@@ -312,17 +370,21 @@ def load_features_nogt(data_path, max_len=10000,
     """
 
     # Pre-process once if not done already
-    dirs = os.listdir(data_path)
-    for i,f in enumerate(dirs):
-        if not os.path.isdir(f):
-            continue
-        for g in os.listdir(os.path.join(data_path, f)):
-            current_path = os.path.join(data_path, f, g)
-            if not os.path.isdir(current_path):
-                continue
-            if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
-                pickle_data_feat_only(current_path, 'features.tsv.gz', 'features_new.pkl')
+    # dirs = os.listdir(data_path)
+    # for i,f in enumerate(dirs):
+    #     if not os.path.isdir(f):
+    #         continue
+    #     for g in os.listdir(os.path.join(data_path, f)):
+    #         current_path = os.path.join(data_path, f, g)
+    #         if not os.path.isdir(current_path):
+    #             continue
+    #         if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
+    #             pickle_data_feat_only(current_path, 'features.tsv.gz', 'features_new.pkl')
 
+    # finding feature files
+    feature_pkl_files = find_feature_files(data_path,
+                                           force_overwrite=force_overwrite)
+    
     if pickle_only: 
         exit()
 
@@ -331,18 +393,25 @@ def load_features_nogt(data_path, max_len=10000,
     i2n_all = {}
 
     idx_coverage = -2
-    for i, f in enumerate(dirs):
-        if not os.path.isdir(os.path.join(data_path, f)):
-            continue
-        for g in os.listdir(os.path.join(data_path, f)):
-            current_path = os.path.join(data_path, f, g)
-            if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
-                continue
-            with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
+    for rep,v in feature_pkl_files.items():
+        for assembler,filename in v.items():
+            with open(filename, 'rb') as feat:
                 features = pickle.load(feat)
-
-            xi, n2ii = features
-            yi = [-1 for i in range(len(xi))]
+    #for i, f in enumerate(dirs):
+    #    if not os.path.isdir(os.path.join(data_path, f)):
+    #        continue
+    #    for g in os.listdir(os.path.join(data_path, f)):
+    #        current_path = os.path.join(data_path, f, g)
+    #        if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
+    #            continue
+    #        with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
+    #            features = pickle.load(feat)
+            
+            try:
+                xi, n2ii = features
+                yi = [-1 for i in range(len(xi))]
+            except ValueError:
+                xi, yi, n2ii = features                
             
             i2ni = reverse_dict(n2ii)
 
@@ -358,12 +427,13 @@ def load_features_nogt(data_path, max_len=10000,
 
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
-                    chunked = xi[j][idx_chunk * max_len : (idx_chunk + 1) * max_len, 1:]
+                    chunked = xi[j][idx_chunk * max_len :
+                                    (idx_chunk + 1) * max_len, 1:]
             
                     x_in_contig.append(chunked)
                     y_in_contig.append(yi[j])
 
-                    i2n_all[len(x_in_contig) - 1 + shift] = (f, i2ni[j][0])
+                    i2n_all[len(x_in_contig) - 1 + shift] = (rep, i2ni[j][0])
                     idx_chunk += 1
                     n2i_keys.add(i2ni[j][0])
 
@@ -378,7 +448,7 @@ def load_features_nogt(data_path, max_len=10000,
     elif mode == 'extensive':
         y = yext
     else:
-        raise("Mode currently not supported")
+        raise('Mode currently not supported: {}'.format(mode))
     
     return x, y, i2n_all
 
@@ -441,8 +511,7 @@ def pickle_data_b(features_in, features_out):
         _open = lambda x: gzip.open(x, 'rt')
     else:
         _open = lambda x: open(x, 'r')
-        
-    
+            
     with _open(features_in) as f:
         # load
         tsv = csv.reader(f, delimiter='\t')

@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import sys
 import argparse
+import logging
 ## application
 from DeepMAsED import Evaluate
 
@@ -34,22 +35,25 @@ def parse_args(test_args=None, subparsers=None):
                                          formatter_class=argparse.RawTextHelpFormatter)
 
     # args
-    parser.add_argument('--data-path', default='data', type=str, 
-                        help='Where to find feature table (default: %(default)s)')
-    parser.add_argument('--save-path', default='model', type=str, 
-                        help='Where to save training weights and logs (default: %(default)s)')
+    parser.add_argument('data_path', metavar='data-path', type=str, 
+                        help='Where to find feature table')
+    parser.add_argument('save_path', metavar='save-path', type=str, 
+                        help='Path to model training weights and logs')
     parser.add_argument('--save-plot', default=None, type=str, 
                         help='Where to save plots (default: %(default)s)')
     parser.add_argument('--max-len', default=10000, type=int, 
                         help='Max contig len, fixed input for CNN (default: %(default)s)')
-    parser.add_argument('--mode', default='chimera', type=str, 
-                        help='Chimera or edit distance (default: %(default)s)')
+    parser.add_argument('--mode', default='extensive', type=str,
+                        choices = ['extensive','edit', 'chimera'],
+                        help='Classification problem (default: %(default)s)')
     parser.add_argument('--technology', default='megahit', type=str, 
-                        help='Megahit or Metaspades (default: %(default)s)')
+                        help='Assembler name in the data_path (default: %(default)s)')
     parser.add_argument('--norm-raw', default=1, type=int, 
                         help='Whether to normalize the four one-hot feature of raw (default: %(default)s)')
     parser.add_argument('--is-synthetic', default=1, type=int, 
                         help='Whether the data is synthetic and thus has ground truth (default: %(default)s)')
+    parser.add_argument('--force-overwrite', action='store_true', default=False,
+                        help='Force re-creation of pickle files (default: %(default)s)')
         # running test args
     if test_args:
         args = parser.parse_args(test_args)

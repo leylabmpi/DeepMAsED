@@ -12,6 +12,8 @@ tests/output*/
 tests/old_models/
 tests/data/*.rick
 tests/data/*/*/*/*/*.pkl
+tests/data/*/model/predictions/
+tests/data/*/model/logs_final/
 DeepMAsED-SM/bin/misc_r_functions/
 DeepMAsED-SM/tests/output_*
 deepmased_trained/predictions/
