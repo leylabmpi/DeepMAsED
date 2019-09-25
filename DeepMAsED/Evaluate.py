@@ -122,69 +122,6 @@ def main(args):
         pickle.dump(scores, spred)
     logging.info('File written: {}'.format(outfile))
 
-        
-    # # old
-    # for model_path in path_to_models:
-    #     # finding final_model.h5 file
-    #     h5_file = 'final_model.h5'
-    #     D = os.path.join(args.save_path, model_path)
-    #     F = os.path.join(D, h5_file)
-    #     if not os.path.exists(F):
-    #         msg = 'Cannot find {} file in {}'
-    #         logging.warning(msg.format(h5_file, D))
-    #         continue
-    #     else:
-    #         msg = 'Found {} file in {}'
-    #         logging.info(msg.format(h5_file, D))
-
-    #     # predictions dir
-    #     if not os.path.exists(os.path.join(args.save_path, model_path, 'predictions')):
-    #         os.makedirs(os.path.join(args.save_path, model_path, 'predictions'))
-    
-    #     if not os.path.exists(os.path.join(args.save_path, model_path, 
-    #                                        'predictions', args.data_path.split('/')[-1])):
-    #         os.makedirs(os.path.join(args.save_path, model_path, 
-    #                                        'predictions', args.data_path.split('/')[-1]))
-
-    #     F = os.path.join(args.save_path, model_path, 'mean_std_final_model.pkl')
-    #     with open(F, 'rb') as mstd:
-    #         mean_tr, std_tr = pickle.load(mstd)
-    
-    #     model = load_model(os.path.join(args.save_path, model_path, 'final_model.h5'), 
-    #                        custom_objects=custom_obj)
-    
-    #     tech = args.technology
-            
-    #     logging.info('Loading data...')
-    #     if args.is_synthetic == 1:
-    #         x, y, i2n = Utils.load_features(args.data_path,
-    #                                         max_len=args.max_len,
-    #                                         mode = args.mode, 
-    #                                         technology=tech)
-    #     else:
-    #         x, y, i2n = Utils.load_features_nogt(args.data_path,
-    #                                              max_len=args.max_len,
-    #                                              mode = args.mode)
-    
-    #     logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))
-    
-    #     n2i = Utils.reverse_dict(i2n)
-    #     x = [xi for xmeta in x for xi in xmeta]
-    #     y = np.concatenate(y)
-    
-    #     dataGen = Models.Generator(x, y, args.max_len, batch_size=64,  shuffle=False, 
-    #                                norm_raw=bool(args.norm_raw),
-    #                                mean_tr=mean_tr, std_tr=std_tr)
-    
-    #     loggin.info('Computing predictions for {}...'.format(tech))
-    
-    #     scores = compute_predictions(y, n2i)
-    #     outfile = os.path.join(args.save_path, model_path, 'predictions', 
-    #                            args.data_path.split('/')[-1],  tech + '.pkl')
-    #     with open(outfile, 'wb') as spred:
-    #         pickle.dump(scores, spred)
-    #     logging.info('File written: {}'.format(outfile))
-       
     
 if __name__ == '__main__':
     pass

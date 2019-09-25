@@ -269,15 +269,6 @@ def load_features(data_path, max_len=10000,
           a dictionary with idx -> (metagenome, contig_name)
     """
 
-    # Pre-process once if not done already
-    #dirs = os.listdir(data_path)
-    #for i, f in enumerate(dirs):
-    #    current_path = os.path.join(data_path, f, technology)
-
-    #    if not os.path.exists(os.path.join(current_path, 'features.pkl')):
-    #        logging.info('Populating pickle file...')
-    #        pickle_data_b(current_path, 'features.tsv.gz', 'features_new.pkl')
-
     # Finding feature files
     feature_pkl_files = find_feature_files(data_path,
                                            technology=technology,
@@ -295,10 +286,6 @@ def load_features(data_path, max_len=10000,
             with open(filename, 'rb') as feat:
                 features = pickle.load(feat)
             
-        #current_path = os.path.join(data_path, f, technology)
-        #with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
-        #    features = pickle.load(feat)
-
             xi, yi, n2ii = features
         
             i2ni = reverse_dict(n2ii)
@@ -370,19 +357,6 @@ def load_features_nogt(data_path, max_len=10000,
         x, y, i2n: lists, where each element comes from one metagenome, and 
           a dictionary with idx -> (metagenome, contig_name)
     """
-
-    # Pre-process once if not done already
-    # dirs = os.listdir(data_path)
-    # for i,f in enumerate(dirs):
-    #     if not os.path.isdir(f):
-    #         continue
-    #     for g in os.listdir(os.path.join(data_path, f)):
-    #         current_path = os.path.join(data_path, f, g)
-    #         if not os.path.isdir(current_path):
-    #             continue
-    #         if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
-    #             pickle_data_feat_only(current_path, 'features.tsv.gz', 'features_new.pkl')
-    
     # found feature table files as a list
     feat_pkl_files = find_files(data_path, 'features.pkl')
     feat_gz_files = find_files(data_path, 'features.tsv.gz')

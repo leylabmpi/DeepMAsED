@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # import
 from __future__ import print_function
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 ## batteries
 import os
 import sys
