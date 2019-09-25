@@ -22,6 +22,7 @@ def main(args):
 
     # CPU only instead of GPU
     if args.cpu_only:
+        logging.info('Setting env for CPU-only mode...')
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
         os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
     
@@ -30,44 +31,41 @@ def main(args):
     recall_0 = Utils.class_recall(0)
     recall_1 = Utils.class_recall(1)
     custom_obj = {'metr' : recall_0}
-        
-    auc = []
-        
+                
     logging.info('Loading model...')
     ## pkl
-    F = os.path.join(args.data_path,  'mean_std_final_model.pkl')
+    F = os.path.join(args.save_path,  'mean_std_final_model.pkl')
     if not os.path.exists(F):
         msg = 'Model file not available at data-path: {}'
         raise IOError(msg.format(F))        
     with open(F, 'rb') as mstd:
         mean_tr, std_tr = pickle.load(mstd)
     ## h5
-    F = os.path.join(args.data_path, 'deepmased.h5')
+    F = os.path.join(args.save_path, 'final_model.h5')
     if not os.path.exists(F):
         msg = 'Model file not available at data-path: {}'
         raise IOError(msg.format(F))    
     model = load_model(F, custom_objects=custom_obj)
     
     # outdirs
-    #model_path = args.save_path
     outdir = os.path.join(args.save_path, 'predictions')
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     outdir = os.path.join(args.save_path, 'predictions',
-                        os.path.split(args.data_path)[1])
+                          os.path.split(args.data_path)[1])
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
     logging.info('Loading features...')
-    args.data_path = os.path.join(args.data_path, 'data')
-    x, y, i2n = Utils.load_features_nogt(args.data_path)
+    x, y, i2n = Utils.load_features_nogt(args.data_path,
+                                         force_overwrite=args.force_overwrite)
     
     logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))    
     n2i = Utils.reverse_dict(i2n)
     x = [xi for xmeta in x for xi in xmeta]
     y = np.concatenate(y)
     
-    dataGen = Models.Generator(x, y, batch_size=64,  shuffle=False, 
+    dataGen = Models.Generator(x, y, batch_size=64, shuffle=False, 
                                norm_raw=0, mean_tr=mean_tr, std_tr=std_tr)
     
     logging.info('Computing predictions...')

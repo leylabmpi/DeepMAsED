@@ -54,6 +54,9 @@ def parse_args(test_args=None, subparsers=None):
       
     The `--data-path` should be the base path to the feature tables,
     ("deepmased-sm_output_dir" in the example above).
+
+    If using real data (eg., mock communities) instead of (or in addition to) simulated 
+    training data, just use the same basic directory structure.
     """
     if subparsers:
         parser = subparsers.add_parser('train', description=desc, epilog=epi,

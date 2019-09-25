@@ -63,17 +63,6 @@ def normalize(x, mean, std, max_len):
 
     return x
 
-def find_files(data_path, filename):
-    """
-    Recursively looks for `filename` in `data_path`
-    """
-    found_files = []
-    for dirpath, dirnames, files in os.walk(data_path):
-        for F in files:
-            if F == filename:
-                found_files.append(os.path.join(dirpath, F))
-    return found_files
-
 def splitall(path):
     """
     Fully split file path
@@ -353,12 +342,25 @@ def load_features(data_path, max_len=10000,
     return x, y, i2n_all
 
 
+def find_files(data_path, filename):
+    """ 
+    Recursively looks for `filename` in `data_path`.
+    Return: list of file paths
+    """
+    feat_files = []
+    for dirpath, dirnames, files in os.walk(data_path):
+        for F in files:
+            if F == filename:
+                feat_files.append(os.path.join(dirpath, F))
+                
+    return feat_files
+
 def load_features_nogt(data_path, max_len=10000, 
                        mode='extensive', 
                        pickle_only=False,
                        force_overwrite=False):
     """
-    Loads features for real datasets. Filters contigs with low coverage. 
+    Loads features for real datasets. Filters contigs with low coverage.
 
     Inputs: 
         data_path: path to directory containing features.pkl
@@ -380,10 +382,37 @@ def load_features_nogt(data_path, max_len=10000,
     #             continue
     #         if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
     #             pickle_data_feat_only(current_path, 'features.tsv.gz', 'features_new.pkl')
-
-    # finding feature files
-    feature_pkl_files = find_feature_files(data_path,
-                                           force_overwrite=force_overwrite)
+    
+    # found feature table files as a list
+    feat_pkl_files = find_files(data_path, 'features.pkl')
+    feat_gz_files = find_files(data_path, 'features.tsv.gz')
+    feat_tsv_files = find_files(data_path, 'features.tsv')
+    
+    feat_files = []
+    if len(feat_pkl_files) > 1 and force_overwrite is True:
+        msg = 'Found {} pickled feature files. However, --force-overwrite used.'
+        msg += ' Re-creating pkl feature files'
+        logging.info(msg.format(len(feat_pkl_files)))
+    if len(feat_pkl_files) > 1 and force_overwrite is False:
+        msg = 'Found {} pickled feature files. Using these files.'
+        logging.info(msg.format(len(feat_pkl_files)))
+        feat_files = feat_pkl_files
+    elif len(feat_gz_files) >= 1:
+        msg = 'Found {} gzip\'ed tsv feature files. Using these files.'
+        logging.info(msg.format(len(feat_gz_files)))        
+        for F in feat_gz_files:
+            pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
+            feat_files.append(pickle_data_feat_only(F, pklF))
+    elif len(feat_tsv_files) >= 1:
+        msg = 'Found {} uncompressed tsv feature files. Using these files.'
+        logging.info(msg.format(len(feat_tsv_files)))
+        for F in feature_tsv_files:
+            pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
+            feat_files.append(pickle_data_feat_only(F, pklF))
+    else:
+        msg = 'Could not find any features files in data_path: {}'
+        raise IOError(msg.format(data_path))
+            
     
     if pickle_only: 
         exit()
@@ -393,55 +422,48 @@ def load_features_nogt(data_path, max_len=10000,
     i2n_all = {}
 
     idx_coverage = -2
-    for rep,v in feature_pkl_files.items():
-        for assembler,filename in v.items():
-            with open(filename, 'rb') as feat:
-                features = pickle.load(feat)
-    #for i, f in enumerate(dirs):
-    #    if not os.path.isdir(os.path.join(data_path, f)):
-    #        continue
-    #    for g in os.listdir(os.path.join(data_path, f)):
-    #        current_path = os.path.join(data_path, f, g)
-    #        if not os.path.exists(os.path.join(current_path, 'features_new.pkl')):
-    #            continue
-    #        with open(os.path.join(current_path, 'features_new.pkl'), 'rb') as feat:
-    #            features = pickle.load(feat)
-            
-            try:
-                xi, n2ii = features
-                yi = [-1 for i in range(len(xi))]
-            except ValueError:
-                xi, yi, n2ii = features                
-            
-            i2ni = reverse_dict(n2ii)
+    for i,f in enumerate(feat_files):
+        # loading pickled features
+        with open(f, 'rb') as feat:
+            features = pickle.load(feat)
 
-            x_in_contig, y_in_contig = [], []
+        # unpacking
+        try:
+            xi, n2ii = features
+            yi = [-1 for i in range(len(xi))]
+        except ValueError:
+            xi, yi, n2ii = features                
 
-            n2i_keys = set([])
-            for j in range(len(xi)):
-                len_contig = xi[j].shape[0]
+        # reverse dict
+        i2ni = reverse_dict(n2ii)
+
+        # contigs
+        x_in_contig, y_in_contig = [], []
+        n2i_keys = set([])
+        for j in range(len(xi)):
+            len_contig = xi[j].shape[0]
                 
-                #Filter low coverage
-                if np.amin(xi[j][:, idx_coverage]) == 0:
-                    continue
+            #Filter low coverage
+            if np.amin(xi[j][:, idx_coverage]) == 0:
+                continue
 
-                idx_chunk = 0
-                while idx_chunk * max_len < len_contig:
-                    chunked = xi[j][idx_chunk * max_len :
-                                    (idx_chunk + 1) * max_len, 1:]
+            idx_chunk = 0
+            while idx_chunk * max_len < len_contig:
+                chunked = xi[j][idx_chunk * max_len :
+                                (idx_chunk + 1) * max_len, 1:]
             
-                    x_in_contig.append(chunked)
-                    y_in_contig.append(yi[j])
+                x_in_contig.append(chunked)
+                y_in_contig.append(yi[j])
 
-                    i2n_all[len(x_in_contig) - 1 + shift] = (rep, i2ni[j][0])
-                    idx_chunk += 1
-                    n2i_keys.add(i2ni[j][0])
+                i2n_all[len(x_in_contig) - 1 + shift] = (i, i2ni[j][0])
+                idx_chunk += 1
+                n2i_keys.add(i2ni[j][0])
 
-            # Each element is a metagenome
-            x.append(x_in_contig)
-            yext.append(np.array(y_in_contig))
+        # Each element is a metagenome
+        x.append(x_in_contig)
+        yext.append(np.array(y_in_contig))
 
-            shift = len(i2n_all)
+        shift = len(i2n_all)
 
     if mode == 'edit':
         y = 100 * np.array(ye)
@@ -557,7 +579,7 @@ def pickle_data_b(features_in, features_out):
     return features_out
 
 
-def pickle_data_feat_only(data_path, features_in, features_out):
+def pickle_data_feat_only(features_in, features_out):
     """
     One time function parsing the csv file and dumping the 
     values of interest into a pickle file. 
@@ -574,10 +596,14 @@ def pickle_data_feat_only(data_path, features_in, features_out):
 
     for k, v in idx_tmp:
         letter_idx[k] = v
-
-    idx = 0
+    
     #Read tsv and process features
-    with gzip.open(os.path.join(data_path, features_in), 'rt') as f:
+    if features_in.endswith('.gz'):
+        _open = lambda x: gzip.open(x, 'rt')
+    else:
+        _open = lambda x: open(x, 'r')
+    idx = 0
+    with _open(features_in) as f:
 
         tsv = csv.reader(f, delimiter='\t')
         col_names = next(tsv)
@@ -606,9 +632,11 @@ def pickle_data_feat_only(data_path, features_in, features_out):
     assert(len(feat_contig) == len(name_to_id))
 
     # Save processed data into pickle file
-    with open(os.path.join(data_path, features_out), 'wb') as f:
+    with open(features_out, 'wb') as f:
         pickle.dump([feat_contig, name_to_id], f)
 
+    return features_out
+        
 def class_recall(label):
     """
     Custom metric for Keras, computes recall per class. 
@@ -663,7 +691,7 @@ def compute_predictions(n2i, generator, model, save_path):
     outfile = os.path.join(save_path, 'predictions.csv')
     write = open(outfile, 'w')
     csv_writer = csv.writer(write, delimiter='\t')
-    csv_writer.writerow(['MAG', 'Contig', 'Deepmased score'])
+    csv_writer.writerow(['MAG', 'Contig', 'Deepmased_score'])
     
     for k in n2i:
         inf = n2i[k][0]
@@ -684,7 +712,6 @@ def compute_predictions(n2i, generator, model, save_path):
     
     write.close()
     logging.info('File written: {}'.format(outfile))
-    #return scores
 
 
 

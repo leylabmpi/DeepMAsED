@@ -20,12 +20,23 @@ def test_help():
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 0
 
-def test_predict(tmp_path):
-    indir = os.path.join(data_dir, 'deepmased_trained')
-    outdir = os.path.join(tmp_path, 'predict_cpu')
-    args = ['--cpu_only', '--data_path', indir, '--save_path', outdir]
+def test_predict(tmpdir):
+    out_path = tmpdir.mkdir('save_dir')
+    model_path = os.path.join(data_dir, 'n1000_r3/', 'model')
+    args = [os.path.join(data_dir, 'deepmased_trained'),
+            model_path, '--cpu-only']
     args = Predict_CMD.parse_args(args)
-    Predict_CMD.main(args)
-    F = os.path.join(outdir,'predictions', 'deepmased_trained', 'predictions.csv')
+    Predict_CMD.main(args)    
+    F = os.path.join(model_path,'predictions', 'predictions.csv')
+    assert os.path.isfile(F)
+    
+def test_predict_r3(tmpdir):
+    out_path = tmpdir.mkdir('save_dir')
+    model_path = os.path.join(data_dir, 'n1000_r3/', 'model')
+    args = [os.path.join(data_dir, 'n1000_r3/'),
+            model_path, '--cpu-only']
+    args = Predict_CMD.parse_args(args)
+    Predict_CMD.main(args)    
+    F = os.path.join(model_path,'predictions', 'predictions.csv')
     assert os.path.isfile(F)
     
