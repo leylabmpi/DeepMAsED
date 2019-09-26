@@ -1,78 +1,89 @@
 # import
 ## batteries
+import logging
 ## 3rd party
 import numpy as np
-import keras
-from keras.models import Model, Sequential
-from keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
-from keras.layers import MaxPooling2D, Dropout
-from keras.layers import Conv2D, Flatten
+try:
+    import keras
+except AttributeError:
+    import tensorflow.keras as keras
+try:
+    from keras.models import Model, Sequential
+    from keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
+    from keras.layers import MaxPooling2D, Dropout
+    from keras.layers import Conv2D, Flatten
+except AttributeError:
+    from tensorflow.keras.models import Model, Sequential
+    from tensorflow.keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
+    from tensorflow.keras.layers import MaxPooling2D, Dropout
+    from tensorflow.keras.layers import Conv2D, Flatten    
 ## application
 from DeepMAsED import Utils
 
 
 class deepmased(object):
     """
-    Implements a convolutional network for chimera prediction. 
+    Implements a convolutional network for misassembly prediction. 
     """
-
     def __init__(self, config):
-
-        max_len = config.max_len
-        filters = config.filters
-        n_conv = config.n_conv
-        n_features = config.n_features
-        pool_window = config.pool_window
-        dropout = config.dropout
-        lr_init = config.lr_init
-        mode = config.mode
-        n_fc = config.n_fc
-        n_hid = config.n_hid
+        self.max_len = config.max_len
+        self.filters = config.filters
+        self.n_conv = config.n_conv
+        self.n_features = config.n_features
+        self.pool_window = config.pool_window
+        self.dropout = config.dropout
+        self.lr_init = config.lr_init
+        self.mode = config.mode
+        self.n_fc = config.n_fc
+        self.n_hid = config.n_hid
 
         self.net = Sequential()
 
-        self.net.add(Conv2D(filters, kernel_size=(2, n_features), 
-                            input_shape=(max_len, n_features, 1),
+        self.net.add(Conv2D(self.filters, kernel_size=(2, self.n_features), 
+                            input_shape=(self.max_len, self.n_features, 1),
                             activation='relu', padding='valid'))
         self.net.add(BatchNormalization(axis=-1))
 
-        for i in range(1, n_conv):
-            self.net.add(Conv2D(2 ** i * filters, kernel_size=(2, 1), 
+        for i in range(1, self.n_conv):
+            self.net.add(Conv2D(2 ** i * self.filters, kernel_size=(2, 1), 
                                 strides=2, 
-                                input_shape=(max_len, 1, 2 ** (i - 1) * filters), 
+                                input_shape=(self.max_len, 1, 2 ** (i - 1) * self.filters), 
                                 activation='relu'))
             self.net.add(BatchNormalization(axis=-1))
         
-        self.net.add(AveragePooling2D((pool_window, 1)))
+        self.net.add(AveragePooling2D((self.pool_window, 1)))
         self.net.add(Flatten())
 
-        optimizer = keras.optimizers.adam(lr=lr_init)
+        optimizer = keras.optimizers.adam(lr=self.lr_init)
 
-        if mode in ['chimera', 'extensive']:
-            for _ in range(n_fc - 1):
-                self.net.add(Dense(n_hid, activation='relu'))
-                self.net.add(Dropout(rate=dropout))
+        if self.mode in ['chimera', 'extensive']:
+            for _ in range(self.n_fc - 1):
+                self.net.add(Dense(self.n_hid, activation='relu'))
+                self.net.add(Dropout(rate=self.dropout))
 
             self.net.add(Dense(1, activation='sigmoid'))
-            self.net.add(Dropout(rate=dropout))
+            self.net.add(Dropout(rate=self.dropout))
 
-            recall_0 = utils.class_recall(0)
-            recall_1 = utils.class_recall(1)
-            self.net.compile(loss='binary_crossentropy', optimizer=optimizer,
+            recall_0 = Utils.class_recall(0)
+            recall_1 = Utils.class_recall(1)
+            self.net.compile(loss='binary_crossentropy',
+                             optimizer=optimizer,
                              metrics=[recall_0, recall_1])
-        elif mode == 'edit':
+        elif self.mode == 'edit':
             self.net.add(Dense(20, activation='relu'))
             self.net.add(Dropout(rate=dropout))
             self.net.add(Dense(20, activation='relu'))
             self.net.add(Dropout(rate=dropout))
             self.net.add(Dense(1, activation='linear'))
-            self.net.compile(loss='mean_absolute_error', optimizer=optimizer,
-                             metrics=[utils.explained_var])
+            self.net.compile(loss='mean_absolute_error',
+                             optimizer=optimizer,
+                             metrics=[Utils.explained_var])
         else:
-            raise('Training mode not supported.')
+            raise('Training mode "{}" not supported.'.format(mode))
 
         self.reduce_lr = keras.callbacks.ReduceLROnPlateau(
-          monitor='val_loss', factor=0.5, patience=5, min_lr = 0.01 * lr_init)
+                               monitor='val_loss', factor=0.5,
+                               patience=5, min_lr = 0.01 * self.lr_init)
 
     def predict(self, x):
         return self.net.predict(x)
@@ -88,9 +99,9 @@ class deepmased(object):
 
 
 class Generator(keras.utils.Sequence):
-    def __init__(self, x, y, max_len=10000, batch_size=32, shuffle=True, norm_raw=True,
+    def __init__(self, x, y, max_len=10000, batch_size=32,
+                 shuffle=True, norm_raw=True,
                  mean_tr=None, std_tr=None): 
-        'Initialization'
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.max_len = max_len
@@ -100,7 +111,7 @@ class Generator(keras.utils.Sequence):
         self.n_feat = x[0].shape[1]
 
         if mean_tr is None:
-            mean, std = utils.compute_mean_std(self.x)
+            mean, std = Utils.compute_mean_std(self.x)
             self.mean = mean
             self.std = std
             if not norm_raw:
