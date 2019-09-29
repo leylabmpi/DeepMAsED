@@ -6,10 +6,7 @@ import logging
 import _pickle as pickle
 ## 3rd party
 import numpy as np
-try:
-    import keras
-except AttributeError:
-    import tensorflow.keras as keras
+import keras
 from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.metrics import recall_score, roc_auc_score, average_precision_score
 from sklearn.preprocessing import StandardScaler
