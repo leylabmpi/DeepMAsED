@@ -27,8 +27,6 @@ def test_predict(tmpdir):
             model_path, '--cpu-only']
     args = Predict_CMD.parse_args(args)
     Predict_CMD.main(args)    
-    F = os.path.join(model_path,'predictions', 'predictions.csv')
-    assert os.path.isfile(F)
     
 def test_predict_r3(tmpdir):
     out_path = tmpdir.mkdir('save_dir')
@@ -37,6 +35,4 @@ def test_predict_r3(tmpdir):
             model_path, '--cpu-only']
     args = Predict_CMD.parse_args(args)
     Predict_CMD.main(args)    
-    F = os.path.join(model_path,'predictions', 'predictions.csv')
-    assert os.path.isfile(F)
     
