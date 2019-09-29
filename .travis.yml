@@ -1,5 +1,15 @@
 language: python
 
+
+matrix:
+  include:
+    - name: "ubuntu xenial"
+      os: linux  
+      dist: xenial
+    - name: "ubuntu bionic"
+      os: linux
+      dist: bionic
+
 python:
   - "3.6"
 
