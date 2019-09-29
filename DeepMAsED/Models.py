@@ -3,20 +3,11 @@
 import logging
 ## 3rd party
 import numpy as np
-try:
-    import keras
-except AttributeError:
-    import tensorflow.keras as keras
-try:
-    from keras.models import Model, Sequential
-    from keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
-    from keras.layers import MaxPooling2D, Dropout
-    from keras.layers import Conv2D, Flatten
-except AttributeError:
-    from tensorflow.keras.models import Model, Sequential
-    from tensorflow.keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
-    from tensorflow.keras.layers import MaxPooling2D, Dropout
-    from tensorflow.keras.layers import Conv2D, Flatten    
+import keras
+from keras.models import Model, Sequential
+from keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
+from keras.layers import MaxPooling2D, Dropout
+from keras.layers import Conv2D, Flatten
 ## application
 from DeepMAsED import Utils
 

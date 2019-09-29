@@ -9,10 +9,7 @@ import glob
 import logging
 from collections import defaultdict
 ## 3rd party
-try:
-    from keras import backend as K
-except AttributeError:
-    from tensorflow.keras import backend as K    
+from keras import backend as K
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
