@@ -42,17 +42,7 @@ The tool is divided into two main parts:
 
 ## DeepMAsED-DL
 
-Either from the `environment.yaml` file:
-
-`conda create --name deepmased --file environment.yaml`
-
-...or just by creating a new env with the following packages:
-
-`conda create -n deepmased tensorflow=1.10 keras tensorboard scikit-learn ipython`
-
-Make sure to activate the correct environment when running the deep learning code:
-
-`conda activate deepmased`
+See the `conda create` line in the .travis.yaml file.
 
 ### Testing the DeepMAsED package (optional)
 
