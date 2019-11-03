@@ -33,7 +33,8 @@ rule combine_ref_genomes:
     shell:
         """
         OUTDIR=`dirname {output}`
-        mkdir -p $OUTDIR 2> {log}
+        rm -rf $OUTDIR 2> {log}
+        mkdir -p $OUTDIR 2>> {log}
         
         {params.exe} {input.fna} \
            {input.comm} {params.genomes_dir} \
@@ -130,7 +131,7 @@ rule metaquast:
     resources:
         time = lambda wildcards, attempt: attempt * 60 * 24,
         n = lambda wildcards, attempt: 12,
-        mem_gb_pt = lambda wildcards, attempt: int(attempt ** 2.6 + 3)
+        mem_gb_pt = lambda wildcards, attempt: int(attempt ** 2.6 + 4)
     conda:
         '../envs/quast.yaml'	
     log:
@@ -141,7 +142,9 @@ rule metaquast:
         """
         OUTDIR=`dirname {output.done}`
 	REFDIR=`dirname {input.refs}`
-
+        # removing existing metaquast output
+        rm -rf $OUTDIR"/combined_reference/" 2> {log}        
+        # metaquast run
         metaquast.py {params} -t {threads} \
           --reads1 {input.read1} --reads2 {input.read2} \
           -o $OUTDIR -r $REFDIR \

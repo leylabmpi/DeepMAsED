@@ -1,0 +1,5 @@
+channels: !!python/tuple
+- bioconda
+dependencies:
+- pigz
+- bioconda::valet

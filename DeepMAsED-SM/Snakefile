@@ -72,6 +72,7 @@ else:
     include: snake_dir + 'bin/assembly/Snakefile'
     include: snake_dir + 'bin/true_errors/Snakefile'
     include: snake_dir + 'bin/map/Snakefile'
+    include: snake_dir + 'bin/SotA/Snakefile'
 
 
 def all_feat_tables(genomes_tbl):
@@ -143,6 +144,20 @@ def all_which_input(wildcards):
     	       rep = config['reps'],
     	       assembler = config['assemblers'])
         input_files += x
+
+        # State of the Art
+	## ALE
+        if not config['params']['ALE'].startswith('Skip'):
+            x = expand(ale_dir + '{rep}/{assembler}/ALE_results.txt',
+    		       rep = config['reps'],
+    	               assembler = config['assemblers'])
+            input_files += x
+	## VALET
+        if not config['params']['VALET'].startswith('Skip'):
+            x = expand(valet_dir + '{rep}/{assembler}/valet_out/reference/summary.tsv',
+    		       rep = config['reps'],
+    	               assembler = config['assemblers'])
+            input_files += x
 
     return input_files
 

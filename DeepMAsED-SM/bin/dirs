@@ -6,6 +6,8 @@ coverage_dir = os.path.join(config['output_dir'], 'coverage/')
 asmbl_dir = os.path.join(config['output_dir'], 'assembly/')
 true_errors_dir = os.path.join(config['output_dir'], 'true_errors/')
 map_dir = os.path.join(config['output_dir'], 'map/')
+ale_dir = os.path.join(config['output_dir'], 'ALE/')
+valet_dir = os.path.join(config['output_dir'], 'VALET/')
 
 log_dir = os.path.join(config['output_dir'], 'logs/')
 benchmark_dir = os.path.join(config['output_dir'], 'benchmarks/')

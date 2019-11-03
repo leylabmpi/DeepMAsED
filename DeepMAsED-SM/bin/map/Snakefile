@@ -143,16 +143,6 @@ rule bam_to_DL_features:
           {input.bam} {input.fasta} > {output} 2>> {log}
         """
 
-        # if [[ -d "{params.tmp_db}" ]]; then
-        #   JOBLIB_TEMP_FOLDER="{params.tmp_db}"
-        # else
-        #   JOBLIB_TEMP_FOLDER="/tmp/"
-        # fi
-        # echo "JOBLIB_TEMP_FOLDER set to: $JOBLIB_TEMP_FOLDER" > {log}
-	
-        # tmpfs = lambda wildcards, attempt: int(round(attempt ** 2.5 * 2 + 5, 0))
-
-
 rule feature_true_est_join:
     """
     Joining 'true' contig assembly info with the bam-generated feature table
@@ -166,7 +156,7 @@ rule feature_true_est_join:
         exe = config['pipeline']['script_folder'] + 'table_join.R'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 12
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 15
     conda:
         '../envs/R.yaml'
     log:

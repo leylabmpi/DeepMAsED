@@ -83,5 +83,14 @@
         "time" : "{resources.time}",
 	"n"   : 8,
         "mem" : "{resources.mem_gb_pt}"
+    },
+    "ALE" : {
+        "time" : "{resources.time}",
+        "mem" : "{resources.mem_gb_pt}"
+    },
+    "VALET" : {
+        "time" : "{resources.time}",
+	"n"   : 8,
+        "mem" : "{resources.mem_gb_pt}"
     }
 }

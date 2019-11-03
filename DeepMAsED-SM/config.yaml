@@ -1,12 +1,13 @@
 # Input
-genomes_file: tests/data/genome_download_n10.tsv
+genomes_file: tests/data/genomes_n10.tsv
 
 # Output location
 output_dir: tests/output_n10/
 
-
 # software parameters
-# Use "Skip" to skip  steps. If no params for rule, use ""
+## Use "Skip" to skip  steps. If no params for rule, use ""
+## `reps:` is the number of replicate simulations
+## If `keep_reads: True`, then simulated reads are kept
 params:
   # simulating metagenomes
   reps: 2
@@ -30,7 +31,12 @@ params:
   # mapping reads to contigs
   samtools: ""
   # creating DL features
-  make_features: ""  
+  make_features: ""
+  # state-of-the-art
+  ## ALE
+  ALE: ""
+  ## VALET
+  VALET: ""
   
 # snakemake pipeline
 pipeline:
