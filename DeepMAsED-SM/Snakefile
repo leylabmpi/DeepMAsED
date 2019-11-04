@@ -6,10 +6,13 @@ import sys
 import getpass
 import socket
 import pandas as pd
+import random
 
 # setup
 ## config
 configfile: 'config.yaml'
+## random seed
+random.seed(config['pipeline']['rnd_seed'])
 ## dirs 
 snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/dirs'

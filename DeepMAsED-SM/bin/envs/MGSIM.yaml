@@ -12,4 +12,4 @@ dependencies:
 - bioconda::pyfasta=0.5
 - bioconda::art
 - pip:
-  - MGSIM>=0.1.4
+  - MGSIM>=0.1.7

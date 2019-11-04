@@ -43,3 +43,4 @@ pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
   temp_folder: /tmp/global2/
+  rnd_seed: 9384

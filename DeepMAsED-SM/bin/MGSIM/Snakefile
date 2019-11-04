@@ -1,4 +1,5 @@
 import os
+import random
 import pandas as pd
 
 if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
@@ -72,7 +73,8 @@ rule MGSIM_communities:
         wAbund = mgsim_dir + '{rep}/comm_wAbund.txt'
     params:
         prefix = mgsim_dir + '{rep}/comm',
-        params = config['params']['MGSIM']['communities']
+        params = config['params']['MGSIM']['communities'],
+        rndSeed = random.randint(10,100000)
     conda:
         '../envs/MGSIM.yaml'
     resources:
@@ -83,7 +85,8 @@ rule MGSIM_communities:
         benchmark_dir + 'MGSIM_communities/{rep}.txt'
     shell:
         """       
-        MGSIM communities {params.params} --n-comm 1 \
+        MGSIM communities {params.params} \
+          --rnd-seed {params.rndSeed} --n-comm 1 \
           {input} {params.prefix} 2> {log} 1>&2
         """
 
@@ -101,7 +104,8 @@ rule MGSIM_reads:
     params:
         out_dir = os.path.join(config['tmp_dir'], '{rep}', 'sim_reads'),
         tmp_dir = os.path.join(config['tmp_dir'], '{rep}', 'sim_reads_tmp'),
-        params = config['params']['MGSIM']['reads']
+        params = config['params']['MGSIM']['reads'],
+        rndSeed = random.randint(10,100000)
     conda:
         '../envs/MGSIM.yaml'
     threads:
@@ -117,6 +121,7 @@ rule MGSIM_reads:
     shell:
         """
         MGSIM reads {params.params} -n {threads} \
+          --rndSeed {params.rndSeed} \
           --tmp-dir {params.tmp_dir} \
           {input.tbl} {input.wAbund} {params.out_dir} \
           2> {log} 1>&2
