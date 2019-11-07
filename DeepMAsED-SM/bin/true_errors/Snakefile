@@ -140,10 +140,12 @@ rule metaquast:
         benchmark_dir + 'metaquast/{rep}/{assembler}.txt'
     shell:
         """
+        # params
         OUTDIR=`dirname {output.done}`
 	REFDIR=`dirname {input.refs}`
         # removing existing metaquast output
         rm -rf $OUTDIR"/combined_reference/" 2> {log}        
+        rm -rf $OUTDIR"/runs_per_reference/" 2>> {log}
         # metaquast run
         metaquast.py {params} -t {threads} \
           --reads1 {input.read1} --reads2 {input.read2} \
