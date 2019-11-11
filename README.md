@@ -103,6 +103,80 @@ See the following resources for help:
 * `./output/benchmarks/`
   * Job resource usage info
 
+##### Features table
+
+* **Basic info**
+  * assembler
+    * metagenome assembler used
+  * contig
+    * contig ID
+  * position
+    * position on the contig (bp)
+  * ref_base
+    * nucleotide at that position on the contig
+* **Extracted from the bam file**
+  * num_query_A
+    * number of reads mapping to that position with 'A'
+  * num_query_C
+    * number of reads mapping to that position with 'C'
+  * num_query_G
+    * number of reads mapping to that position with 'G'
+  * num_query_T
+    * number of reads mapping to that position with 'T'
+  * num_SNPs
+    * number of SNPs at that position
+  * coverage
+    * number of reads mapping to that position
+  * min_insert_size
+    * minimum paired-end read insert size for all reads mapping to that position
+  * mean_insert_size
+    * mean paired-end read insert size for all reads mapping to that position
+  * stdev_insert_size
+    * stdev paired-end read insert size for all reads mapping to that position
+  * max_insert_size
+    * max paired-end read insert size for all reads mapping to that position
+  * min_mapq
+    * minimum read mapping quality for all reads mapping to that position
+  * mean_mapq
+    * mean read mapping quality for all reads mapping to that position
+  * stdev_mapq
+    * stdev read mapping quality for all reads mapping to that position
+  * max_mapq
+    * max read mapping quality for all reads mapping to that position
+  * num_proper
+    * number of reads mapping to that position with proper read pairing
+  * num_diff_strand
+    * number of reads mapping to that position where mate maps to the other strand
+    * "proper" pair alignment determined by bowtie2
+  * num_orphans
+    * number of reads mapping to that position where the mate did not map
+  * num_supplementary
+    * number of reads mapping to that position where the alignment is supplementary
+    * see the [samtools docs](https://samtools.github.io/hts-specs/SAMv1.pdf) for more info
+  * num_secondary
+    * number of reads mapping to that position where the alignment is secondary
+    * see the [samtools docs](https://samtools.github.io/hts-specs/SAMv1.pdf) for more info
+  * seq_window_entropy
+    * sliding window contig sequence Shannon entropy
+    * window size defined with the `make_features:` param in the `config.yaml` file
+  * seq_window_perc_gc
+    * sliding window contig sequence GC content
+    * window size defined with the `make_features:` param in the `config.yaml` file
+* **miniasm info**
+  * chimeric
+    * chimeric contig (Supplementary alignments; SAM 0x800)
+  * num_hits
+    * number of primary + supplementary alignments
+  * query_hit_len
+    * total query hit length (all alignments summed)
+  * edit_dist
+    * "NM" tag in minimap2 (summed for all alignments)
+  * edit_dist_norm
+    * edit_dist / query_hit_len
+* **MetaQUAST info**
+  * Extensive_misassembly
+    * the "extensive misassembly" classification set by MetaQUAST
+
 ### Creating custom train/test data from reference genomes
 
 This is useful for training DeepMAsED-DL with a custom
