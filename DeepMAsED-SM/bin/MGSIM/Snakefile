@@ -15,7 +15,8 @@ if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
             tbl = genomes_dir + 'genomes.tsv',
             fna = config['genomes_tbl']['Fasta']
         params:
-            config['params']['MGSIM']['genome_download']
+            params = config['params']['MGSIM']['genome_download'],
+            outdir = config['tmp_dir'] + 'ref_genomes'
         conda:
             '../envs/MGSIM.yaml'
         threads:
@@ -26,11 +27,11 @@ if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
             benchmark_dir + 'MGSIM_genome_download.txt'
         shell:
             """
-            OUTDIR=`dirname {output.tbl}`
+            OUTDIR="{params.outdir}"
 	    rm -rf $OUTDIR 2> {log}
             mkdir -p $OUTDIR 2>> {log}
 
-            MGSIM genome_download {params} \
+            MGSIM genome_download {params.params} \
               -n {threads} -d $OUTDIR -r \
               {input.tbl} > {output.tbl} 2>> {log}
             """
@@ -44,9 +45,10 @@ else:
             tbl = config['genomes_file'],
             fna = config['genomes_tbl']['Fasta']
         output:
-            tbl = genomes_dir + 'genomes.tsv',
+            tbl = genomes_dir + 'genomes.tsv'
         params:
-            exe = config['pipeline']['script_folder'] + 'rename_genomes.py'
+            exe = config['pipeline']['script_folder'] + 'rename_genomes.py',
+            outdir = config['tmp_dir'] + 'ref_genomes'
         conda:
             '../envs/MGSIM.yaml'
         log:
@@ -55,7 +57,7 @@ else:
             benchmark_dir + 'MGSIM_genome_rename.txt'
         shell:
             """
-            OUTDIR=`dirname {output.tbl}`
+            OUTDIR="{params.outdir}"
 	    rm -rf $OUTDIR 2> {log}
             mkdir -p $OUTDIR >> {log}
 
