@@ -127,9 +127,10 @@ def main(args):
                                               write_graph=True, write_images=True)
         logging.info('Training network...')
         if config.mode in ['chimera', 'extensive']:
-            w_one = int(len(np.where(y == 0)[0])  / len(np.where(y == 1)[0]))
-            class_weight = {0 : 1 , 1: w_one}
-            deepmased.net.fit_generator(generator=dataGen, 
+#             w_one = int(len(np.where(y == 0)[0])  / len(np.where(y == 1)[0]))
+#             class_weight = {0 : 1 , 1: w_one}
+             
+            deepmased.net.fit_generator(generator=dataGen,
                                         epochs=args.n_epochs, 
                                         use_multiprocessing=True,
                                         verbose=2,
