@@ -47,6 +47,7 @@ def main(args):
                                   max_len=args.max_len,
                                   standard=args.standard,
                                   mode = config.mode, 
+                                  technology = args.technology,
                                   pickle_only=args.pickle_only,
                                   force_overwrite=args.force_overwrite)
 
@@ -136,10 +137,17 @@ def main(args):
                                         verbose=2,
                                         callbacks=[tb_logs, deepmased.reduce_lr])
         logging.info('Saving trained model...')
-        outfile = os.path.join(save_path, 'final_model.h5')
+        
+        if args.technology is None:
+            tech_name='all'
+        else:
+            tech_name=args.technology
+            
+        outfile = os.path.join(save_path, args.save_name + tech_name + '_model.h5')
         deepmased.save(outfile)
         logging.info('  File written: {}'.format(outfile))
-        outfile = os.path.join(save_path, 'mean_std_final_model.pkl')
+        
+        outfile = os.path.join(save_path, args.save_name + tech_name +'_mean_std.pkl')
         with open(outfile, 'wb') as f:
             pickle.dump([dataGen.mean, dataGen.std], f)
         logging.info('  File written: {}'.format(outfile))

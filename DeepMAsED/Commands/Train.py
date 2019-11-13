@@ -68,8 +68,12 @@ def parse_args(test_args=None, subparsers=None):
     # args
     parser.add_argument('data_path',  metavar='data-path', type=str, 
                         help='Base path to the feature tables (see the docs)')
+    parser.add_argument('--technology', default=None, type=str, 
+                        help='Assembler name in the data_path (default: %(default)s)')    
     parser.add_argument('--save-path', default='model', type=str, 
                         help='Where to save training weights and logs (default: %(default)s)')
+    parser.add_argument('--save_name', default='new_', type=str, 
+                        help='Prefix for name in the save_path (default: %(default)s)')  
     parser.add_argument('--filters', default=8, type=int, 
                         help='N of filters for first conv layer. Then x2 (default: %(default)s)')
     parser.add_argument('--n-hid', default=50, type=int, 
