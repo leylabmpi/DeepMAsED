@@ -20,7 +20,7 @@ from DeepMAsED import Utils
 
 def compute_predictions(y, n2i, model, dataGen):
     """
-    Computes predictions for a model and generator, aggregating scores for long contigs.
+    Computes predictions for a model and generator, NOT aggregating scores for long contigs.
 
     Inputs: 
         n2i: dictionary with contig_name -> list of idx corresponding to that contig.
@@ -70,43 +70,35 @@ def main(args):
     recall_1 = Utils.class_recall(1)
     custom_obj = {'metr' : recall_0}
     
-    # 'final_model.h5' 
-    h5_file = os.path.join(args.save_path, 'final_model.h5')
+    h5_file = os.path.join(args.model_path, args.model_name)
     if not os.path.exists(h5_file):
         msg = 'Cannot find {} file in {}'
-        raise IOError(msg.format('final_model.h5', args.save_path))
-    logging.info('Loading file: {}'.format(h5_file))
+        raise IOError(msg.format(args.model_name, args.model_path))
+    logging.info('Loading model: {}'.format(h5_file))
     model = load_model(h5_file, custom_objects=custom_obj)
-    
-    # prediction directory
-    pred_dir = os.path.join(args.save_path, 'predictions')
-    if not os.path.exists(pred_dir):
-        os.makedirs(pred_dir)
 
+    
     # model pkl
-    pkl_file = os.path.join(args.save_path, 'mean_std_final_model.pkl')
+    pkl_file = os.path.join(args.model_path, args.mstd_name)
     logging.info('Loading file: {}'.format(pkl_file))
     with open(pkl_file, 'rb') as mstd:
         mean_tr, std_tr = pickle.load(mstd)
     
-    # tech
-    tech = args.technology
-    auc = []
 
     # loading features
     if args.is_synthetic == 1:
         x, y, i2n = Utils.load_features(args.data_path,
                                         max_len = args.max_len,
                                         mode = args.mode, 
-                                        technology = tech,
+                                        technology = args.technology,
                                         force_overwrite=args.force_overwrite)
     else:
         x, y, i2n = Utils.load_features_nogt(args.data_path,
                                              max_len = args.max_len,
                                              mode = args.mode,
                                              force_overwrite=args.force_overwrite)
-    
-
+#     yyy = np.concatenate(y)
+#     logging.info('Loaded {} ys'.format(np.array(yyy).shape))
     logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))    
     n2i = Utils.reverse_dict(i2n)
     x = [xi for xmeta in x for xi in xmeta]
@@ -115,9 +107,9 @@ def main(args):
                                norm_raw=bool(args.norm_raw),
                                mean_tr=mean_tr, std_tr=std_tr)
     
-    logging.info('Computing predictions for {}...'.format(tech))    
+    logging.info('Computing predictions for {}...'.format(args.technology))    
     scores = compute_predictions(y, n2i, model, dataGen)
-    outfile = os.path.join(args.save_path, 'predictions', tech + '.pkl')
+    outfile = os.path.join(args.save_path,  args.save_name + args.technology + '.pkl')
     with open(outfile, 'wb') as spred:
         pickle.dump(scores, spred)
     logging.info('File written: {}'.format(outfile))

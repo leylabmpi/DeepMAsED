@@ -126,7 +126,7 @@ def find_feature_files(data_path, technology=None, force_overwrite=False):
     feature_gz_files, n_gz = _find_feature_files(data_path, 'features.tsv.gz', technology)
     feature_tsv_files, n_tsv = _find_feature_files(data_path, 'features.tsv', technology)
     feature_pkl_files, n_pkl = _find_feature_files(data_path, 'features.pkl', technology)
-    print(feature_pkl_files)
+    #print(feature_pkl_files)
     # which files to use?
     if n_pkl > 1 and force_overwrite is True:
         msg = 'Found {} pickled feature files. However, --force-overwrite used.'
