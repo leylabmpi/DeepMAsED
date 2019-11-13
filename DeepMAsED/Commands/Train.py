@@ -84,8 +84,6 @@ def parse_args(test_args=None, subparsers=None):
                         help='N of fully connected layers (default: %(default)s)')
     parser.add_argument('--n-epochs', default=10, type=int, 
                         help='N of training epochs (default: %(default)s)')
-    parser.add_argument('--standard', default=1, type=int, 
-                        help='Binary, whether or not to standardize the features (default: %(default)s)')
     parser.add_argument('--max-len', default=10000, type=int, 
                         help='Max contig len, fixed input for CNN (default: %(default)s)')
     parser.add_argument('--dropout', default=0.5, type=float, 

@@ -45,7 +45,6 @@ def main(args):
     # Load and process data
     x, y = Utils.load_features_tr(args.data_path,
                                   max_len=args.max_len,
-                                  standard=args.standard,
                                   mode = config.mode, 
                                   technology = args.technology,
                                   pickle_only=args.pickle_only,

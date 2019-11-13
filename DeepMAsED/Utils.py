@@ -159,7 +159,7 @@ def find_feature_files(data_path, technology=None, force_overwrite=False):
 
 
 def load_features_tr(data_path, max_len=10000, 
-                     standard=1, mode='extensive', 
+                     mode='extensive', 
                      technology = None,
                      pickle_only=False, force_overwrite=False):
     """
@@ -252,7 +252,7 @@ def load_features_tr(data_path, max_len=10000,
 
 
 def load_features(data_path, max_len=10000, 
-                  standard=1, mode='extensive',
+                  mode='extensive',
                   technology = 'megahit', 
                   pickle_only = False,
                   force_overwrite = False):
@@ -262,7 +262,6 @@ def load_features(data_path, max_len=10000,
     Inputs: 
         data_path: path to directory containing features.pkl
         max_len: fixed length of contigs
-        standard: whether to standardise features.
         technology: assembler, megahit or metaspades.
         pickle_only: only perform pickling prior to testing. One time call. 
 
