@@ -45,8 +45,8 @@ def main(args):
     # Load and process data
     x, y = Utils.load_features_tr(args.data_path,
                                   max_len=args.max_len,
-                                  standard=args.standard,
                                   mode = config.mode, 
+                                  technology = args.technology,
                                   pickle_only=args.pickle_only,
                                   force_overwrite=args.force_overwrite)
 
@@ -127,18 +127,26 @@ def main(args):
                                               write_graph=True, write_images=True)
         logging.info('Training network...')
         if config.mode in ['chimera', 'extensive']:
-            w_one = int(len(np.where(y == 0)[0])  / len(np.where(y == 1)[0]))
-            class_weight = {0 : 1 , 1: w_one}
-            deepmased.net.fit_generator(generator=dataGen, 
+#             w_one = int(len(np.where(y == 0)[0])  / len(np.where(y == 1)[0]))
+#             class_weight = {0 : 1 , 1: w_one}
+             
+            deepmased.net.fit_generator(generator=dataGen,
                                         epochs=args.n_epochs, 
                                         use_multiprocessing=True,
                                         verbose=2,
                                         callbacks=[tb_logs, deepmased.reduce_lr])
         logging.info('Saving trained model...')
-        outfile = os.path.join(save_path, 'final_model.h5')
+        
+        if args.technology is None:
+            tech_name='all'
+        else:
+            tech_name=args.technology
+            
+        outfile = os.path.join(save_path, args.save_name + tech_name + '_model.h5')
         deepmased.save(outfile)
         logging.info('  File written: {}'.format(outfile))
-        outfile = os.path.join(save_path, 'mean_std_final_model.pkl')
+        
+        outfile = os.path.join(save_path, args.save_name + tech_name +'_mean_std.pkl')
         with open(outfile, 'wb') as f:
             pickle.dump([dataGen.mean, dataGen.std], f)
         logging.info('  File written: {}'.format(outfile))

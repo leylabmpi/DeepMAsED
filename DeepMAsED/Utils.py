@@ -126,7 +126,7 @@ def find_feature_files(data_path, technology=None, force_overwrite=False):
     feature_gz_files, n_gz = _find_feature_files(data_path, 'features.tsv.gz', technology)
     feature_tsv_files, n_tsv = _find_feature_files(data_path, 'features.tsv', technology)
     feature_pkl_files, n_pkl = _find_feature_files(data_path, 'features.pkl', technology)
-    
+    #print(feature_pkl_files)
     # which files to use?
     if n_pkl > 1 and force_overwrite is True:
         msg = 'Found {} pickled feature files. However, --force-overwrite used.'
@@ -159,7 +159,8 @@ def find_feature_files(data_path, technology=None, force_overwrite=False):
 
 
 def load_features_tr(data_path, max_len=10000, 
-                     standard=1, mode='extensive', 
+                     mode='extensive', 
+                     technology = None,
                      pickle_only=False, force_overwrite=False):
     """
     Loads features, pre-process them and returns training. 
@@ -199,7 +200,7 @@ def load_features_tr(data_path, max_len=10000,
                   |_ features.tsv.gz
     """
     # finding feature files
-    feature_pkl_files = find_feature_files(data_path,
+    feature_pkl_files = find_feature_files(data_path, technology=technology,
                                            force_overwrite=force_overwrite)
 
     # Pre-process once if not done already
@@ -217,6 +218,7 @@ def load_features_tr(data_path, max_len=10000,
                 xi, yi, n2ii = pickle.load(feat)
                 xtech.append(xi)
                 ytech.append(yi)
+
 
         x_in_contig, y_in_contig = [], []
         
@@ -250,7 +252,7 @@ def load_features_tr(data_path, max_len=10000,
 
 
 def load_features(data_path, max_len=10000, 
-                  standard=1, mode='extensive',
+                  mode='extensive',
                   technology = 'megahit', 
                   pickle_only = False,
                   force_overwrite = False):
@@ -260,7 +262,6 @@ def load_features(data_path, max_len=10000,
     Inputs: 
         data_path: path to directory containing features.pkl
         max_len: fixed length of contigs
-        standard: whether to standardise features.
         technology: assembler, megahit or metaspades.
         pickle_only: only perform pickling prior to testing. One time call. 
 

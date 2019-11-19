@@ -31,8 +31,19 @@ def parse_args(test_args=None, subparsers=None):
     # args
     parser.add_argument('data_path', metavar='data-path', type=str, 
                         help='Where to find feature tables (base directory for all tables)')
-    parser.add_argument('save_path', metavar='save-path', type=str, 
-                        help='Directory of model created during training')
+    
+    parser.add_argument('--model-path',  default='', type=str, 
+                        help='Directory where model')
+    parser.add_argument('--model-name', default='deepmased.h5', type=str, 
+                        help='Model name in the model_path (default: %(default)s)') 
+    parser.add_argument('--mstd-name', default='mean_std_final_model.pkl', type=str, 
+                        help='Data mean and std name in the model_path (default: %(default)s)')     
+    
+    parser.add_argument('--save-path', default='', type=str, 
+                        help='Directory where to save')
+    parser.add_argument('--save-name', default='new_', type=str, 
+                        help='Prefix for name in the save_path (default: %(default)s)')    
+    
     parser.add_argument('--save-plot', default=None, type=str, 
                         help='Where to save plots (default: %(default)s)')
     parser.add_argument('--max-len', default=10000, type=int, 
@@ -61,6 +72,9 @@ def main(args=None):
     if args is None:
         args = parse_args()
     # Main interface
+    print()
+    print (args)
+    print()
     Evaluate.main(args)
     
 # main

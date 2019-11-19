@@ -68,34 +68,36 @@ def parse_args(test_args=None, subparsers=None):
     # args
     parser.add_argument('data_path',  metavar='data-path', type=str, 
                         help='Base path to the feature tables (see the docs)')
+    parser.add_argument('--technology', default=None, type=str, 
+                        help='Assembler name in the data_path (default: %(default)s)')    
     parser.add_argument('--save-path', default='model', type=str, 
                         help='Where to save training weights and logs (default: %(default)s)')
+    parser.add_argument('--save_name', default='new_', type=str, 
+                        help='Prefix for name in the save_path (default: %(default)s)')  
     parser.add_argument('--filters', default=8, type=int, 
                         help='N of filters for first conv layer. Then x2 (default: %(default)s)')
-    parser.add_argument('--n-hid', default=20, type=int, 
+    parser.add_argument('--n-hid', default=50, type=int, 
                         help='N of units in fully connected layers (default: %(default)s)')
-    parser.add_argument('--n-conv', default=2, type=int, 
+    parser.add_argument('--n-conv', default=5, type=int, 
                         help='N of conv layers (default: %(default)s)')
-    parser.add_argument('--n-fc', default=1, type=int, 
+    parser.add_argument('--n-fc', default=3, type=int, 
                         help='N of fully connected layers (default: %(default)s)')
-    parser.add_argument('--n-epochs', default=50, type=int, 
+    parser.add_argument('--n-epochs', default=10, type=int, 
                         help='N of training epochs (default: %(default)s)')
-    parser.add_argument('--standard', default=1, type=int, 
-                        help='Binary, whether or not to standardize the features (default: %(default)s)')
     parser.add_argument('--max-len', default=10000, type=int, 
                         help='Max contig len, fixed input for CNN (default: %(default)s)')
-    parser.add_argument('--dropout', default=0.1, type=float, 
+    parser.add_argument('--dropout', default=0.5, type=float, 
                         help='Rate of dropout (default: %(default)s)')
-    parser.add_argument('--pool-window', default=40, type=int, 
+    parser.add_argument('--pool-window', default=50, type=int, 
                         help='Window size for average pooling (default: %(default)s)')
-    parser.add_argument('--n-folds', default=5, type=int, 
+    parser.add_argument('--n-folds', default=-1, type=int, 
                         help='How many folds for CV. Use "-1" to skip & pool all data for training (default: %(default)s)')
     parser.add_argument('--lr-init', default=0.001, type=float, 
                         help='Size of test set (default: %(default)s)')
     parser.add_argument('--mode', default='extensive', type=str,
                         choices = ['extensive','edit', 'chimera'],
                         help='Classification problem (default: %(default)s)')
-    parser.add_argument('--norm-raw', default=1, type=int, 
+    parser.add_argument('--norm-raw', default=0, type=int, 
                         help='Whether to normalize the four one-hot feature of raw (default: %(default)s)')
     parser.add_argument('--pickle-only', action='store_true', default=False,
                         help='Only pickle files (default: %(default)s)')
