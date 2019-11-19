@@ -27,8 +27,8 @@ def main(args):
             line = line.rstrip()
             m = regex.search(line)
             if m:
-                msg = 'Line {}: non-ascii character found: "{}"\n'
-                sys.stderr.write(msg.format(i+1, m.group(0)))
+                msg = 'Line {}: non-ascii character found: "{}". Replacing with "{}"\n'
+                sys.stderr.write(msg.format(i+1, m.group(0), args.replace))
                 line = regex.sub(args.replace, line)
             print(line)
     
