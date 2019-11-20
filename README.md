@@ -12,11 +12,13 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 # Citation
 
-Rojas-Carulla, Mateo, Ruth E. Ley, Bernhard Schoelkopf, and Nicholas D. Youngblut. 2019. “DeepMAsED: Evaluating the Quality of Metagenomic Assemblies.” bioRxiv. https://doi.org/10.1101/763813.
+Rojas-Carulla, Mateo, Ruth E. Ley, Bernhard Schoelkopf, and Nicholas D. Youngblut. 2019.
+"DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." bioRxiv. https://doi.org/10.1101/763813.
+
 
 # WARNINGS
 
-This package is currently undergoing heavy development.
+This project is currently undergoing heavy development.
 The UI is not stable and can change at any time (see git log for changes).
 
 # Main Description
@@ -24,11 +26,11 @@ The UI is not stable and can change at any time (see git log for changes).
 The tool is divided into two main parts:
 
 * **DeepMAsED-SM**
-  * a snakemake pipeline for:
+  * A snakemake pipeline for:
     * generating DeepMAsED train/test datasets from reference genomes
     * creating feature tables from "real" assemblies (fasta + bam files)
 * **DeepMAsED-DL**
-  * deep learning for misassembly detection
+  * A python package for misassembly detection via deep learning
 
 
 # Setup
