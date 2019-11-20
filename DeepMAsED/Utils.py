@@ -8,6 +8,7 @@ import gzip
 import glob
 import logging
 from collections import defaultdict
+import multiprocessing as mp
 ## 3rd party
 from keras import backend as K
 import numpy as np
@@ -82,7 +83,7 @@ def splitall(path):
             allparts.insert(0, parts[1])
     return allparts
 
-def _find_feature_files(data_path, filename, technology=None):
+def _find_feature_files(data_path, filename, technology='all-asmbl'):
     """ 
     Finding feature files.
     Recursively looks for `filename` in `data_path`.
@@ -100,7 +101,7 @@ def _find_feature_files(data_path, filename, technology=None):
                 sim_rep = x[-2]     # simulation rep
                 asmbl = x[-1]       # assembler
                 # filter by techology (assembler)
-                if technology is not None and asmbl != technology:
+                if technology != 'all-asmbl' and asmbl != technology:
                     msg = 'Skipping file because assembler does'
                     msg += ' not match user-seleted assembler:'
                     msg += ' {} != {} for file "{}"'
@@ -110,10 +111,33 @@ def _find_feature_files(data_path, filename, technology=None):
                 # loading dict & counting
                 D[sim_rep][asmbl] = os.path.join(dirpath, F)
                 n_feat_files += 1
+                msg = 'Found feature file: {}'
+                logging.info(msg.format(os.path.join(dirpath, F)))
                 
     return D, n_feat_files
 
-def find_feature_files(data_path, technology=None, force_overwrite=False):
+def pickle_in_parallel(feature_files, n_procs):
+    """
+    Pickling feature files using multiproessing.Pool
+    """
+    logging.info('Pickling in parallel with {} threads'.format(n_procs))
+    pool = mp.Pool(processes = n_procs)
+    # list of lists for input to pool.map
+    x = []
+    for rep,v in feature_files.items():
+        for asmbl,F in v.items():
+            pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
+            x.append([F, pklF, rep, asmbl])
+    # Pickle in parallel and saving file paths in dict
+    feature_pkl_files = defaultdict(dict)
+    for y in pool.map(pickle_data_b, x):
+        rep = y[2]
+        asmbl = y[3]
+        feature_pkl_files[rep][asmbl] = y[1]
+    return feature_pkl_files
+
+def find_feature_files(data_path, technology=None,
+                       force_overwrite=False, n_procs=1):
     """
     Finding feature files in `data_path`. Searching for specific file naming.
     Params:
@@ -126,31 +150,30 @@ def find_feature_files(data_path, technology=None, force_overwrite=False):
     feature_gz_files, n_gz = _find_feature_files(data_path, 'features.tsv.gz', technology)
     feature_tsv_files, n_tsv = _find_feature_files(data_path, 'features.tsv', technology)
     feature_pkl_files, n_pkl = _find_feature_files(data_path, 'features.pkl', technology)
-    #print(feature_pkl_files)
+    
     # which files to use?
     if n_pkl > 1 and force_overwrite is True:
         msg = 'Found {} pickled feature files. However, --force-overwrite used.'
         msg += ' Re-creating pkl feature files'
         logging.info(msg.format(n_pkl))
+    elif n_pkl > 1 and (n_pkl < n_gz or n_pkl < n_tsv):
+        msg = 'Found {} pickled feature files.'
+        msg += ' However, there are more *.tsv or *.tsv.gz feature files.'
+        msg += ' Assuming that not all pkl files are present.'
+        msg += ' Re-creating pkl feature files'
+        logging.info(msg.format(n_pkl))
+        force_overwrite = True
     if n_pkl >= 1 and force_overwrite is False:
         msg = 'Found {} pickled feature files. Using these files.'
         logging.info(msg.format(n_pkl))
     elif n_gz >= 1:
         msg = 'Found {} gzip\'ed tsv feature files. Using these files.'
         logging.info(msg.format(n_gz))
-        feature_pkl_files = defaultdict(dict)
-        for rep,v in feature_gz_files.items():
-            for asmbl,F in v.items():
-                pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
-                feature_pkl_files[rep][asmbl] = pickle_data_b(F, pklF)
+        feature_pkl_files = pickle_in_parallel(feature_gz_files, n_procs)
     elif n_tsv >= 1:
         msg = 'Found {} uncompressed tsv feature files. Using these files.'
         logging.info(msg.format(n_tsv))
-        feature_pkl_files = defaultdict(dict)
-        for rep,v in feature_tsv_files.items():
-            for asmbl,F in v.items():
-                pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
-                feature_pkl_files[rep][asmbl] = pickle_data_b(F, pklF)
+        feature_pkl_files = pickle_in_parallel(feature_tsv_files, n_procs)
     else:
         msg = 'Could not find any features files in data_path: {}'
         raise IOError(msg.format(data_path))
@@ -159,9 +182,9 @@ def find_feature_files(data_path, technology=None, force_overwrite=False):
 
 
 def load_features_tr(data_path, max_len=10000, 
-                     mode='extensive', 
-                     technology = None,
-                     pickle_only=False, force_overwrite=False):
+                     mode='extensive', technology = None,
+                     pickle_only=False, force_overwrite=False,
+                     n_procs=1):
     """
     Loads features, pre-process them and returns training. 
     Fuses data from both assemblers. 
@@ -201,7 +224,8 @@ def load_features_tr(data_path, max_len=10000,
     """
     # finding feature files
     feature_pkl_files = find_feature_files(data_path, technology=technology,
-                                           force_overwrite=force_overwrite)
+                                           force_overwrite=force_overwrite,
+                                           n_procs=n_procs)
 
     # Pre-process once if not done already
     if pickle_only:
@@ -482,11 +506,12 @@ def kfold(x, y, idx_lo, k=5):
 
     return x_tr, x_val, y_tr, y_val
 
-def pickle_data_b(features_in, features_out): 
+def pickle_data_b(x):
     """
     One time function parsing the csv file and dumping the 
     values of interest into a pickle file. 
     """
+    features_in, features_out = x[:2]
 
     msg = 'Pickling feature data: {} => {}'
     logging.info(msg.format(features_in, features_out))
@@ -551,7 +576,7 @@ def pickle_data_b(features_in, features_out):
     # Save processed data into pickle file
     with open(features_out, 'wb') as f:
         pickle.dump([feat_contig, target_contig, name_to_id], f)
-    return features_out
+    return x
 
 
 def pickle_data_feat_only(features_in, features_out):
@@ -646,7 +671,7 @@ def reverse_dict(d):
     return r_d
 
 
-def compute_predictions(n2i, generator, model, save_path):
+def compute_predictions(n2i, generator, model, save_path, save_name):
     """
     Computes predictions for a model and generator, aggregating scores for long contigs.
 
@@ -663,7 +688,7 @@ def compute_predictions(n2i, generator, model, save_path):
     score_val = score_val.flatten()
     scores = {}
 
-    outfile = os.path.join(save_path, 'predictions.csv')
+    outfile = os.path.join(save_path, '_'.join([save_name, 'predictions.csv']))
     write = open(outfile, 'w')
     csv_writer = csv.writer(write, delimiter='\t')
     csv_writer.writerow(['MAG', 'Contig', 'Deepmased_score'])

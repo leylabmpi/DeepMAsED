@@ -22,7 +22,8 @@ def test_help():
 
 def test_train_r3_pkl_only(tmpdir):
     save_path = tmpdir.mkdir('save_dir')
-    args = ['--n-folds', '3', '--n-epochs', '2', '--pickle-only',
+    args = ['--n-folds', '3', '--n-epochs', '2',
+            '--pickle-only', 
             '--save-path', str(save_path),
             os.path.join(data_dir, 'n1000_r3/')]
     args = Train_CMD.parse_args(args)

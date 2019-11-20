@@ -29,18 +29,19 @@ class Config(object):
         self.lr_init = args.lr_init
         self.mode = args.mode
 
-def main(args):    
+def main(args):
+    # init
     np.random.seed(12)
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
+    save_path = args.save_path
     
     # Build model
-    config = Config(args)    
+    logging.info('Building model')
+    config = Config(args)
     deepmased = Models.deepmased(config)
     deepmased.print_summary()
 
-    if not os.path.exists(args.save_path):
-        os.makedirs(args.save_path)
-
-    save_path = args.save_path
 
     # Load and process data
     x, y = Utils.load_features_tr(args.data_path,
@@ -48,16 +49,12 @@ def main(args):
                                   mode = config.mode, 
                                   technology = args.technology,
                                   pickle_only=args.pickle_only,
-                                  force_overwrite=args.force_overwrite)
-
-    # Skip kfold and simply pool all the data for training?
-    ## If true, all elements in x and y are combined
-    if args.n_folds < 0:
-        x = [item for sl in x for item in sl]
-        y = np.concatenate(y)
+                                  force_overwrite=args.force_overwrite,
+                                  n_procs=args.n_procs)
 
     # kfold cross validation
     if args.n_folds >= 0:
+        logging.info('Running kfold cross validation. n-folds: {}'.format(args.n_folds))
         outfile_h5 = os.path.join(save_path, str(args.n_folds - 1) + '_model.h5')
         if os.path.exists(outfile_h5) and args.force_overwrite is False:
             msg = 'Output already exists ({}). Use --force-overwrite to overwrite the file'
@@ -66,7 +63,7 @@ def main(args):
         # iter over folds
         ap_scores = []
         for val_idx in range(args.n_folds):
-            logging.info('Fold {}: Constructing model...'.format(val_idx))            
+            logging.info('Fold {}: Constructing model...'.format(val_idx))        
             x_tr, x_val, y_tr, y_val = Utils.kfold(x, y, val_idx, k=args.n_folds)
             deepmased = Models.deepmased(config)
 
@@ -117,7 +114,12 @@ def main(args):
             logging.info('Fold {}: File written: {}'.format(val_idx, outfile_pkl_fold))
 
     else:
+        # Skip kfold and simply pool all the data for training
+        ## all elements in x and y are combined
         logging.info('NOTE: Training on all pooled data!')
+        x = [item for sl in x for item in sl]
+        y = np.concatenate(y)
+
         logging.info('Constructing model...')
         dataGen = Models.Generator(x, y, args.max_len, batch_size=64,
                                    norm_raw=bool(args.norm_raw))
@@ -125,28 +127,21 @@ def main(args):
         tb_logs = keras.callbacks.TensorBoard(log_dir=os.path.join(save_path, 'logs_final'), 
                                               histogram_freq=0, 
                                               write_graph=True, write_images=True)
+        
         logging.info('Training network...')
-        if config.mode in ['chimera', 'extensive']:
-#             w_one = int(len(np.where(y == 0)[0])  / len(np.where(y == 1)[0]))
-#             class_weight = {0 : 1 , 1: w_one}
-             
+        if config.mode in ['chimera', 'extensive']:             
             deepmased.net.fit_generator(generator=dataGen,
                                         epochs=args.n_epochs, 
                                         use_multiprocessing=True,
                                         verbose=2,
                                         callbacks=[tb_logs, deepmased.reduce_lr])
-        logging.info('Saving trained model...')
-        
-        if args.technology is None:
-            tech_name='all'
-        else:
-            tech_name=args.technology
             
-        outfile = os.path.join(save_path, args.save_name + tech_name + '_model.h5')
+        logging.info('Saving trained model...')                   
+        outfile = os.path.join(save_path, '_'.join([args.save_name, args.technology, 'model.h5']))
         deepmased.save(outfile)
         logging.info('  File written: {}'.format(outfile))
         
-        outfile = os.path.join(save_path, args.save_name + tech_name +'_mean_std.pkl')
+        outfile = os.path.join(save_path, '_'.join([args.save_name, args.technology, 'mean_std.pkl']))
         with open(outfile, 'wb') as f:
             pickle.dump([dataGen.mean, dataGen.std], f)
         logging.info('  File written: {}'.format(outfile))

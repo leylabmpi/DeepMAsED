@@ -31,8 +31,16 @@ def parse_args(test_args=None, subparsers=None):
     # args
     parser.add_argument('data_path', metavar='data-path', type=str, 
                         help='Where to find feature table(s) (base directory for all tables)')
-    parser.add_argument('save_path', metavar='save-path', type=str, 
-                        help='Directory of model created during training')
+    parser.add_argument('--model-path',  default='.', type=str, 
+                        help='Directory contining the model')
+    parser.add_argument('--model-name', default='deepmased_all-asmbl_model.h5', type=str, 
+                        help='Model name in the model_path (default: %(default)s)')
+    parser.add_argument('--mstd-name', default='deepmased_all-asmbl_mean_std.pkl', type=str, 
+                        help='Data mean and std name in the model_path (default: %(default)s)') 
+    parser.add_argument('--save-path', default='.', type=str, 
+                        help='Directory where to save output (default: %(default)s)')
+    parser.add_argument('--save-name', default='deepmased', type=str, 
+                        help='Prefix for name in the save_path (default: %(default)s)')        
     parser.add_argument('--cpu-only', action='store_true', default=False,
                         help='Only use CPUs, and no GPUs (default: %(default)s)')
     parser.add_argument('--force-overwrite', action='store_true', default=False,

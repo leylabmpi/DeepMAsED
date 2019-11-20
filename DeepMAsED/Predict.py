@@ -34,27 +34,22 @@ def main(args):
                 
     logging.info('Loading model...')
     ## pkl
-    F = os.path.join(args.save_path,  'mean_std_final_model.pkl')
+    F = os.path.join(args.model_path, args.mstd_name)
     if not os.path.exists(F):
         msg = 'Model file not available at data-path: {}'
         raise IOError(msg.format(F))        
     with open(F, 'rb') as mstd:
         mean_tr, std_tr = pickle.load(mstd)
     ## h5
-    F = os.path.join(args.save_path, 'final_model.h5')
+    F = os.path.join(args.model_path, args.model_name)
     if not os.path.exists(F):
         msg = 'Model file not available at data-path: {}'
         raise IOError(msg.format(F))    
     model = load_model(F, custom_objects=custom_obj)
     
-    # outdirs
-    outdir = os.path.join(args.save_path, 'predictions')
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-    outdir = os.path.join(args.save_path, 'predictions',
-                          os.path.split(args.data_path)[1])
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
+    # outdir
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
 
     logging.info('Loading features...')
     x, y, i2n = Utils.load_features_nogt(args.data_path,
@@ -69,7 +64,7 @@ def main(args):
                                norm_raw=0, mean_tr=mean_tr, std_tr=std_tr)
     
     logging.info('Computing predictions...')
-    scores = Utils.compute_predictions(n2i, dataGen, model, outdir)
+    scores = Utils.compute_predictions(n2i, dataGen, model, args.save_path, args.save_name)
     
 
 if __name__ == '__main__':

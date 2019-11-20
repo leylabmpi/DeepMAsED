@@ -87,18 +87,19 @@ def main(args):
 
     # loading features
     if args.is_synthetic == 1:
+        logging.info('Loading synthetic features')
         x, y, i2n = Utils.load_features(args.data_path,
                                         max_len = args.max_len,
                                         mode = args.mode, 
                                         technology = args.technology,
                                         force_overwrite=args.force_overwrite)
     else:
+        logging.info('Loading non-synthetic features')
         x, y, i2n = Utils.load_features_nogt(args.data_path,
                                              max_len = args.max_len,
                                              mode = args.mode,
                                              force_overwrite=args.force_overwrite)
-#     yyy = np.concatenate(y)
-#     logging.info('Loaded {} ys'.format(np.array(yyy).shape))
+        
     logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))    
     n2i = Utils.reverse_dict(i2n)
     x = [xi for xmeta in x for xi in xmeta]
@@ -109,7 +110,7 @@ def main(args):
     
     logging.info('Computing predictions for {}...'.format(args.technology))    
     scores = compute_predictions(y, n2i, model, dataGen)
-    outfile = os.path.join(args.save_path,  args.save_name + args.technology + '.pkl')
+    outfile = os.path.join(args.save_path, '_'.join([args.save_name, args.technology + '.pkl']))
     with open(outfile, 'wb') as spred:
         pickle.dump(scores, spred)
     logging.info('File written: {}'.format(outfile))

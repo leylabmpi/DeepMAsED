@@ -22,15 +22,17 @@ def test_help():
 
 def test_evaluate_r3(tmpdir):
     save_path = tmpdir.mkdir('save_dir')
+    model_path = os.path.join(data_dir, 'n1000_r3/', 'model')
     args = [os.path.join(data_dir, 'n1000_r3/'),
-            os.path.join(data_dir, 'n1000_r3/', 'model')]
+            '--model-path', model_path]
     args = Evaluate_CMD.parse_args(args)
     Evaluate_CMD.main(args)
 
 def test_evaluate_r3_not_syn(tmpdir):
     save_path = tmpdir.mkdir('save_dir')
+    model_path = os.path.join(data_dir, 'n1000_r3/', 'model')
     args = [os.path.join(data_dir, 'n1000_r3/'),
-            os.path.join(data_dir, 'n1000_r3/', 'model'),
+            '--model-path', model_path,
             '--is-synthetic', '0']
     args = Evaluate_CMD.parse_args(args)
     Evaluate_CMD.main(args)
