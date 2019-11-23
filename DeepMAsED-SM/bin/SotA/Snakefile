@@ -32,9 +32,14 @@ rule VALET:
 	read1 = config['tmp_dir'] + '{rep}/sim_reads/1/R1.fq',
 	read2 = config['tmp_dir'] + '{rep}/sim_reads/1/R2.fq'
     output:
-        valet_dir + '{rep}/{assembler}/valet_out/reference/summary.tsv'
+        sum = valet_dir + '{rep}/{assembler}/summary.tsv',
+        sbed = valet_dir + '{rep}/{assembler}/summary.bed',
+        ssbed = valet_dir + '{rep}/{assembler}/suspicious.bed',
+        cbed = valet_dir + '{rep}/{assembler}/coverage.bed',
+        bbed = valet_dir + '{rep}/{assembler}/breakpoints.bed'
     params:
-        params = config['params']['VALET']
+        params = config['params']['VALET'],
+        tmp_dir = config['tmp_dir'] + 'VALET/{rep}/{assembler}/valet_out/reference/'
     threads:
         8
     resources:
@@ -48,14 +53,25 @@ rule VALET:
         benchmark_dir + 'VALET/{rep}/{assembler}.txt'
     shell:
         """
-        OUTDIR=`dirname {output}`
-        OUTDIR=`dirname $OUTDIR`
-        rm -rf $OUTDIR
+        # tmp directory
+        TMPDIR=`dirname {params.tmp_dir}`
+        rm -rf $TMPDIR 2> {log}
 
+        # valet run
         valet.py --threads {threads} \
           --assembly-names reference \
           --skip-reapr {params.params} \
-          --output-dir $OUTDIR -a {input.ref} \
+          --output-dir $TMPDIR -a {input.ref} \
           -1 {input.read1} -2 {input.read2} \
-          2> {log}        
+          2>> {log}        
+
+        # copying files
+        cp -f {params.tmp_dir}/summary.tsv {output.sum} 2>> {log}
+        cp -f {params.tmp_dir}/summary.bed {output.sbed} 2>> {log}
+        cp -f {params.tmp_dir}/suspicious.bed {output.ssbed} 2>> {log}
+        cp -f {params.tmp_dir}/coverage.bed {output.cbed} 2>> {log}
+        cp -f {params.tmp_dir}/breakpoints.bed {output.bbed} 2>> {log}
+        
+        # removing tmp dir
+        rm -rf $TMPDIR 2>> {log}
         """

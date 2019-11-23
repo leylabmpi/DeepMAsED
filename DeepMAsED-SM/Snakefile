@@ -157,7 +157,7 @@ def all_which_input(wildcards):
             input_files += x
 	## VALET
         if not config['params']['VALET'].startswith('Skip'):
-            x = expand(valet_dir + '{rep}/{assembler}/valet_out/reference/summary.tsv',
+            x = expand(valet_dir + '{rep}/{assembler}/summary.tsv',
     		       rep = config['reps'],
     	               assembler = config['assemblers'])
             input_files += x

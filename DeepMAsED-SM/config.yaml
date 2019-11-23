@@ -31,21 +31,16 @@ params:
   # mapping reads to contigs
   samtools: ""
   # creating DL features
-<<<<<<< HEAD
-  make_features: ""
+  make_features: --window 4
   # state-of-the-art
   ## ALE
   ALE: ""
   ## VALET
   VALET: ""
-||||||| merged common ancestors
-  make_features: ""  
-=======
-  make_features: --window 4
->>>>>>> 7b91f66e18b62c974c9ad25a3ec91a1925acbfba
   
 # snakemake pipeline
 pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
   temp_folder: /tmp/global2/
+  rnd_seed: 9384
