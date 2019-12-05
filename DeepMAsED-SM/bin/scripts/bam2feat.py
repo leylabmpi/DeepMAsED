@@ -269,7 +269,7 @@ def main(args):
     logging.info(msg.format(len(contigs)))
 
     # debug
-    contigs = contigs[len(contigs)-10:]
+    #contigs = contigs[len(contigs)-10:]
     
     # getting contig stats
     func = partial(contig_stats, bam_file=args.bam_file,
