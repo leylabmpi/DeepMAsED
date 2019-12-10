@@ -367,6 +367,13 @@ def find_files(data_path, filename):
                 
     return feat_files
 
+def count_lines_in_gz(f_path):
+    with gzip.open(f_path) as f:
+        count = 0
+        for _ in f:
+            count += 1
+        return count
+    
 def load_features_nogt(data_path, max_len=10000, 
                        mode='extensive', 
                        pickle_only=False,
@@ -401,7 +408,10 @@ def load_features_nogt(data_path, max_len=10000,
         logging.info(msg.format(len(feat_gz_files)))        
         for F in feat_gz_files:
             pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
-            feat_files.append(pickle_data_feat_only(F, pklF))
+            #check that no empty
+            if count_lines_in_gz(F)>1:
+                feat_files.append(pickle_data_feat_only(F, pklF))
+            else: logging.info("Empty file: {}".format(F))
     elif len(feat_tsv_files) >= 1:
         msg = 'Found {} uncompressed tsv feature files. Using these files.'
         logging.info(msg.format(len(feat_tsv_files)))
@@ -627,6 +637,7 @@ def pickle_data_feat_only(features_in, features_out):
             feat[-1][0][letter_idx[row[3]]] = 1
 
     # Append last
+    # there are empty files
     feat_contig.append(np.concatenate(feat, 0))
 
     assert(len(feat_contig) == len(name_to_id))
@@ -634,6 +645,7 @@ def pickle_data_feat_only(features_in, features_out):
     # Save processed data into pickle file
     with open(features_out, 'wb') as f:
         pickle.dump([feat_contig, name_to_id], f)
+        logging.info("Saved as: {}".format(features_out))
 
     return features_out
         
@@ -708,7 +720,7 @@ def compute_predictions(n2i, generator, model, save_path, save_name):
 
         # Make sure all the labels for the contig coincide
         #scores[k[0]][k[1]] = {'pred' : score_val[inf : sup]}
-        csv_writer.writerow([k[0], k[1], str(np.mean(score_val[inf : sup]))])
+        csv_writer.writerow([k[0], k[1], str(np.max(score_val[inf : sup]))])
     
     write.close()
     logging.info('File written: {}'.format(outfile))

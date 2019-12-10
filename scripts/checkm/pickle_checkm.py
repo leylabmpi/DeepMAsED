@@ -11,14 +11,16 @@ parser.add_argument('--checkm_path', default='data', type=str,
                     help='Where to find checkM csv.')
 
 def main(args):
-    if 'Almeida' in args.checkm_path:
+    if 'Pasolli' in args.checkm_path:
+        idx_complete = 7
+        idx_contam = 8
+        delim = '\t'
+        
+    else: #if 'Almeida' in args.checkm_path:
         idx_complete = 1
         idx_contam = 2
         delim = '\t'
-    elif 'Pasolli' in args.checkm_path:
-        idx_complete = 7
-        idx_contam = 8
-        delim = ';'
+
     
     checkm = {}
     

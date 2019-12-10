@@ -18,7 +18,7 @@ from DeepMAsED import Models
 from DeepMAsED import Utils
 
 
-def compute_predictions(y, n2i, model, dataGen):
+def compute_predictions_y_known(y, n2i, model, dataGen):
     """
     Computes predictions for a model and generator, NOT aggregating scores for long contigs.
 
@@ -109,7 +109,7 @@ def main(args):
                                mean_tr=mean_tr, std_tr=std_tr)
     
     logging.info('Computing predictions for {}...'.format(args.technology))    
-    scores = compute_predictions(y, n2i, model, dataGen)
+    scores = compute_predictions_y_known(y, n2i, model, dataGen)
     outfile = os.path.join(args.save_path, '_'.join([args.save_name, args.technology + '.pkl']))
     with open(outfile, 'wb') as spred:
         pickle.dump(scores, spred)
