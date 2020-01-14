@@ -19,6 +19,7 @@ DeepMAsED-SM/tests/output_*
 deepmased_trained/predictions/
 screenlog.*
 bin/misc_*
+.figures/
 logs/
 archive/
 */archive/
