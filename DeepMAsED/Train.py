@@ -119,6 +119,12 @@ def main(args):
         logging.info('NOTE: Training on all pooled data!')
         x = [item for sl in x for item in sl]
         y = np.concatenate(y)
+        
+#         #downsample to half
+#         import random
+#         dwnsample = np.array(random.sample(range(len(y)), int(len(y)/2)))
+#         x = np.array(x)[dwnsample]
+#         y = np.array(y)[dwnsample]
 
         logging.info('Constructing model...')
         dataGen = Models.Generator(x, y, args.max_len, batch_size=64,

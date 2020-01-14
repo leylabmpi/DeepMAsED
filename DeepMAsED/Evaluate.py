@@ -18,40 +18,6 @@ from DeepMAsED import Models
 from DeepMAsED import Utils
 
 
-def compute_predictions(y, n2i, model, dataGen):
-    """
-    Computes predictions for a model and generator, NOT aggregating scores for long contigs.
-
-    Inputs: 
-        n2i: dictionary with contig_name -> list of idx corresponding to that contig.
-    Output:
-        score_agg: scores for individual contigs
-        y_agg: corresponding true labels
-    """
-
-    score_val = model.predict_generator(dataGen)
-
-    # Compute predictions by aggregating scores for longer contigs
-    score_val = score_val.flatten()
-    scores = {}
-    for k in n2i:
-        inf = n2i[k][0]
-        sup = n2i[k][-1] + 1
-        if k[0] not in scores:
-            scores[k[0]] = {}
-       
-        # Make sure contig doesnt appear more than once
-        assert(k[1] not in scores[k[0]])
-
-        # Make sure we have predictions for these indices
-        if sup > len(score_val):
-            continue
-
-        # Make sure all the labels for the contig coincide
-        assert((y[inf : sup] == y[inf]).all())
-        scores[k[0]][k[1]] = {'y' : int(y[inf]), 'pred' : score_val[inf : sup]}
-
-    return scores
 
 def main(args):
     """Main interface
@@ -109,7 +75,7 @@ def main(args):
                                mean_tr=mean_tr, std_tr=std_tr)
     
     logging.info('Computing predictions for {}...'.format(args.technology))    
-    scores = compute_predictions(y, n2i, model, dataGen)
+    scores = Utils.compute_predictions_y_known(y, n2i, model, dataGen)
     outfile = os.path.join(args.save_path, '_'.join([args.save_name, args.technology + '.pkl']))
     with open(outfile, 'wb') as spred:
         pickle.dump(scores, spred)

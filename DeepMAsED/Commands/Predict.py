@@ -32,10 +32,10 @@ def parse_args(test_args=None, subparsers=None):
     parser.add_argument('data_path', metavar='data-path', type=str, 
                         help='Where to find feature table(s) (base directory for all tables)')
     parser.add_argument('--model-path',  default='.', type=str, 
-                        help='Directory contining the model (default: %(default)s)')
-    parser.add_argument('--model-name', default='deepmased_all-asmbl_model.h5', type=str, 
+                        help='Directory containing the model (default: %(default)s)')
+    parser.add_argument('--model-name', default='deepmased_model.h5', type=str, 
                         help='Model name in the model_path (default: %(default)s)')
-    parser.add_argument('--mstd-name', default='deepmased_all-asmbl_mean_std.pkl', type=str, 
+    parser.add_argument('--mstd-name', default='deepmased_mean_std.pkl', type=str, 
                         help='Data mean and std name in the model_path (default: %(default)s)') 
     parser.add_argument('--save-path', default='.', type=str, 
                         help='Directory where to save output (default: %(default)s)')
@@ -58,6 +58,9 @@ def main(args=None):
     # Input
     if args is None:
         args = parse_args()
+        print()
+        print (args)
+        print()
     # Main interface
     Predict.main(args)
     

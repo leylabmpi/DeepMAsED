@@ -40,29 +40,6 @@ def compute_mean_std(x_tr):
 
     return mean, std
 
-def normalize(x, mean, std, max_len):
-    """
-    DETERIORATED
-    Given mean and std vector computed from training data, 
-    normalize and return in shape (n, p, 1)
-    """
-    n_feat = x[0].shape[1]
-
-    for i in range(len(x)):
-        x[i] = (x[i] - mean) / std
-        num_timesteps = x[i].shape[0]
-        if num_timesteps < max_len:
-            x[i] = np.concatenate((x[i], 
-                                   np.zeros((max_len - num_timesteps, n_feat))), 
-                                   0)
-        else:
-            x[i] = x[i][0:max_len]
-        x[i] = np.expand_dims(x[i], 0)
-    
-    x = np.concatenate(x, 0)
-    x = np.expand_dims(x, -1)
-
-    return x
 
 def splitall(path):
     """
@@ -139,7 +116,7 @@ def pickle_in_parallel(feature_files, n_procs):
 def find_feature_files(data_path, technology=None,
                        force_overwrite=False, n_procs=1):
     """
-    Finding feature files in `data_path`. Searching for specific file naming.
+    Finding or creating pickle feature files in `data_path`.
     Params:
       data_path: base directory to feature files
       techology: metagenome assembler
@@ -192,6 +169,8 @@ def load_features_tr(data_path, max_len=10000,
     Inputs: 
         data_path: path to directory containing features.pkl
         max_len: fixed length of contigs
+        technology: assembler, megahit or metaspades.
+        pickle_only: only perform pickling prior to testing. One time call. 
 
     Outputs:
         x, y: lists, where each element comes from one metagenome, and 
@@ -253,7 +232,7 @@ def load_features_tr(data_path, max_len=10000,
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
                     chunked = xi[j][idx_chunk * max_len :
-                                    (idx_chunk + 1) * max_len, 1:]
+                                    (idx_chunk + 1) * max_len, :]
             
                     x_in_contig.append(chunked)
                     y_in_contig.append(yi[j])
@@ -324,7 +303,7 @@ def load_features(data_path, max_len=10000,
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
                     chunked = xi[j][idx_chunk * max_len :
-                                    (idx_chunk + 1) * max_len, 1:]
+                                    (idx_chunk + 1) * max_len, :]
         
                     x_in_contig.append(chunked)
                     y_in_contig.append(yi[j])
@@ -367,6 +346,13 @@ def find_files(data_path, filename):
                 
     return feat_files
 
+def count_lines_in_gz(f_path):
+    with gzip.open(f_path) as f:
+        count = 0
+        for _ in f:
+            count += 1
+        return count
+    
 def load_features_nogt(data_path, max_len=10000, 
                        mode='extensive', 
                        pickle_only=False,
@@ -401,7 +387,10 @@ def load_features_nogt(data_path, max_len=10000,
         logging.info(msg.format(len(feat_gz_files)))        
         for F in feat_gz_files:
             pklF = os.path.join(os.path.split(F)[0], 'features.pkl')
-            feat_files.append(pickle_data_feat_only(F, pklF))
+            #check that no empty
+            if count_lines_in_gz(F)>1:
+                feat_files.append(pickle_data_feat_only(F, pklF))
+            else: logging.info("Empty file: {}".format(F))
     elif len(feat_tsv_files) >= 1:
         msg = 'Found {} uncompressed tsv feature files. Using these files.'
         logging.info(msg.format(len(feat_tsv_files)))
@@ -449,7 +438,7 @@ def load_features_nogt(data_path, max_len=10000,
             idx_chunk = 0
             while idx_chunk * max_len < len_contig:
                 chunked = xi[j][idx_chunk * max_len :
-                                (idx_chunk + 1) * max_len, 1:]
+                                (idx_chunk + 1) * max_len, :]
             
                 x_in_contig.append(chunked)
                 y_in_contig.append(yi[j])
@@ -522,7 +511,7 @@ def pickle_data_b(x):
     # Dictionary for one-hot encoding
     letter_idx = defaultdict(int)
     # Idx of letter in feature vector
-    idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+    idx_tmp = [('A',0) , ('C',1), ('T',2), ('G',3)]
 
     for k, v in idx_tmp:
         letter_idx[k] = v
@@ -564,7 +553,7 @@ def pickle_data_b(x):
                 idx += 1
 
             # Feature vec
-            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
+            feat.append(np.array(4 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
             feat[-1][0][letter_idx[row[3]]] = 1
 
     # Append last
@@ -592,7 +581,7 @@ def pickle_data_feat_only(features_in, features_out):
     # Dictionary for one-hot encoding
     letter_idx = defaultdict(int)
     # Idx of letter in feature vector
-    idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+    idx_tmp = [('A',0) , ('C',1), ('T',2), ('G',3)]
 
     for k, v in idx_tmp:
         letter_idx[k] = v
@@ -623,10 +612,11 @@ def pickle_data_feat_only(features_in, features_out):
                 idx += 1
 
             # Feature vec
-            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_sec - 1)]])[None, :].astype(np.uint8))
+            feat.append(np.array(4 * [0] + [int(ri) for ri in row[4:(w_sec - 1)]])[None, :].astype(np.uint8))
             feat[-1][0][letter_idx[row[3]]] = 1
 
     # Append last
+    # there are empty files
     feat_contig.append(np.concatenate(feat, 0))
 
     assert(len(feat_contig) == len(name_to_id))
@@ -634,6 +624,7 @@ def pickle_data_feat_only(features_in, features_out):
     # Save processed data into pickle file
     with open(features_out, 'wb') as f:
         pickle.dump([feat_contig, name_to_id], f)
+        logging.info("Saved as: {}".format(features_out))
 
     return features_out
         
@@ -679,7 +670,7 @@ def compute_predictions(n2i, generator, model, save_path, save_name):
         n2i: dictionary with contig_name -> list of idx corresponding to that contig.
         generator: deepmased data generator
     Output:
-        scores: scores for individual contigs
+        saves scores for individual contigs
     """
 
     score_val = model.predict_generator(generator)
@@ -708,10 +699,45 @@ def compute_predictions(n2i, generator, model, save_path, save_name):
 
         # Make sure all the labels for the contig coincide
         #scores[k[0]][k[1]] = {'pred' : score_val[inf : sup]}
-        csv_writer.writerow([k[0], k[1], str(np.mean(score_val[inf : sup]))])
+        csv_writer.writerow([k[0], k[1], str(np.max(score_val[inf : sup]))])
     
     write.close()
     logging.info('File written: {}'.format(outfile))
 
 
+def compute_predictions_y_known(y, n2i, model, dataGen):
+    """
+    Computes predictions for a model and generator, NOT aggregating scores for long contigs.
+
+    Inputs: 
+        n2i: dictionary with contig_name -> list of idx corresponding to that contig.
+    Output:
+        scores:
+            pred: scores for individual contigs
+            y: corresponding true labels
+    """
+
+    score_val = model.predict_generator(dataGen)
+
+    # Compute predictions by aggregating scores for longer contigs
+    score_val = score_val.flatten()
+    scores = {}
+    for k in n2i:
+        inf = n2i[k][0]
+        sup = n2i[k][-1] + 1
+        if k[0] not in scores:
+            scores[k[0]] = {}
+       
+        # Make sure contig doesnt appear more than once
+        assert(k[1] not in scores[k[0]])
+
+        # Make sure we have predictions for these indices
+        if sup > len(score_val):
+            continue
+
+        # Make sure all the labels for the contig coincide
+        assert((y[inf : sup] == y[inf]).all())
+        scores[k[0]][k[1]] = {'y' : int(y[inf]), 'pred' : score_val[inf : sup]}
+
+    return scores
 
