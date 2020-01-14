@@ -40,29 +40,6 @@ def compute_mean_std(x_tr):
 
     return mean, std
 
-def normalize(x, mean, std, max_len):
-    """
-    DETERIORATED
-    Given mean and std vector computed from training data, 
-    normalize and return in shape (n, p, 1)
-    """
-    n_feat = x[0].shape[1]
-
-    for i in range(len(x)):
-        x[i] = (x[i] - mean) / std
-        num_timesteps = x[i].shape[0]
-        if num_timesteps < max_len:
-            x[i] = np.concatenate((x[i], 
-                                   np.zeros((max_len - num_timesteps, n_feat))), 
-                                   0)
-        else:
-            x[i] = x[i][0:max_len]
-        x[i] = np.expand_dims(x[i], 0)
-    
-    x = np.concatenate(x, 0)
-    x = np.expand_dims(x, -1)
-
-    return x
 
 def splitall(path):
     """
@@ -693,7 +670,7 @@ def compute_predictions(n2i, generator, model, save_path, save_name):
         n2i: dictionary with contig_name -> list of idx corresponding to that contig.
         generator: deepmased data generator
     Output:
-        scores: scores for individual contigs
+        saves scores for individual contigs
     """
 
     score_val = model.predict_generator(generator)
@@ -728,4 +705,39 @@ def compute_predictions(n2i, generator, model, save_path, save_name):
     logging.info('File written: {}'.format(outfile))
 
 
+def compute_predictions_y_known(y, n2i, model, dataGen):
+    """
+    Computes predictions for a model and generator, NOT aggregating scores for long contigs.
+
+    Inputs: 
+        n2i: dictionary with contig_name -> list of idx corresponding to that contig.
+    Output:
+        scores:
+            pred: scores for individual contigs
+            y: corresponding true labels
+    """
+
+    score_val = model.predict_generator(dataGen)
+
+    # Compute predictions by aggregating scores for longer contigs
+    score_val = score_val.flatten()
+    scores = {}
+    for k in n2i:
+        inf = n2i[k][0]
+        sup = n2i[k][-1] + 1
+        if k[0] not in scores:
+            scores[k[0]] = {}
+       
+        # Make sure contig doesnt appear more than once
+        assert(k[1] not in scores[k[0]])
+
+        # Make sure we have predictions for these indices
+        if sup > len(score_val):
+            continue
+
+        # Make sure all the labels for the contig coincide
+        assert((y[inf : sup] == y[inf]).all())
+        scores[k[0]][k[1]] = {'y' : int(y[inf]), 'pred' : score_val[inf : sup]}
+
+    return scores
 
