@@ -139,7 +139,7 @@ def pickle_in_parallel(feature_files, n_procs):
 def find_feature_files(data_path, technology=None,
                        force_overwrite=False, n_procs=1):
     """
-    Finding feature files in `data_path`. Searching for specific file naming.
+    Finding or creating pickle feature files in `data_path`.
     Params:
       data_path: base directory to feature files
       techology: metagenome assembler
@@ -192,6 +192,8 @@ def load_features_tr(data_path, max_len=10000,
     Inputs: 
         data_path: path to directory containing features.pkl
         max_len: fixed length of contigs
+        technology: assembler, megahit or metaspades.
+        pickle_only: only perform pickling prior to testing. One time call. 
 
     Outputs:
         x, y: lists, where each element comes from one metagenome, and 
@@ -253,7 +255,7 @@ def load_features_tr(data_path, max_len=10000,
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
                     chunked = xi[j][idx_chunk * max_len :
-                                    (idx_chunk + 1) * max_len, 1:]
+                                    (idx_chunk + 1) * max_len, :]
             
                     x_in_contig.append(chunked)
                     y_in_contig.append(yi[j])
@@ -324,7 +326,7 @@ def load_features(data_path, max_len=10000,
                 idx_chunk = 0
                 while idx_chunk * max_len < len_contig:
                     chunked = xi[j][idx_chunk * max_len :
-                                    (idx_chunk + 1) * max_len, 1:]
+                                    (idx_chunk + 1) * max_len, :]
         
                     x_in_contig.append(chunked)
                     y_in_contig.append(yi[j])
@@ -459,7 +461,7 @@ def load_features_nogt(data_path, max_len=10000,
             idx_chunk = 0
             while idx_chunk * max_len < len_contig:
                 chunked = xi[j][idx_chunk * max_len :
-                                (idx_chunk + 1) * max_len, 1:]
+                                (idx_chunk + 1) * max_len, :]
             
                 x_in_contig.append(chunked)
                 y_in_contig.append(yi[j])
@@ -532,7 +534,7 @@ def pickle_data_b(x):
     # Dictionary for one-hot encoding
     letter_idx = defaultdict(int)
     # Idx of letter in feature vector
-    idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+    idx_tmp = [('A',0) , ('C',1), ('T',2), ('G',3)]
 
     for k, v in idx_tmp:
         letter_idx[k] = v
@@ -574,7 +576,7 @@ def pickle_data_b(x):
                 idx += 1
 
             # Feature vec
-            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
+            feat.append(np.array(4 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
             feat[-1][0][letter_idx[row[3]]] = 1
 
     # Append last
@@ -602,7 +604,7 @@ def pickle_data_feat_only(features_in, features_out):
     # Dictionary for one-hot encoding
     letter_idx = defaultdict(int)
     # Idx of letter in feature vector
-    idx_tmp = [('A',1) , ('C',2), ('T',3), ('G',4)]
+    idx_tmp = [('A',0) , ('C',1), ('T',2), ('G',3)]
 
     for k, v in idx_tmp:
         letter_idx[k] = v
@@ -633,7 +635,7 @@ def pickle_data_feat_only(features_in, features_out):
                 idx += 1
 
             # Feature vec
-            feat.append(np.array(5 * [0] + [int(ri) for ri in row[4:(w_sec - 1)]])[None, :].astype(np.uint8))
+            feat.append(np.array(4 * [0] + [int(ri) for ri in row[4:(w_sec - 1)]])[None, :].astype(np.uint8))
             feat[-1][0][letter_idx[row[3]]] = 1
 
     # Append last
