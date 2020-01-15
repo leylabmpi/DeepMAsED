@@ -20,6 +20,9 @@ setup(
     long_description = desc + '\n See README for more information.',
     author = 'Nick Youngblut',
     author_email = 'nyoungb2@gmail.com',
+    package_data={'DeepMAsED': ['Model/deepmased_model.h5',
+                                'Model/deepmased_mean_std.pkl']},
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'DeepMAsED = DeepMAsED.__main__:main'

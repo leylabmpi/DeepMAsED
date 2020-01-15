@@ -1,4 +1,5 @@
 from __future__ import print_function
+from pkg_resources import resource_filename
 # import
 ## batteries
 import os
@@ -27,15 +28,19 @@ def parse_args(test_args=None, subparsers=None):
     else:
         parser = argparse.ArgumentParser(description=desc, epilog=epi,
                                          formatter_class=argparse.RawTextHelpFormatter)
-
+    #default trained model
+    pkg_model = resource_filename('DeepMAsED','Model/deepmased_model.h5')
+    pkg_mstd = resource_filename('DeepMAsED','Model/deepmased_mean_std.pkl')
+    pkg_path, pkg_model = os.path.split(pkg_model)
+    _, pkg_mstd  = os.path.split(pkg_mstd)
     # args
     parser.add_argument('data_path', metavar='data-path', type=str, 
                         help='Where to find feature table(s) (base directory for all tables)')
-    parser.add_argument('--model-path',  default='.', type=str, 
+    parser.add_argument('--model-path',  default=pkg_path, type=str, 
                         help='Directory containing the model (default: %(default)s)')
-    parser.add_argument('--model-name', default='deepmased_model.h5', type=str, 
+    parser.add_argument('--model-name', default=pkg_model, type=str, 
                         help='Model name in the model_path (default: %(default)s)')
-    parser.add_argument('--mstd-name', default='deepmased_mean_std.pkl', type=str, 
+    parser.add_argument('--mstd-name', default=pkg_mstd, type=str, 
                         help='Data mean and std name in the model_path (default: %(default)s)') 
     parser.add_argument('--save-path', default='.', type=str, 
                         help='Directory where to save output (default: %(default)s)')
