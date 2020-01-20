@@ -530,6 +530,15 @@ def pickle_data_b(x):
         # indexing
         w_ext = col_names.index('Extensive_misassembly')
         w_chimera = col_names.index('chimeric')
+        w_ref = col_names.index('ref_base')
+        w_nA = col_names.index('num_query_A')
+        w_nC = col_names.index('num_query_C')
+        w_nG = col_names.index('num_query_G')
+        w_nT = col_names.index('num_query_T')
+        w_var = col_names.index('num_SNPs')
+        w_cov = col_names.index('coverage')
+        w_dis = col_names.index('num_discordant')
+        w_features = [w_nA, w_nC, w_nG, w_nT, w_var, w_cov, w_dis]
         # formatting rows
         for row in tsv:
             name_contig = row[0]
@@ -553,8 +562,8 @@ def pickle_data_b(x):
                 idx += 1
 
             # Feature vec
-            feat.append(np.array(4 * [0] + [int(ri) for ri in row[4:(w_chimera - 2)]])[None, :].astype(np.uint8))
-            feat[-1][0][letter_idx[row[3]]] = 1
+            feat.append(np.array(4 * [0] + [int(row[ind]) for ind in w_features])[None, :].astype(np.uint8))
+            feat[-1][0][letter_idx[row[w_ref]]] = 1
 
     # Append last
     feat_contig.append(np.concatenate(feat, 0))
@@ -596,8 +605,16 @@ def pickle_data_feat_only(features_in, features_out):
 
         tsv = csv.reader(f, delimiter='\t')
         col_names = next(tsv)
-
-        w_sec = col_names.index('num_secondary')
+        #indexing
+        w_ref = col_names.index('ref_base')
+        w_nA = col_names.index('num_query_A')
+        w_nC = col_names.index('num_query_C')
+        w_nG = col_names.index('num_query_G')
+        w_nT = col_names.index('num_query_T')
+        w_var = col_names.index('num_SNPs')
+        w_cov = col_names.index('coverage')
+        w_dis = col_names.index('num_discordant')
+        w_features = [w_nA, w_nC, w_nG, w_nT, w_var, w_cov, w_dis]
 
         for row in tsv:
             name_contig = row[1]
@@ -605,6 +622,7 @@ def pickle_data_feat_only(features_in, features_out):
             # If name not in set, add previous contig and target to dataset
             if name_contig not in name_to_id:
                 if idx != 0:
+                    
                     feat_contig.append(np.concatenate(feat, 0))
 
                 feat = []
@@ -612,8 +630,8 @@ def pickle_data_feat_only(features_in, features_out):
                 idx += 1
 
             # Feature vec
-            feat.append(np.array(4 * [0] + [int(ri) for ri in row[4:(w_sec - 1)]])[None, :].astype(np.uint8))
-            feat[-1][0][letter_idx[row[3]]] = 1
+            feat.append(np.array(4 * [0] + [int(row[ind]) for ind in w_features])[None, :].astype(np.uint8))
+            feat[-1][0][letter_idx[row[w_ref]]] = 1
 
     # Append last
     # there are empty files
