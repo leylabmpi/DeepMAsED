@@ -32,7 +32,7 @@ def test_predict_r3(tmpdir):
     out_path = tmpdir.mkdir('save_dir')
     model_path = os.path.join(data_dir, 'n1000_r3/', 'model')
     args = [os.path.join(data_dir, 'n1000_r3/'),
-            '--model-path', model_path, '--cpu-only']
+            '--cpu-only']
     args = Predict_CMD.parse_args(args)
     Predict_CMD.main(args)    
     

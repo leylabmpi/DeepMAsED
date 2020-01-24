@@ -15,12 +15,6 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 Rojas-Carulla, Mateo, Ruth E. Ley, Bernhard Schoelkopf, and Nicholas D. Youngblut. 2019.
 "DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." bioRxiv. https://doi.org/10.1101/763813.
 
-
-# WARNINGS
-
-This project is currently undergoing heavy development.
-The UI is not stable and can change at any time (see git log for changes).
-
 # Main Description
 
 The tool is divided into two main parts:
@@ -35,16 +29,12 @@ The tool is divided into two main parts:
 
 # Setup
 
-## DeepMAsED-SM
+## conda 
 
 * [If needed] Install miniconda (or anaconda)
-* Create a conda env that includes `snakemake` & `pandas`
-  * e.g., `conda create -n snakemake conda-forge::pandas bioconda::snakemake`
-* To activate the conda env: `conda activate snakemake`
-
-## DeepMAsED-DL
-
-See the `conda create` line in the .travis.yaml file.
+* See the `conda create` line in the .travis.yaml file.
+* If just using DeepMAsED-SM:
+  * `conda create -n snakemake conda-forge::pandas bioconda::snakemake`
 
 ### Testing the DeepMAsED package (optional)
 
