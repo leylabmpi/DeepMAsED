@@ -12,8 +12,9 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 # Citation
 
-Rojas-Carulla, Mateo, Ruth E. Ley, Bernhard Schoelkopf, and Nicholas D. Youngblut. 2019.
-"DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." bioRxiv. https://doi.org/10.1101/763813.
+Mineeva, Olga, Mateo Rojas-Carulla, Ruth E. Ley, Bernhard Schölkopf, and Nicholas D. Youngblut. 2020.
+"DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." Bioinformatics , February.
+https://doi.org/10.1093/bioinformatics/btaa124.
 
 # Main Description
 
@@ -96,6 +97,8 @@ See the following resources for help:
   * Job resource usage info
 
 ##### Features table
+
+Created by the script `.DeepMAsED-SM/bin/scripts/bam2feat.py`
 
 * **Basic info**
   * assembler
