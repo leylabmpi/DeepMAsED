@@ -48,6 +48,10 @@ The tool is divided into two main parts:
 
 # Usage
 
+**tl;dr** 
+
+See the "Workflow for predicting misassemblies among your contigs" section below
+
 ## DeepMAsED-SM
 
 ### Creating feature tables for genomes (MAGs)
@@ -122,41 +126,14 @@ Created by the script `.DeepMAsED-SM/bin/scripts/bam2feat.py`
     * number of SNPs at that position
   * coverage
     * number of reads mapping to that position
-  * min_insert_size
-    * minimum paired-end read insert size for all reads mapping to that position
-  * mean_insert_size
-    * mean paired-end read insert size for all reads mapping to that position
-  * stdev_insert_size
-    * stdev paired-end read insert size for all reads mapping to that position
-  * max_insert_size
-    * max paired-end read insert size for all reads mapping to that position
-  * min_mapq
-    * minimum read mapping quality for all reads mapping to that position
-  * mean_mapq
-    * mean read mapping quality for all reads mapping to that position
-  * stdev_mapq
-    * stdev read mapping quality for all reads mapping to that position
-  * max_mapq
-    * max read mapping quality for all reads mapping to that position
-  * num_proper
-    * number of reads mapping to that position with proper read pairing
-  * num_diff_strand
-    * number of reads mapping to that position where mate maps to the other strand
-    * "proper" pair alignment determined by bowtie2
-  * num_orphans
-    * number of reads mapping to that position where the mate did not map
+  * num_discordant
+    * discordant reads according to the read mapper definition
   * num_supplementary
     * number of reads mapping to that position where the alignment is supplementary
     * see the [samtools docs](https://samtools.github.io/hts-specs/SAMv1.pdf) for more info
   * num_secondary
     * number of reads mapping to that position where the alignment is secondary
     * see the [samtools docs](https://samtools.github.io/hts-specs/SAMv1.pdf) for more info
-  * seq_window_entropy
-    * sliding window contig sequence Shannon entropy
-    * window size defined with the `make_features:` param in the `config.yaml` file
-  * seq_window_perc_gc
-    * sliding window contig sequence GC content
-    * window size defined with the `make_features:` param in the `config.yaml` file
 * **miniasm info**
   * chimeric
     * chimeric contig (Supplementary alignments; SAM 0x800)
@@ -212,7 +189,7 @@ The output will the be same as for feature generation, but with extra directorie
 
 Main interface: `DeepMAsED -h`
 
-Note: `DeepMAsED` can be run without GPUs, but it will be much slower.
+Note: `DeepMAsED` can be run without GPUs, but it will be substantially slower.
 
 ### Predicting with existing model
 
@@ -226,4 +203,32 @@ See `DeepMAsED train -h`
 
 See `DeepMAsED evalulate -h`
 
+# Workflow for predicting misassemblies among your contigs
 
+This is assuming that you want to run the default final model
+reported in our paper (Mineeva et al., 2020). 
+
+## First, create the feature table(s) for all contigs
+
+The easiest method is to use `DeepMAsED-SM`.
+See the "Creating feature tables for genomes (MAGs)" section above
+for instructions on how to do this.
+
+> You can also just directly use the [bam2feat.py](DeepMAsED-SM/bin/scripts/bam2feat.py)
+script for creating the feature tables if you don't want to run `snakemake`. 
+
+
+## Second, predict misassemblies using the default model
+
+Currently, you have to have to put the feature tables in a directory structure
+that matches what would be created by the simulation runs.
+See `DeepMAsED predict -h` for more details. 
+
+To predict:
+
+`DeepMAsED predict --force-overwrite data_path`
+
+...where `data_path` is the base path to the feature tables (see the subcommand docs).
+
+`--force-ovewrite` forces the re-creation of the pkl files, which is slower but
+can prevent issues.
