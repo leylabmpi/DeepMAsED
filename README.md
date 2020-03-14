@@ -12,8 +12,7 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 # Citation
 
-[Mineeva, Olga, Mateo Rojas-Carulla, Ruth E. Ley, Bernhard Schölkopf, and Nicholas D. Youngblut. 2020. "DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." Bioinformatics , February.]
-(https://doi.org/10.1093/bioinformatics/btaa124)
+[Mineeva, Olga, Mateo Rojas-Carulla, Ruth E. Ley, Bernhard Schölkopf, and Nicholas D. Youngblut. 2020. "DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." Bioinformatics , February.](https://doi.org/10.1093/bioinformatics/btaa124)
 
 # Main Description
 
