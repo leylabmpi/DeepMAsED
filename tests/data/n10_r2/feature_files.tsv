@@ -1,0 +1,5 @@
+richness	rep	read_depth	assembler	feature_file	MGSIM_reads_params
+1	1	1000000	metaspades	1/1/1000000/metaspades/features.tsv.gz	"--art-paired --art-mflen 250 --art-sdev 10"
+1	1	1000000	megahit	1/1/1000000/megahit/features.tsv.gz	"--art-paired --art-mflen 250 --art-sdev 10"
+1	2	1000000	metaspades	1/2/1000000/metaspades/features.tsv.gz	"--art-paired --art-mflen 250 --art-sdev 10"
+1	2	1000000	megahit	1/2/1000000/megahit/features.tsv.gz	"--art-paired --art-mflen 250 --art-sdev 10"

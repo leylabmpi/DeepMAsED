@@ -22,16 +22,16 @@ from DeepMAsED import Utils
 def main(args):
     """Main interface
     """
-    np.random.seed(12)
-    logging.info('Loading data...')
-    
-    # where to save the plot
+    # init
+    np.random.seed(args.seed)
+    ## where to save the plot
     save_plot = args.save_plot
     if save_plot is None:
-        save_plot = args.save_path        
-        
+        save_plot = args.save_path
+                
     # Load and process data
     # Provide objective to load
+    logging.info('Loading data...')
     recall_0 = Utils.class_recall(0)
     recall_1 = Utils.class_recall(1)
     custom_obj = {'metr' : recall_0}
@@ -42,7 +42,6 @@ def main(args):
         raise IOError(msg.format(args.model_name, args.model_path))
     logging.info('Loading model: {}'.format(h5_file))
     model = load_model(h5_file, custom_objects=custom_obj)
-
     
     # model pkl
     pkl_file = os.path.join(args.model_path, args.mstd_name)
@@ -50,26 +49,27 @@ def main(args):
     with open(pkl_file, 'rb') as mstd:
         mean_tr, std_tr = pickle.load(mstd)
     
-
     # loading features
     if args.is_synthetic == 1:
         logging.info('Loading synthetic features')
-        x, y, i2n = Utils.load_features(args.data_path,
+        x, y, i2n = Utils.load_features(args.feature_file_table,
                                         max_len = args.max_len,
-                                        mode = args.mode, 
                                         technology = args.technology,
-                                        force_overwrite=args.force_overwrite)
+                                        force_overwrite = args.force_overwrite,
+                                        n_procs = args.n_procs)
     else:
         logging.info('Loading non-synthetic features')
-        x, y, i2n = Utils.load_features_nogt(args.data_path,
+        x, y, i2n = Utils.load_features_nogt(args.feature_file_table,
                                              max_len = args.max_len,
-                                             mode = args.mode,
-                                             force_overwrite=args.force_overwrite)
+                                             force_overwrite = args.force_overwrite,
+                                             n_procs = args.n_procs)
         
-    logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))    
+    logging.info('Loaded {} contigs'.format(len(set(i2n.values()))))    
     n2i = Utils.reverse_dict(i2n)
     x = [xi for xmeta in x for xi in xmeta]
-    y = np.concatenate(y)    
+    y = np.concatenate(y)
+    
+    logging.info('Running model generator...')
     dataGen = Models.Generator(x, y, args.max_len, batch_size=64,  shuffle=False, 
                                norm_raw=bool(args.norm_raw),
                                mean_tr=mean_tr, std_tr=std_tr)

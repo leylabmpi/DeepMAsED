@@ -35,8 +35,8 @@ def parse_args(test_args=None, subparsers=None):
     pkg_path, pkg_model = os.path.split(pkg_model)
     _, pkg_mstd  = os.path.split(pkg_mstd)
     # args
-    parser.add_argument('data_path', metavar='data-path', type=str, 
-                        help='Where to find feature tables (base directory for all tables)')    
+    parser.add_argument('feature_file_table',  metavar='feature_file_table', type=str, 
+                        help='Table listing feature table files (see Train docs)')
     parser.add_argument('--model-path',  default=pkg_path, type=str, 
                         help='Directory containing the model (default: %(default)s)')
     parser.add_argument('--model-name', default=pkg_model, type=str, 
@@ -51,18 +51,19 @@ def parse_args(test_args=None, subparsers=None):
                         help='Where to save plots (default: %(default)s)')
     parser.add_argument('--max-len', default=10000, type=int, 
                         help='Max contig len, fixed input for CNN (default: %(default)s)')
-    parser.add_argument('--mode', default='extensive', type=str,
-                        choices = ['extensive','edit', 'chimera'],
-                        help='Classification problem (default: %(default)s)')
-    parser.add_argument('--technology', default='megahit', type=str, 
-                        help='Assembler name in the data_path (default: %(default)s)')
+    parser.add_argument('--technology', default='all-asmbl', type=str, 
+                        help='Assembler name in the data_path. "all-asmbl" will use all assemblers (default: %(default)s)')    
     parser.add_argument('--norm-raw', default=1, type=int, 
                         help='Whether to normalize the four one-hot feature of raw (default: %(default)s)')
     parser.add_argument('--is-synthetic', default=1, type=int, 
                         help='Whether the data is synthetic and thus has ground truth (default: %(default)s)')
     parser.add_argument('--force-overwrite', action='store_true', default=False,
                         help='Force re-creation of pickle files (default: %(default)s)')
-        # running test args
+    parser.add_argument('--seed', default=12, type=int, 
+                        help='Seed used for numpy.random (default: %(default)s)')
+    parser.add_argument('--n-procs', default=1, type=int, 
+                        help='Number of parallel processes (default: %(default)s)')
+    # running test args
     if test_args:
         args = parser.parse_args(test_args)
         return args

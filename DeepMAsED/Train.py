@@ -27,30 +27,28 @@ class Config(object):
         self.pool_window = args.pool_window
         self.dropout = args.dropout
         self.lr_init = args.lr_init
-        self.mode = args.mode
 
 def main(args):
     # init
-    np.random.seed(12)
+    np.random.seed(args.seed)
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
     save_path = args.save_path
     
     # Build model
-    logging.info('Building model')
     config = Config(args)
-    deepmased = Models.deepmased(config)
-    deepmased.print_summary()
-
+    if not args.pickle_only:
+        logging.info('Building model')
+        deepmased = Models.deepmased(config)
+        deepmased.print_summary()
 
     # Load and process data
-    x, y = Utils.load_features_tr(args.data_path,
+    x, y = Utils.load_features_tr(args.feature_file_table,
                                   max_len=args.max_len,
-                                  mode = config.mode, 
                                   technology = args.technology,
-                                  pickle_only=args.pickle_only,
-                                  force_overwrite=args.force_overwrite,
-                                  n_procs=args.n_procs)
+                                  pickle_only = args.pickle_only,
+                                  force_overwrite = args.force_overwrite,
+                                  n_procs = args.n_procs)
 
     # kfold cross validation
     if args.n_folds >= 0:
@@ -81,24 +79,20 @@ def main(args):
                                                   histogram_freq=0, 
                                                   write_graph=True, write_images=True)
             logging.info('Fold {}: Training network...'.format(val_idx))
-            ## which mode (binary or continuous)?
-            if config.mode in ['chimera', 'extensive']:
+            ## binary classification (extensive misassembly)
+            try:
                 w_one = int(len(np.where(y_tr == 0)[0])  / len(np.where(y_tr == 1)[0]))
-                class_weight = {0 : 1 , 1: w_one}
-                deepmased.net.fit_generator(generator=dataGen, 
-                                            validation_data=dataGen_val,
-                                            epochs=args.n_epochs, 
-                                            use_multiprocessing=True,
-                                            workers=args.n_procs,
-                                            verbose=2,
-                                            callbacks=[tb_logs, deepmased.reduce_lr])
-            elif config.mode == 'edit':
-                st = StandardScaler()
-                y_tr = st.fit_transform(y_tr)
-                y_te = st.transform(y_te)
-                deepmased.net.fit(x_tr, y_tr, validation_data=(x_te, y_te),
-                                  epochs=args.n_epochs, 
-                                  callbacks=[tb_logs, deepmased.reduce_lr])
+            except ZeroDivisionError:
+                logging.warning('  No misassemblies present!')
+                w_one = 0
+            class_weight = {0 : 1 , 1: w_one}
+            deepmased.net.fit_generator(generator=dataGen, 
+                                        validation_data=dataGen_val,
+                                        epochs=args.n_epochs, 
+                                        use_multiprocessing=args.n_procs > 1,
+                                        workers=args.n_procs,
+                                        verbose=2,
+                                        callbacks=[tb_logs, deepmased.reduce_lr])
             # AUC scores
             logging.info('Fold {}: Computing AUC scores...'.format(val_idx))
             scores_val = deepmased.predict_generator(dataGen_val)
@@ -135,19 +129,20 @@ def main(args):
                                               write_graph=True, write_images=True)
         
         logging.info('Training network...')
-        if config.mode in ['chimera', 'extensive']:             
-            deepmased.net.fit_generator(generator=dataGen,
-                                        epochs=args.n_epochs, 
-                                        use_multiprocessing=True,
-                                        verbose=2,
-                                        callbacks=[tb_logs, deepmased.reduce_lr])
+        deepmased.net.fit_generator(generator=dataGen,
+                                    epochs=args.n_epochs, 
+                                    use_multiprocessing=args.n_procs > 1,
+                                    workers=args.n_procs,
+                                    verbose=2,
+                                    callbacks=[tb_logs, deepmased.reduce_lr])
             
-        logging.info('Saving trained model...')                   
-        outfile = os.path.join(save_path, '_'.join([args.save_name, args.technology, 'model.h5']))
+        logging.info('Saving trained model...')
+        x = [args.save_name, args.technology, 'model.h5']
+        outfile = os.path.join(save_path, '_'.join(x))
         deepmased.save(outfile)
-        logging.info('  File written: {}'.format(outfile))
-        
-        outfile = os.path.join(save_path, '_'.join([args.save_name, args.technology, 'mean_std.pkl']))
+        logging.info('  File written: {}'.format(outfile))        
+        x = [args.save_name, args.technology, 'mean_std.pkl']
+        outfile = os.path.join(save_path, '_'.join(x))
         with open(outfile, 'wb') as f:
             pickle.dump([dataGen.mean, dataGen.std], f)
         logging.info('  File written: {}'.format(outfile))

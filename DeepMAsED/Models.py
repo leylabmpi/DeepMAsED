@@ -24,7 +24,6 @@ class deepmased(object):
         self.pool_window = config.pool_window
         self.dropout = config.dropout
         self.lr_init = config.lr_init
-        self.mode = config.mode
         self.n_fc = config.n_fc
         self.n_hid = config.n_hid
 
@@ -47,30 +46,19 @@ class deepmased(object):
 
         optimizer = keras.optimizers.adam(lr=self.lr_init)
 
-        if self.mode in ['chimera', 'extensive']:
-            for _ in range(self.n_fc - 1):
-                self.net.add(Dense(self.n_hid, activation='relu'))
-                self.net.add(Dropout(rate=self.dropout))
-
-            self.net.add(Dense(1, activation='sigmoid'))
+        # binary classification
+        for _ in range(self.n_fc - 1):
+            self.net.add(Dense(self.n_hid, activation='relu'))
             self.net.add(Dropout(rate=self.dropout))
+            
+        self.net.add(Dense(1, activation='sigmoid'))
+        self.net.add(Dropout(rate=self.dropout))
 
-            recall_0 = Utils.class_recall(0)
-            recall_1 = Utils.class_recall(1)
-            self.net.compile(loss='binary_crossentropy',
-                             optimizer=optimizer,
-                             metrics=[recall_0, recall_1])
-        elif self.mode == 'edit':
-            self.net.add(Dense(20, activation='relu'))
-            self.net.add(Dropout(rate=dropout))
-            self.net.add(Dense(20, activation='relu'))
-            self.net.add(Dropout(rate=dropout))
-            self.net.add(Dense(1, activation='linear'))
-            self.net.compile(loss='mean_absolute_error',
-                             optimizer=optimizer,
-                             metrics=[Utils.explained_var])
-        else:
-            raise('Training mode "{}" not supported.'.format(mode))
+        recall_0 = Utils.class_recall(0)
+        recall_1 = Utils.class_recall(1)
+        self.net.compile(loss='binary_crossentropy',
+                         optimizer=optimizer,
+                         metrics=[recall_0, recall_1])
 
         self.reduce_lr = keras.callbacks.ReduceLROnPlateau(
                                monitor='val_loss', factor=0.5,

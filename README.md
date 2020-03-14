@@ -12,9 +12,8 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 
 # Citation
 
-Mineeva, Olga, Mateo Rojas-Carulla, Ruth E. Ley, Bernhard Schölkopf, and Nicholas D. Youngblut. 2020.
-"DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." Bioinformatics , February.
-https://doi.org/10.1093/bioinformatics/btaa124.
+[Mineeva, Olga, Mateo Rojas-Carulla, Ruth E. Ley, Bernhard Schölkopf, and Nicholas D. Youngblut. 2020. "DeepMAsED: Evaluating the Quality of Metagenomic Assemblies." Bioinformatics , February.]
+(https://doi.org/10.1093/bioinformatics/btaa124)
 
 # Main Description
 
@@ -50,19 +49,25 @@ The tool is divided into two main parts:
 
 **tl;dr** 
 
-See the "Workflow for predicting misassemblies among your contigs" section below
+If you just want to identify missassemblies among your metagenome assembly
+contigs, then see the "Workflow for predicting misassemblies among your contigs"
+section below.
 
 ## DeepMAsED-SM
 
 ### Creating feature tables for genomes (MAGs)
 
-Feature tables are fed to DeepMAsED-DL for misassembly classification.
+Feature tables are fed to DeepMAsED-DL for training models and misassembly classification.
+The easiest approach is to used `DeepMAsED-SM`. Alternatively, one can just use
+the [bam2feat.py](./DeepMAsED-SM/bin/scripts/bam2feat.py) script to directly
+create the feature tables. The snakemake pipeline just helps to parallize the run
+(on a compute cluster).
 
-**Input:**
+**Input for DeepMAsED-SM**
 
-* A table of reference genomes & metagenome samples
-  * The table maps reference genomes to metagenomes from which they originate.
-    * If MAGs created by binning, you can either combine metagenome samples, or map genomes to many metagenome samples 
+* A table mapping contigs to the metagenome samples that the originate from.
+  * If using MAGs, then you can either combine metagenome samples or map genomes to
+    many metagenome samples
   * Table format: `<Taxon>\t<Fasta>\t<Sample>\t<Read1>\t<Read2>`
      * "Taxon" = the species/strain name of the genome
      * "Fasta" = the genome (MAG) fasta file (uncompressed or gzip'ed)
@@ -70,7 +75,7 @@ Feature tables are fed to DeepMAsED-DL for misassembly classification.
        * Note: the 'sample' can just be gDNA from a cultured isolate (not a metagenome)
      * "Read1" = Illumina Read1 for the sample
      * "Read2" = Illumina Read2 for the sample
-* The snakemake config file (e.g., `config.yaml`). This includes:
+* The snakemake config file (e.g., [config.yaml](./DeepMAsED-SM/config.yaml). This includes:
   * Config params on MG communities
   * Config params on assemblers & parameters
   * Note: the same config is used for simulations and feature table creation
@@ -102,7 +107,7 @@ See the following resources for help:
 
 ##### Features table
 
-Created by the script `.DeepMAsED-SM/bin/scripts/bam2feat.py`
+Created by the [bam2feat.py](./DeepMAsED-SM/bin/scripts/bam2feat.py) script.
 
 * **Basic info**
   * assembler
@@ -151,7 +156,7 @@ Created by the script `.DeepMAsED-SM/bin/scripts/bam2feat.py`
 
 ### Creating custom train/test data from reference genomes
 
-This is useful for training DeepMAsED-DL with a custom
+This is useful for training `DeepMAsED-DL` with a custom
 train/test dataset (e.g., just biome-specific taxa). 
 
 **Input:**
@@ -203,10 +208,11 @@ See `DeepMAsED train -h`
 
 See `DeepMAsED evalulate -h`
 
+
 # Workflow for predicting misassemblies among your contigs
 
 This is assuming that you want to run the default final model
-reported in our paper (Mineeva et al., 2020). 
+reported in our paper ([Mineeva et al., 2020](https://doi.org/10.1093/bioinformatics/btaa124)). 
 
 ## First, create the feature table(s) for all contigs
 
@@ -214,21 +220,45 @@ The easiest method is to use `DeepMAsED-SM`.
 See the "Creating feature tables for genomes (MAGs)" section above
 for instructions on how to do this.
 
-> You can also just directly use the [bam2feat.py](DeepMAsED-SM/bin/scripts/bam2feat.py)
-script for creating the feature tables if you don't want to run `snakemake`. 
-
+Alternatively, you can just directly use the [bam2feat.py](DeepMAsED-SM/bin/scripts/bam2feat.py)
+script for creating the feature tables if you don't want to run `snakemake`.
+If you go this route, then you will need to manually creata a `feature_file_table`;
+see `DeepMAsED train -h` for a description of the format. 
 
 ## Second, predict misassemblies using the default model
 
-Currently, you have to have to put the feature tables in a directory structure
-that matches what would be created by the simulation runs.
-See `DeepMAsED predict -h` for more details. 
-
 To predict:
 
-`DeepMAsED predict --force-overwrite data_path`
+`DeepMAsED predict --force-overwrite feature_file_table`
 
-...where `data_path` is the base path to the feature tables (see the subcommand docs).
+...where `feature_filt_table` is the path to a table that lists
+all feature files (see above). 
 
-`--force-ovewrite` forces the re-creation of the pkl files, which is slower but
-can prevent issues.
+`--force-ovewrite` forces the re-creation of the pkl files, which is a bit slower
+but can prevent issues.
+
+Change `--save-path` to set the output directory.
+Use `--cpu-only` to just use CPUs instead of a GPU.
+
+## Third, inspect the output
+
+By default, the predictions will be written to `deepmased_predictions.tsv`.
+
+Example output:
+
+```
+Collection     Contig  Deepmased_score
+0       NODE_1156_length_5232_cov_4.046938      0.0007264018
+0       NODE_1563_length_3868_cov_5.851298      0.03783685
+0       NODE_4288_length_1225_cov_3.235897      0.070887744
+1       k141_9081       8.8751316e-05
+1       k141_2594       6.720424e-05
+1       k141_4878       0.0015754104
+2       NODE_5204_length_1290_cov_3.283401      0.00036007166
+2       NODE_2848_length_2164_cov_2.982456      0.0005029738
+2       NODE_446_length_6027_cov_5.812291       0.068261534
+```
+
+See [Mineeva et al., 2020](https://doi.org/10.1093/bioinformatics/btaa124)
+to help decide what score cutoff is prudent for classifying
+misassembled contigs.
