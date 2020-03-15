@@ -5,8 +5,12 @@ import re
 import sys
 import getpass
 import socket
-import pandas as pd
 import random
+from distutils.spawn import find_executable
+import pandas as pd
+
+def skipped(x):
+    return str(x).strip().lower().startswith('skip')
 
 # setup
 ## config
@@ -16,13 +20,22 @@ random.seed(config['pipeline']['rnd_seed'])
 ## dirs 
 snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/dirs'
-
+## email
+if not skipped(config['email']):
+    if not find_executable('mutt'):
+        print('WARNING: mutt not found; email notifications will be skipped',
+              file=sys.stderr)
+        config['email'] = 'Skip'
+else:
+    print('WARNING: email set to Skip; no email notifications',
+          file=sys.stderr)
+        
 ## load 
 ### temp_folder
 config['pipeline']['username'] = getpass.getuser()
-config['pipeline']['email'] = config['pipeline']['username'] + '@tuebingen.mpg.de'
-config['pipeline']['temp_folder'] = os.path.join(config['pipeline']['temp_folder'],
-                                                 config['pipeline']['username'])
+config['tmp_dir'] = os.path.join(config['tmp_dir'], config['pipeline']['username'])
+config['tmp_dir'] = os.path.join(config['tmp_dir'], 'DeepMAsED-SM_' + \
+                                 str(os.stat('.').st_ino) + '/')
 ### genomes file
 config['genomes_tbl'] = pd.read_csv(config['genomes_file'], sep='\t', comment='#')
 #### Taxon
@@ -44,15 +57,13 @@ if 'Sample' in config['genomes_tbl'].columns:
     if 'Read1' not in config['genomes_tbl'].columns:
         raise IOError('"Read1" column not found in input table!')
     if 'Read2' not in config['genomes_tbl'].columns:
-        sys.stderr.write('WARNING: no "Read2" column in the input table!\n')
+        print('WARNING: no "Read2" column in the input table!\n', file=sys.stderr)
     config['just_features'] = True
 else:
     config['just_features'] = False
 
 ## output directories
 config['output_dir'] = config['output_dir'].rstrip('/') + '/'
-config['tmp_dir'] = os.path.join(config['pipeline']['temp_folder'],
-		                 'DeepMAsED_' + str(os.stat('.').st_ino) + '/')
 if not os.path.isdir(config['tmp_dir']):
     os.makedirs(config['tmp_dir'])
 print('\33[33mUsing temporary directory: {} \x1b[0m'.format(config['tmp_dir']))
@@ -103,11 +114,11 @@ def all_which_input(wildcards):
                        rep = config['reps'])
             input_files += x
         # coverage
-        if not config['params']['nonpareil'].startswith('Skip'):
+        if not skipped(config['params']['nonpareil']):
             x = expand(coverage_dir + '{rep}/nonpareil.npo',
                        rep = config['reps'])
             input_files += x
-            if not config['params']['nonpareil_summary'].startswith('Skip'):
+            if not skipped(config['params']['nonpareil_summary']):
                 input_files.append(coverage_dir + 'nonpareil/all_summary.RDS')
                 input_files.append(coverage_dir + 'nonpareil/all_summary.txt')
                 input_files.append(coverage_dir + 'nonpareil/all_curve.pdf')
@@ -150,13 +161,13 @@ def all_which_input(wildcards):
 
         # State of the Art
 	## ALE
-        if not config['params']['ALE'].startswith('Skip'):
+        if not skipped(config['params']['ALE']):
             x = expand(ale_dir + '{rep}/{assembler}/ALE_results.txt',
     		       rep = config['reps'],
     	               assembler = config['assemblers'])
             input_files += x
 	## VALET
-        if not config['params']['VALET'].startswith('Skip'):
+        if not skipped(config['params']['VALET']):
             x = expand(valet_dir + '{rep}/{assembler}/summary.tsv',
     		       rep = config['reps'],
     	               assembler = config['assemblers'])

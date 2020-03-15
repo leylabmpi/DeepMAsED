@@ -4,6 +4,12 @@ genomes_file: tests/data/genome_download_n10.tsv
 # Output location
 output_dir: tests/output_n10/
 
+# temporary output location (eg., /tmp/ or /dev/shm/)
+tmp_dir: tests/output_n10_TMP/
+
+# email notifications on job failure and success (Use 'Skip' for no emails)
+email: Skip
+
 # software parameters
 ## Use "Skip" to skip  steps. If no params for rule, use ""
 ## `reps:` is the number of replicate simulations
@@ -13,7 +19,7 @@ params:
   reps: 2
   MGSIM:
     genome_download: ""
-    communities: --richness 1 #--shared-perc 80 --perm-perc 100
+    communities: --richness 1   #eg., --shared-perc 80 --perm-perc 100
     reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
   keep_reads: False
   # coverage
@@ -31,7 +37,7 @@ params:
   # mapping reads to contigs
   samtools: ""
   # creating DL features
-  make_features: --window 4
+  make_features: ""
   # state-of-the-art
   ## ALE
   ALE: ""
@@ -42,5 +48,4 @@ params:
 pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
-  temp_folder: /tmp/global2/
   rnd_seed: 9384

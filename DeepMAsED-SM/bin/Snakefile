@@ -17,7 +17,9 @@ def file_atch(file_path, file_type):
        msg = 'WARNING: could not attach {}: {}'.format(file_type, file_path)
    return attach,msg
        
-def send_email(rpt_file, email, config, pipeline='LL_pipeline', success=True):
+def send_email(rpt_file, email, config, pipeline='pipeline', success=True):
+    if skipped(email):
+        return None
     # json of config
     config_json = os.path.join(config['tmp_dir'], 'job_config.json')
     write_config(config_json)
@@ -52,7 +54,7 @@ onsuccess:
         shell(cmd)
     except subprocess.CalledProcessError:
         print('WARNING: could not parse snakemake log file')
-    send_email(rpt_file, config['pipeline']['email'], config, pipeline='DeepMAsED', success=True)
+    send_email(rpt_file, config['email'], config, pipeline='DeepMAsED', success=True)
 
 onerror:
     rpt_file,cmd = mk_cmd(success=False)
@@ -60,5 +62,5 @@ onerror:
         shell(cmd)
     except subprocess.CalledProcessError:
         print('WARNING: could not parse snakemake log file')
-    send_email(rpt_file, config['pipeline']['email'], config, pipeline='DeepMAsED', success=False)
+    send_email(rpt_file, config['email'], config, pipeline='DeepMAsED', success=False)
  

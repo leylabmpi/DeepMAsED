@@ -42,4 +42,5 @@ install:
 
 script:
   - pytest
+  - bash DeepMAsED-SM/tests/data/read_n6_dl.sh
   - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
