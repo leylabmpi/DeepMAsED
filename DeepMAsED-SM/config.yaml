@@ -1,8 +1,8 @@
 # Input
 ## example of just creating features from contigs (or MAGs/genomes)
-#genomes_file: tests/data/genomes_n4_justFeat.tsv
+genomes_file: tests/data/genomes_n4_justFeat.tsv
 ## example of creating simulated assemblies from genomes
-genomes_file: tests/data/genomes_n10.tsv
+#genomes_file: tests/data/genomes_n10.tsv
 
 # Output location
 output_dir: tests/output_n10/
@@ -11,7 +11,7 @@ output_dir: tests/output_n10/
 tmp_dir: tests/output_n10_TMP/
 
 # email notifications on job failure and success (Use 'Skip' for no emails)
-email: nyoungblut@tuebingen.mpg.de #Skip
+email: Skip
 
 # software parameters
 ## Use "Skip" to skip  steps. If no params for rule, use ""
