@@ -108,7 +108,7 @@ rule samtools_faidx:
         benchmark_dir + 'samtools_faidx/{rep}/{assembler}.txt'
     shell:
         """
-        samtools faidx {input}
+        samtools faidx {input} 2> {log} 1>&2
         """
 
 rule bam_to_DL_features:
