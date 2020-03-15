@@ -68,12 +68,15 @@ create the feature tables. The snakemake pipeline just helps to parallize the ru
   * If using MAGs, then you can either combine metagenome samples or map genomes to
     many metagenome samples
   * Table format: `<Taxon>\t<Fasta>\t<Sample>\t<Read1>\t<Read2>`
-     * "Taxon" = the species/strain name of the genome
-     * "Fasta" = the genome (MAG) fasta file (uncompressed or gzip'ed)
-     * "Sample" = the metagenome sample from which the genome originated
-       * Note: the 'sample' can just be gDNA from a cultured isolate (not a metagenome)
+     * "Taxon" = the species/strain name of the genome (MAG)
+     * "Fasta" = the genome (MAG) contig fasta file (uncompressed or gzip'ed)
+     * "Sample" = the metagenome sample from which the genome (MAG) originated
+       * If this column is not provided, then DeepMAsED-SM will simulate metagenomes from the user-provided genomes,
+         thus creating simulation data
      * "Read1" = Illumina Read1 for the sample
+       * Only needed if "Sample" provided
      * "Read2" = Illumina Read2 for the sample
+       * Only needed fi "Sample" provided and reads are paired-end 
 * The snakemake config file (e.g., [config.yaml](./DeepMAsED-SM/config.yaml). This includes:
   * Config params on MG communities
   * Config params on assemblers & parameters
