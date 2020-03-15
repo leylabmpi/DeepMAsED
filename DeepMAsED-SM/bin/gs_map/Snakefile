@@ -17,28 +17,44 @@ rule ref_genome_rename:
         {params.exe} {input.fna} > {output.fna} 2> {log}
         """
 
-localrules: symlink_reads
-
-rule symlink_reads:
+rule copy_read1:
     """
-    Uncompressing reads
+    copy read1 to tmp dir
     """
     input:
-        read1 = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read1'].unique().tolist(),
-        read2 = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read2'].unique().tolist(),
+        read = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read1'].unique().tolist(),
     output:
-        read1 = temp(config['tmp_dir'] + '{sample}_R1.fq.gz'),
-        read2 = temp(config['tmp_dir'] + '{sample}_R2.fq.gz')
+        read = temp(config['tmp_dir'] + '{sample}_R1.fq.gz')
+    params:
+        ionice = config['params']['ionice']
     log:
         log_dir + 'symlink_reads/{sample}.log'
     benchmark:
         benchmark_dir + 'symlink_reads/{sample}.txt'
     shell:
         """
-        ln -s -f {input.read1} {output.read1} 2> {log}
-        ln -s -f {input.read2} {output.read2} 2>> {log}
+        ionice {params.ionice} cp -f {input.read} {output.read} 2> {log}
         """
 
+rule copy_read2:
+    """
+    copy read2 to tmp dir
+    """
+    input:
+        read = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read2'].unique().tolist(),
+    output:
+        read = temp(config['tmp_dir'] + '{sample}_R2.fq.gz')
+    params:
+        ionice = config['params']['ionice']
+    log:
+        log_dir + 'copy_read2/{sample}.log'
+    benchmark:
+        benchmark_dir + 'copy_read2/{sample}.txt'
+    shell:
+        """
+        ionice {params.ionice} cp -f {input.read} {output.read} 2> {log}
+        """
+        
 rule map_bowtie2_build:
     """
     Building bowtie2 index for each genome

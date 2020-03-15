@@ -16,6 +16,7 @@ tests/data/*/model/predictions/
 tests/data/*/model/logs_final/
 DeepMAsED-SM/bin/misc_r_functions/
 DeepMAsED-SM/tests/output_*
+DeepMAsED-SM/tests/data/*.gz
 deepmased_trained/predictions/
 screenlog.*
 bin/misc_*

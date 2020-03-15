@@ -1,11 +1,11 @@
 # Input
-genomes_file: tests/data/genome_download_n10.tsv
+genomes_file: tests/data/genomes_n4_justFeat.tsv
 
 # Output location
-output_dir: tests/output_n10/
+output_dir: tests/output_n4/
 
 # temporary output location (eg., /tmp/ or /dev/shm/)
-tmp_dir: tests/output_n10_TMP/
+tmp_dir: tests/output_n4_TMP/
 
 # email notifications on job failure and success (Use 'Skip' for no emails)
 email: Skip
@@ -15,6 +15,8 @@ email: Skip
 ## `reps:` is the number of replicate simulations
 ## If `keep_reads: True`, then simulated reads are kept
 params:
+  # ionice for reducing I/O (use -c 2 for normal I/O)
+  ionice: -c 3
   # simulating metagenomes
   reps: 2
   MGSIM:

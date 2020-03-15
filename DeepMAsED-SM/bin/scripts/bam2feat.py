@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 from __future__ import print_function
+# batteries
 import sys,os
 import argparse
 import logging
 import itertools
 from functools import partial
 from multiprocessing import Pool
-
+# 3rd party
 import pysam
 
 
@@ -47,14 +48,21 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 IDX = {'A':0, 'C':1, 'G':2, 'T':3}
 
 def count_SNPs(query_seqs, ref_seq):
+    """ Counting SNPs for all reads mapped to a position on the ref sequence
+    """
     SNP_cnt = 0
     for i,x in enumerate(query_seqs):
-        if i != IDX[ref_seq]:
+        try:
+            matched = i == IDX[ref_seq]
+        except KeyError:
+            matched = None
+        if matched is False:
             SNP_cnt += x[0]
     return SNP_cnt
 
 def _contig_stats(contig, bam_file, fasta_file, assembler):
-
+    """ getting status for reads mapped to a contig
+    """
     fasta = pysam.FastaFile(fasta_file)
     
     x = 'rb' if bam_file.endswith('.bam') else 'r'

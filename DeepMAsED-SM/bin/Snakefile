@@ -16,14 +16,30 @@ def file_atch(file_path, file_type):
        file_path = os.path.split(file_path)[1]
        msg = 'WARNING: could not attach {}: {}'.format(file_type, file_path)
    return attach,msg
+
+def mk_rpt(success=True):
+    msg = 'complete' if success is True else 'error'
+    print('Pipeline {}! Creating report...'.format(msg))
+    exe = os.path.join(config['pipeline']['script_folder'], 'log_summarize.py')
+    rpt_file = os.path.join(config['tmp_dir'], 'job_report.csv')
+    cmd = '{exe} {{log}} > {rpt_file}'.format(exe=exe, rpt_file=rpt_file)
+    return rpt_file, cmd
        
-def send_email(rpt_file, email, config, pipeline='pipeline', success=True):
+def send_email(email, config, pipeline='pipeline', success=True):
     if skipped(email):
         return None
+
+    # creating report
+    rpt_file,cmd = mk_rpt(success=success)
+    try:
+        shell(cmd)
+    except subprocess.CalledProcessError:
+        print('WARNING: could not parse snakemake log file')
+    
     # json of config
     config_json = os.path.join(config['tmp_dir'], 'job_config.json')
     write_config(config_json)
-    
+
     # email
     title = '{} finished successfully' if success is True else '{} => error occurred'
     title = title.format(pipeline)
@@ -39,28 +55,10 @@ def send_email(rpt_file, email, config, pipeline='pipeline', success=True):
     os.remove(rpt_file)
     os.remove(config_json)
 
-def mk_cmd(success=True):
-    msg = 'complete' if success is True else 'error'
-    print('Pipeline {}! Creating report...'.format(msg))
-    exe = os.path.join(config['pipeline']['script_folder'], 'log_summarize.py')
-    rpt_file = os.path.join(config['tmp_dir'], 'job_report.csv')
-    cmd = '{exe} {{log}} > {rpt_file}'.format(exe=exe, rpt_file=rpt_file)
-    return rpt_file, cmd
-
 ## call
 onsuccess:
-    rpt_file,cmd = mk_cmd(success=True)
-    try:
-        shell(cmd)
-    except subprocess.CalledProcessError:
-        print('WARNING: could not parse snakemake log file')
-    send_email(rpt_file, config['email'], config, pipeline='DeepMAsED', success=True)
+    send_email(config['email'], config, pipeline='DeepMAsED', success=True)
 
 onerror:
-    rpt_file,cmd = mk_cmd(success=False)
-    try:
-        shell(cmd)
-    except subprocess.CalledProcessError:
-        print('WARNING: could not parse snakemake log file')
-    send_email(rpt_file, config['email'], config, pipeline='DeepMAsED', success=False)
+    send_email(config['email'], config, pipeline='DeepMAsED', success=False)
  

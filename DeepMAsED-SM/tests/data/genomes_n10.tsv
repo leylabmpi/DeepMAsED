@@ -1,11 +1,11 @@
 Taxon	Fasta
-Leptospira alexanderi strain 56659	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_002009845.1/GCA_002009845.1_ASM200984v1_genomic.fna.gz
-Megasphaera sp. UPII 199-6	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_000214495.2/GCA_000214495.2_ASM21449v1_genomic.fna.gz
-Cryobacterium roopkundense strain RuG17	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_000764165.1/GCA_000764165.1_ASM76416v1_genomic.fna.gz
-Anaerocolumna xylanovorans DSM 12503	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_900143645.1/GCA_900143645.1_IMG-taxon_2582580727_annotated_assembly_genomic.fna.gz
-Clostridium peptidivorans isolate src2	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_900205925.1/GCA_900205925.1_Clostridium_peptidoveorans_DPC7177_genomic.fna.gz
-Papillibacter cinnamivorans DSM 12816	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_900176335.1/GCA_900176335.1_IMG-taxon_2588254267_annotated_assembly_genomic.fna.gz
-Vibrio sp. C7	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_000755365.1/GCA_000755365.1_ASM75536v1_genomic.fna.gz
-Cytophagales str. B6	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_000333295.1/GCA_000333295.1_ASM33329v1_genomic.fna.gz
-Gluconacetobacter sp. SXCC-1	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_000208635.2/GCA_000208635.2_ASM20863v1_genomic.fna.gz
-Enterobacter oryzendophyticus strain REICA_082	/ebio/abt3_projects/databases_no-backup/GTDB/release86/genbank/bacteria/GCA_900094925.1/GCA_900094925.1_IMG-taxon_2617270737_annotated_assembly_genomic.fna.gz
+Leptospira alexanderi strain 56659	tests/data/GCA_002009845.1_ASM200984v1_genomic.fna.gz
+Megasphaera sp. UPII 199-6	tests/data/GCA_000214495.2_ASM21449v1_genomic.fna.gz
+Cryobacterium roopkundense strain RuG17	tests/data/GCA_000764165.1_ASM76416v1_genomic.fna.gz
+Anaerocolumna xylanovorans DSM 12503	tests/data/GCA_900143645.1_IMG-taxon_2582580727_annotated_assembly_genomic.fna.gz
+Clostridium peptidivorans isolate src2	tests/data/GCA_900205925.1_Clostridium_peptidoveorans_DPC7177_genomic.fna.gz
+Papillibacter cinnamivorans DSM 12816	tests/data/GCA_900176335.1_IMG-taxon_2588254267_annotated_assembly_genomic.fna.gz
+Vibrio sp. C7	tests/data/GCA_000755365.1_ASM75536v1_genomic.fna.gz
+Cytophagales str. B6	tests/data/GCA_000333295.1_ASM33329v1_genomic.fna.gz
+Gluconacetobacter sp. SXCC-1	tests/data/GCA_000208635.2_ASM20863v1_genomic.fna.gz
+Enterobacter oryzendophyticus strain REICA_082	tests/data/GCA_900094925.1_IMG-taxon_2617270737_annotated_assembly_genomic.fna.gz
