@@ -11,7 +11,7 @@ desc = 'Copying data from DeepMAsED-SM test to DL-test data directory'
 epi = """DESCRIPTION:
 Simple script to convert the files in the features/
 directory created by DeepMAsED-SM to data files for
-running the DeepMAsED unit tests.
+running the `DeepMAsED train` unit tests.
 
 In order to make sure that there are enough misassemblies
 in the feature tables for training, the miassemblies are
@@ -51,10 +51,9 @@ def main(args):
                 line[ii] = '/'.join(line[ii].split('/')[3:])
             outF.write('\t'.join(line) + '\n')
     logging.info('Feature table file written: {}'.format(feat_file_tbl_out))
-
         
-    # formatting feature files
-    P = os.path.join(args.features_dir, '*', '*', '*', '*', 'features.tsv.gz')
+    # formatting feature files (making smaller; randomly adding misassemblies)
+    P = os.path.join(args.features_dir, '*', '*', 'features.tsv.gz')
     feature_files = glob.glob(P)
     if len(feature_files) == 0:
         raise IOError('Cannot find feature files at {}'.format(P))

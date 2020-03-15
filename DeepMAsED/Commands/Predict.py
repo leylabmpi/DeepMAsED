@@ -72,9 +72,6 @@ def main(args=None):
     # Input
     if args is None:
         args = parse_args()
-        print()
-        print (args)
-        print()
     # Main interface
     Predict.main(args)
     

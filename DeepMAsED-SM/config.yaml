@@ -1,14 +1,17 @@
 # Input
-genomes_file: tests/data/genomes_n4_justFeat.tsv
+## example of just creating features from contigs (or MAGs/genomes)
+#genomes_file: tests/data/genomes_n4_justFeat.tsv
+## example of creating simulated assemblies from genomes
+genomes_file: tests/data/genomes_n10.tsv
 
 # Output location
-output_dir: tests/output_n4/
+output_dir: tests/output_n10/
 
 # temporary output location (eg., /tmp/ or /dev/shm/)
-tmp_dir: tests/output_n4_TMP/
+tmp_dir: tests/output_n10_TMP/
 
 # email notifications on job failure and success (Use 'Skip' for no emails)
-email: Skip
+email: nyoungblut@tuebingen.mpg.de #Skip
 
 # software parameters
 ## Use "Skip" to skip  steps. If no params for rule, use ""
@@ -35,7 +38,7 @@ params:
   contig_length_cutoff: 1000       # length in bp 
   # assessing assembly errors
   minimap2: ""
-  metaquast: --min-identity 95 --extensive-mis-size 100 --no-icarus --max-ref-number 0
+  metaquast: --min-contig 1000 --min-identity 95 --extensive-mis-size 100 --no-html --no-plots --no-icarus --no-gc --no-snps --no-sv
   # mapping reads to contigs
   samtools: ""
   # creating DL features

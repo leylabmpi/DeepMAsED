@@ -117,14 +117,12 @@ def read_feature_file_table(feat_file_table, force_overwrite=False, technology='
         tsv = csv.reader(f, delimiter='\t')
         col_names = next(tsv)
         # indexing
-        colnames = ['richness', 'rep', 'read_depth', 'assembler', 'feature_file']
+        colnames = ['rep', 'assembler', 'feature_file']
         colnames = {x:col_names.index(x) for x in colnames}
         
         # formatting rows
         for i,row in enumerate(tsv):
-            richness = get_row_val(row, i + 2, colnames, 'richness')
             rep = get_row_val(row, i + 2, colnames, 'rep')
-            read_depth = get_row_val(row, i + 2, colnames, 'read_depth')
             assembler = get_row_val(row, i + 2, colnames, 'assembler')
             if technology != 'all-asmbl' and assembler != technology:
                 msg = 'Feature file table, Row{} => "{}" != --technology; Skipping'
@@ -149,7 +147,7 @@ def read_feature_file_table(feat_file_table, force_overwrite=False, technology='
                 msg += '; The file provided: {}'
                 raise ValueError(msg.format(i + 2, feature_file))
             
-            D[file_type][rep][assembler] = [feature_file, richness, read_depth]
+            D[file_type][rep][assembler] = [feature_file]
 
     # summary
     sys.stderr.write('#-- Feature file table summary --#\n')

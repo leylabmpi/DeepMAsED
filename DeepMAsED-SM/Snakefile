@@ -88,22 +88,12 @@ else:
     include: snake_dir + 'bin/map/Snakefile'
     include: snake_dir + 'bin/SotA/Snakefile'
 
-
-def all_feat_tables(genomes_tbl):
-    out_files = []
-    for i,x in genomes_tbl.iterrows():
-        f = '{genome}/{sample}/features.tsv.gz'
-	f = f.format(genome=x['Taxon'], sample=x['Sample'])
-	f = map_dir + f
-	out_files.append(f)
-    return out_files
-
 def all_which_input(wildcards):
     input_files = []
 
     if config['just_features']:
         # feature table
-        input_files += all_feat_tables(config['genomes_tbl'])
+        input_files.append(map_dir + 'feature_files.tsv')
     else:
         # reads
         if config['params']['keep_reads'] == True:
@@ -154,10 +144,7 @@ def all_which_input(wildcards):
         input_files += x
     
         # feature table
-        x = expand(map_dir + '{rep}/{assembler}/features.tsv.gz',
-    	       rep = config['reps'],
-    	       assembler = config['assemblers'])
-        input_files += x
+        input_files.append(map_dir + 'feature_files.tsv')
 
         # State of the Art
 	## ALE

@@ -76,9 +76,6 @@ def main(args=None):
     if args is None:
         args = parse_args()
     # Main interface
-    print()
-    print (args)
-    print()
     Evaluate.main(args)
     
 # main

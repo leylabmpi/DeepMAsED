@@ -31,7 +31,7 @@ The tool is divided into two main parts:
 ## conda 
 
 * [If needed] Install miniconda (or anaconda)
-* See the `conda create` line in the .travis.yaml file.
+* See the `conda create` line in the [.travis.yml](./travis.yml) file.
 * If just using DeepMAsED-SM:
   * `conda create -n snakemake conda-forge::pandas bioconda::snakemake`
 
@@ -88,6 +88,8 @@ create the feature tables. The snakemake pipeline just helps to parallize the ru
 
 `snakemake --use-conda -j <NUMBER_OF_THREADS> --configfile <MY_CONFIG.yaml_FILE>`
 
+> See the `script:` section of the [.travis.yml](.travis.yml) file for a full working example (you don't need to run `pytest`).
+
 #### Running on SGE cluster 
 
 `./snakemake_sge.sh <MY_CONFIG.yaml_FILE> cluster.json <PATH_FOR_SGE_LOGS> <NUMBER_OF_PARALLEL_JOBS> [additional snakemake options]`
@@ -100,7 +102,7 @@ See the following resources for help:
 
 #### Output
 
-> Assuming output directory is `./output/`
+> Assuming output directory in the config is `./output/`
 
 * `./output/map/`
   * Metagenome assembly error ML features

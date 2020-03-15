@@ -217,30 +217,34 @@ rule features_compress:
         """
 
 
-# rule samtools_mpileup:
-#     """
-#     Calling samtools mpileup on each bam
-#     """
-#     input:
-#         bam = map_dir + '{rep}/{assembler}.bam',
-#         bai = map_dir + '{rep}/{assembler}.bam.bai',
-#         ref = asmbl_dir + '{rep}/{assembler}/contigs.fasta',
-#         ref_fai = asmbl_dir + '{rep}/{assembler}/contigs.fasta.fai'
-#     output:
-#         map_dir + '{rep}/{assembler}_mpileup.tsv.gz'
-#     params:
-#         config['params']['mpileup']
-#     resources:
-#         time = lambda wildcards, attempt: attempt ** 3 * 59,
-#         mem_gb_pt = lambda wildcards, attempt: attempt * 12
-#     conda:
-#         '../envs/bowtie2.yaml'
-#     log:
-#         log_dir + 'map_bowtie2_index_bam/{rep}/{assembler}.log'
-#     benchmark:
-#         benchmark_dir + 'map_bowtie2_index_bam/{rep}/{assembler}.txt'
-#     shell:
-#         """
-#         echo "" > {log}
-#         samtools mpileup {params} -s -aa -f {input.ref} {input.bam} 2>> {log} | gzip > {output} 2>> {log}
-#         """
+localrules: features_file_table
+        
+rule features_file_table:
+    """
+    Creating a table that lists all feature files
+    """
+    input:
+        feats = expand(map_dir + '{rep}/{assembler}/features.tsv.gz',
+    	               rep = config['reps'],
+    	               assembler = config['assemblers'])
+    output:
+        tsv = map_dir + 'feature_files.tsv'
+    params:
+        reads = config['params']['MGSIM']['reads']
+    log:
+        log_dir + 'features_file_table.log'
+    benchmark:
+        benchmark_dir + 'featuress_file_table.txt'
+    run:
+        import os,sys
+        MGSIM_reads = '"' + params.reads + '"'
+        cols = ['rep', 'assembler', 'feature_file']
+        with open(output.tsv, 'w') as outF:
+            outF.write('\t'.join(cols) + '\n')
+            for F in input.feats:
+                D,feat_file = os.path.split(F)
+                D,assembler = os.path.split(D)
+                D,rep = os.path.split(D)
+                rel_path = os.path.join(rep, assembler, os.path.split(F)[1])
+                x = '\t'.join([rep, assembler, rel_path])
+                outF.write(x + '\n')
