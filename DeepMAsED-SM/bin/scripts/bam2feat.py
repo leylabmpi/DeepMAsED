@@ -45,18 +45,14 @@ parser.add_argument('--version', action='version', version='0.0.1')
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
-IDX = {'A':0, 'C':1, 'G':2, 'T':3}
+IDX = {'A':0, 'C':1, 'G':2, 'T':3, 'N':-1}
 
 def count_SNPs(query_seqs, ref_seq):
     """ Counting SNPs for all reads mapped to a position on the ref sequence
     """
     SNP_cnt = 0
     for i,x in enumerate(query_seqs):
-        try:
-            matched = i == IDX[ref_seq]
-        except KeyError:
-            matched = None
-        if matched is False:
+        if i != IDX[ref_seq]:
             SNP_cnt += x[0]
     return SNP_cnt
 
