@@ -44,4 +44,4 @@ script:
   - bash DeepMAsED-SM/tests/data/genomes_n4_dl.sh
   - bash DeepMAsED-SM/tests/data/read_n2_dl.sh
   - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
-  - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -j 2 --printshellcmds
+  - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile --printshellcmds
