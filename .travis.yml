@@ -43,5 +43,5 @@ script:
   - pytest
   - bash DeepMAsED-SM/tests/data/genomes_n4_dl.sh
   - bash DeepMAsED-SM/tests/data/read_n2_dl.sh
-  - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
-  - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile --printshellcmds
+  - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
+  - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F -j 2
