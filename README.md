@@ -81,6 +81,8 @@ create the feature tables. The snakemake pipeline just helps to parallize the ru
 
 #### Running locally 
 
+> See the "Setup" section above for snakemake installation instructions. 
+
 `snakemake --use-conda -j <NUMBER_OF_THREADS> --configfile <MY_CONFIG.yaml_FILE>`
 
 #### Running on SGE cluster 
