@@ -28,7 +28,7 @@ The tool is divided into two main parts:
 ## conda 
 
 * [If needed] Install miniconda (or anaconda)
-* See the `conda create` line in the [.travis.yml](./travis.yml) file.
+* See the `conda create` line in the [.travis.yml](./.travis.yml) file.
 * If just using DeepMAsED-SM:
   * `conda create -n snakemake conda-forge::pandas bioconda::snakemake`
 
