@@ -507,7 +507,7 @@ def pickle_data_b(x, set_target=True):
         w_nG = col_names.index('num_query_G')
         w_nT = col_names.index('num_query_T')
         w_var = col_names.index('num_SNPs')
-        w_cov = col_names.index('coverage')  # WARNING: predict assumes coverage in -2 position
+        w_cov = col_names.index('coverage')  # WARNING: Predict assumes coverage in -2 position
         w_dis = col_names.index('num_discordant')
         w_features = [w_nA, w_nC, w_nG, w_nT, w_var, w_cov, w_dis]
         # formatting rows

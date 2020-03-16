@@ -19,12 +19,9 @@ Deep learning for Metagenome Assembly Error Detection (DeepMAsED)
 The tool is divided into two main parts:
 
 * **DeepMAsED-SM**
-  * A snakemake pipeline for:
-    * generating DeepMAsED train/test datasets from reference genomes
-    * creating feature tables from "real" assemblies (fasta + bam files)
+  * A snakemake pipeline for generating DeepMAsED train/test datasets from reference genomes
 * **DeepMAsED-DL**
   * A python package for misassembly detection via deep learning
-
 
 # Setup
 
@@ -43,52 +40,100 @@ The tool is divided into two main parts:
 
 `python setup.py install`
 
-
 # Usage
 
-**tl;dr** 
+## Example of classifying contig misassemblies
 
-If you just want to identify missassemblies among your metagenome assembly
-contigs, then see the "Workflow for predicting misassemblies among your contigs"
-section below.
+You need to have the following input:
 
-## DeepMAsED-SM
+* fasta of metagenome assembly contigs (uncompressed)
+* BAM file of metagenome reads mapped to the contigs
 
-### Creating feature tables for genomes (MAGs)
+### Create table mapping BAM & fasta files
 
-Feature tables are fed to DeepMAsED-DL for training models and misassembly classification.
-The easiest approach is to used `DeepMAsED-SM`. Alternatively, one can just use
-the [bam2feat.py](./DeepMAsED-SM/bin/scripts/bam2feat.py) script to directly
-create the feature tables. The snakemake pipeline just helps to parallize the run
-(on a compute cluster).
+If multiple sets of contigs (eg., MAGs) and BAM files,
+then which contigs go with which BAM files?
 
-**Input for DeepMAsED-SM**
+Create a tab-delim table of: `bam<tab>fasta` (header required)
 
-* A table mapping contigs to the metagenome samples that the originate from.
-  * If using MAGs, then you can either combine metagenome samples or map genomes to
-    many metagenome samples
-  * Table format: `<Taxon>\t<Fasta>\t<Sample>\t<Read1>\t<Read2>`
-     * "Taxon" = the species/strain name of the genome (MAG)
-     * "Fasta" = the genome (MAG) contig fasta file (uncompressed or gzip'ed)
-     * "Sample" = the metagenome sample from which the genome (MAG) originated
-       * If this column is not provided, then DeepMAsED-SM will simulate metagenomes from the user-provided genomes,
-         thus creating simulation data
-     * "Read1" = Illumina Read1 for the sample
-       * Only needed if "Sample" provided
-     * "Read2" = Illumina Read2 for the sample
-       * Only needed fi "Sample" provided and reads are paired-end 
-* The snakemake config file (e.g., [config.yaml](./DeepMAsED-SM/config.yaml). This includes:
+This will be your `bam_fasta_table`, which is need for creating the features.
+
+### Create feature table(s)
+
+`DeepMAsED features $bam_fasta_table`
+
+This generates >=1 feature table and a table listing all output files
+(the "feature_file_table"). This feature_file_table will be the input
+for `predict`
+
+### Predict misassemblies
+
+`DeepMAsED predict $feature_file_table`
+
+...where `feature_filt_table` is the path to a table that lists
+all feature files (see above). 
+
+`--force-ovewrite` forces the re-creation of the pkl files, which is a bit slower
+but can prevent issues.
+
+Change `--save-path` to set the output directory.
+Use `--cpu-only` to just use CPUs instead of a GPU.
+
+#### Third, inspect the output
+
+By default, the predictions will be written to `deepmased_predictions.tsv`.
+
+##### Example output
+
+```
+Collection     Contig  Deepmased_score
+0       NODE_1156_length_5232_cov_4.046938      0.0007264018
+0       NODE_1563_length_3868_cov_5.851298      0.03783685
+0       NODE_4288_length_1225_cov_3.235897      0.070887744
+1       k141_9081       8.8751316e-05
+1       k141_2594       6.720424e-05
+1       k141_4878       0.0015754104
+2       NODE_5204_length_1290_cov_3.283401      0.00036007166
+2       NODE_2848_length_2164_cov_2.982456      0.0005029738
+2       NODE_446_length_6027_cov_5.812291       0.068261534
+```
+
+See [Mineeva et al., 2020](https://doi.org/10.1093/bioinformatics/btaa124)
+to help decide what score cutoff is prudent for classifying
+misassembled contigs.
+
+
+## Creating training datasets with `DeepMAsED-SM`
+
+This is useful for training `DeepMAsED-DL` with a custom
+train/test dataset (e.g., just biome-specific taxa). 
+
+### Input
+
+* A table listing refernce genomes. Two possible formats:
+  * Genome-accession: `<Taxon>\t<Accession>`
+     * "Taxon" = the species/strain name
+     * "Accession" = the NCBI genbank genome accession 
+     * The genomes will be downloaded based on the accession
+  * Genome-fasta: `<Taxon>\t<Fasta>`
+     * "Taxon" = the species/strain name of the genome
+     * "Fasta" = the fasta of the genome sequence
+     * Use this option if you already have the genome fasta files (uncompressed or gzip'ed)
+* The snakemake config file (e.g., `config.yaml`). This includes:
   * Config params on MG communities
   * Config params on assemblers & parameters
-  * Note: the same config is used for simulations and feature table creation
+
+> The column order for the tables doesn't matter, but the column names must be exact.
 
 #### Running locally 
 
 > See the "Setup" section above for snakemake installation instructions. 
 
-`snakemake --use-conda -j <NUMBER_OF_THREADS> --configfile <MY_CONFIG.yaml_FILE>`
+`cd ./DeepMAsED-SM/`
 
-> See the `script:` section of the [.travis.yml](.travis.yml) file for a full working example (you don't need to run `pytest`).
+> Edit the config.yaml file as needed (eg., changing input & output paths)
+
+`snakemake --use-conda -j <NUMBER_OF_THREADS> --configfile <MY_CONFIG.yaml_FILE>`
 
 #### Running on SGE cluster 
 
@@ -100,20 +145,46 @@ See the following resources for help:
 * [Snakemake docs on cluster config](https://snakemake.readthedocs.io/en/stable/snakefiles/configuration.html)
 * [Snakemake profiles](https://github.com/Snakemake-Profiles)
 
+
 #### Output
 
-> Assuming output directory in the config is `./output/`
+The output will the be same as for feature generation, but with extra directories:
 
+* `./output/genomes/`
+  * Reference genomes
+* `./output/MGSIM/`
+  * Simulated metagenomes
+* `./output/assembly/`
+  * Metagenome assemblies
+* `./output/true_errors/`
+  * Metagenome assembly errors determined by using the references
 * `./output/map/`
-  * Metagenome assembly error ML features
-* `./output/logs/`
-  * Shell process log files (also see the SGE job log files)
-* `./output/benchmarks/`
-  * Job resource usage info
+  * Feature tables for each simulation
 
-##### Features table
+## DeepMAsED-DL
 
-Created by the [bam2feat.py](./DeepMAsED-SM/bin/scripts/bam2feat.py) script.
+Main interface: `DeepMAsED -h`
+
+> `DeepMAsED [train|predict]` can be run without GPUs,
+but the will be substantially slower.
+
+### Predicting with existing model
+
+See `DeepMAsED predict -h` 
+
+### Training a new model
+
+See `DeepMAsED train -h` 
+
+### Evaluating a model
+
+See `DeepMAsED evalulate -h`
+
+### Creating features for `predict`
+
+See `DeepMAsED features -h`
+
+#### Features table
 
 * **Basic info**
   * assembler
@@ -145,126 +216,6 @@ Created by the [bam2feat.py](./DeepMAsED-SM/bin/scripts/bam2feat.py) script.
   * num_secondary
     * number of reads mapping to that position where the alignment is secondary
     * see the [samtools docs](https://samtools.github.io/hts-specs/SAMv1.pdf) for more info
-* **miniasm info**
-  * chimeric
-    * chimeric contig (Supplementary alignments; SAM 0x800)
-  * num_hits
-    * number of primary + supplementary alignments
-  * query_hit_len
-    * total query hit length (all alignments summed)
-  * edit_dist
-    * "NM" tag in minimap2 (summed for all alignments)
-  * edit_dist_norm
-    * edit_dist / query_hit_len
 * **MetaQUAST info**
   * Extensive_misassembly
     * the "extensive misassembly" classification set by MetaQUAST
-
-### Creating custom train/test data from reference genomes
-
-This is useful for training `DeepMAsED-DL` with a custom
-train/test dataset (e.g., just biome-specific taxa). 
-
-**Input:**
-
-* A table listing refernce genomes. Two possible formats:
-  * Genome-accession: `<Taxon>\t<Accession>`
-     * "Taxon" = the species/strain name
-     * "Accession" = the NCBI genbank genome accession 
-     * The genomes will be downloaded based on the accession
-  * Genome-fasta: `<Taxon>\t<Fasta>`
-     * "Taxon" = the species/strain name of the genome
-     * "Fasta" = the fasta of the genome sequence
-     * Use this option if you already have the genome fasta files (uncompressed or gzip'ed)
-* The snakemake config file (e.g., `config.yaml`). This includes:
-  * Config params on MG communities
-  * Config params on assemblers & parameters
-
-Note: the column order for the tables doesn't matter, but the column names must be exact.
-
-#### Output
-
-The output will the be same as for feature generation, but with extra directories:
-
-* `./output/genomes/`
-  * Reference genomes
-* `./output/MGSIM/`
-  * Simulated metagenomes
-* `./output/assembly/`
-  * Metagenome assemblies
-* `./output/true_errors/`
-  * Metagenome assembly errors determined by using the references
-
-
-## DeepMAsED-DL
-
-Main interface: `DeepMAsED -h`
-
-Note: `DeepMAsED` can be run without GPUs, but it will be substantially slower.
-
-### Predicting with existing model
-
-See `DeepMAsED predict -h` 
-
-### Training a new model
-
-See `DeepMAsED train -h` 
-
-### Evaluating a model
-
-See `DeepMAsED evalulate -h`
-
-
-# Workflow for predicting misassemblies among your contigs
-
-This is assuming that you want to run the default final model
-reported in our paper ([Mineeva et al., 2020](https://doi.org/10.1093/bioinformatics/btaa124)). 
-
-## First, create the feature table(s) for all contigs
-
-The easiest method is to use `DeepMAsED-SM`.
-See the "Creating feature tables for genomes (MAGs)" section above
-for instructions on how to do this.
-
-Alternatively, you can just directly use the [bam2feat.py](DeepMAsED-SM/bin/scripts/bam2feat.py)
-script for creating the feature tables if you don't want to run `snakemake`.
-If you go this route, then you will need to manually creata a `feature_file_table`;
-see `DeepMAsED train -h` for a description of the format. 
-
-## Second, predict misassemblies using the default model
-
-To predict:
-
-`DeepMAsED predict --force-overwrite feature_file_table`
-
-...where `feature_filt_table` is the path to a table that lists
-all feature files (see above). 
-
-`--force-ovewrite` forces the re-creation of the pkl files, which is a bit slower
-but can prevent issues.
-
-Change `--save-path` to set the output directory.
-Use `--cpu-only` to just use CPUs instead of a GPU.
-
-## Third, inspect the output
-
-By default, the predictions will be written to `deepmased_predictions.tsv`.
-
-Example output:
-
-```
-Collection     Contig  Deepmased_score
-0       NODE_1156_length_5232_cov_4.046938      0.0007264018
-0       NODE_1563_length_3868_cov_5.851298      0.03783685
-0       NODE_4288_length_1225_cov_3.235897      0.070887744
-1       k141_9081       8.8751316e-05
-1       k141_2594       6.720424e-05
-1       k141_4878       0.0015754104
-2       NODE_5204_length_1290_cov_3.283401      0.00036007166
-2       NODE_2848_length_2164_cov_2.982456      0.0005029738
-2       NODE_446_length_6027_cov_5.812291       0.068261534
-```
-
-See [Mineeva et al., 2020](https://doi.org/10.1093/bioinformatics/btaa124)
-to help decide what score cutoff is prudent for classifying
-misassembled contigs.

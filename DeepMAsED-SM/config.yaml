@@ -1,8 +1,6 @@
 # Input
-## example of just creating features from contigs (or MAGs/genomes)
-genomes_file: tests/data/genomes_n4_justFeat.tsv
 ## example of creating simulated assemblies from genomes
-#genomes_file: tests/data/genomes_n10.tsv
+genomes_file: tests/data/genomes_n10.tsv
 
 # Output location
 output_dir: tests/output_n10/
@@ -25,7 +23,7 @@ params:
   MGSIM:
     genome_download: ""
     communities: --richness 1   #eg., --shared-perc 80 --perm-perc 100
-    reads: --sr-seq-depth 1e6 --art-paired --art-mflen 250
+    reads: --sr-seq-depth 5e2 --art-paired --art-mflen 250  
   keep_reads: False
   # coverage
   nonpareil: -T kmer

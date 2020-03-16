@@ -31,7 +31,7 @@ install:
   - conda config --add channels bioconda
   - conda info -a
   # conda env setup
-  - conda create -n DeepMAsED --yes python=$TRAVIS_PYTHON_VERSION tensorflow=2.0 tensorboard keras scikit-learn ipython pytest snakemake
+  - conda create -n DeepMAsED --yes python=$TRAVIS_PYTHON_VERSION tensorflow=2.0 tensorboard keras scikit-learn ipython pysam pytest snakemake
   - conda activate DeepMAsED
   # DeepMAsED install
   - python setup.py build_ext --inplace
@@ -42,6 +42,5 @@ install:
 script:
   - pytest
   - bash DeepMAsED-SM/tests/data/genomes_n4_dl.sh
-  - bash DeepMAsED-SM/tests/data/read_n2_dl.sh
   - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
   - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F -j 2

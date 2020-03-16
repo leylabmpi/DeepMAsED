@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # import
 from __future__ import print_function
-__version__ = '0.2.2'
+__version__ = '0.3.0'
 ## batteries
 import os
 import sys
@@ -10,6 +10,7 @@ import argparse
 from DeepMAsED.Commands import Train
 from DeepMAsED.Commands import Predict
 from DeepMAsED.Commands import Evaluate
+from DeepMAsED.Commands import Features
 
 # funcs
 def main(args=None):
@@ -40,7 +41,10 @@ def main(args=None):
     predict.set_defaults(func=Predict.main)
     ## evaluate
     evaluate = Evaluate.parse_args(subparsers=subparsers)
-    evaluate.set_defaults(func=Evaluate.main)
+    evaluate.set_defaults(func=Evaluate.main)    
+    ## evaluate
+    features = Features.parse_args(subparsers=subparsers)
+    features.set_defaults(func=Features.main)
     
     # parsing args
     if args:
