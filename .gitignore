@@ -11,6 +11,9 @@ tmp/
 tests/output*/
 tests/old_models/
 tests/data/*.rick
+tests/data/*/*.pkl
+tests/data/*/*/*.pkl
+tests/data/*/*/*/*.pkl
 tests/data/*/*/*/*/*.pkl
 tests/data/*/model/predictions/
 tests/data/*/model/logs_final/
