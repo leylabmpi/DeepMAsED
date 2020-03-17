@@ -42,4 +42,3 @@ install:
 script:
   - pytest
   - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
-  - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F -j 2
