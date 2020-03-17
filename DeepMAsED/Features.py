@@ -156,7 +156,7 @@ def find_file(infile, alt_dir):
     if not os.path.isfile(infile):
         infile = os.path.join(alt_dir, os.path.split(infile)[1])
         if not os.path.isfile(infile):
-            infile = os.path.join(os.getwd(), os.path.split(infile)[1])
+            infile = os.path.join(os.getcwd(), os.path.split(infile)[1])
             if not os.path.isfile(infile):
                 raise IOError('Cannot find file: {}'.format(orig_file))        
     return infile
