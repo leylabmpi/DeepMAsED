@@ -41,7 +41,5 @@ install:
 
 script:
   - pytest
-  - bash DeepMAsED-SM/tests/data/genomes_n4_dl.sh
-  - bash DeepMAsED-SM/tests/data/read_n2_dl.sh  
   - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
   - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F -j 2
