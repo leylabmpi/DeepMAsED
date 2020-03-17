@@ -7,7 +7,9 @@ import gzip
 import argparse
 import logging
 import itertools
+from distutils.spawn import find_executable
 from functools import partial
+from subprocess import Popen, PIPE
 from multiprocessing import Pool
 # 3rd party
 import pysam
@@ -159,7 +161,7 @@ def find_file(infile, alt_dir):
                 raise IOError('Cannot find file: {}'.format(orig_file))        
     return infile
 
-def index_file(orig_file, file_format='fa', overwrite=True):
+def index_fasta(orig_file, file_format='fa', overwrite=True):
     """ faidx indexing with pysam
     """
     if overwrite or not has_index_file(original_file, file_format=file_format):
@@ -173,6 +175,28 @@ def index_file(orig_file, file_format='fa', overwrite=True):
         else:
             raise G2GValueError("Unknown file format: {0}".format(file_format))
 
+def index_bam(bam_file, threads=1):
+    bai_file = bam_file + '.bai'
+    exe = 'samtools'
+    if not os.path.isfile(bai_file):
+        logging.info('Cannot find {}; creating...'.format(bai_file))
+        # samtools in path?
+        if not find_executable(exe):
+            msg = 'Must index bam file, but samtools not in your PATH'
+            raise IOError(msg)
+        # indexing
+        cmd = ['samtools' , 'index', '-@', str(threads), bam_file]
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output, err = p.communicate()
+        rc = p.returncode
+        if rc != 0:
+            print(output.decode('ascii'))
+            print(err.decode('ascii'))
+            raise IOError('samtools return code: {}'.format(rc))
+        if not os.path.isfile(bai_file):
+            msg = '"samtools index" did not create the file: {}'
+            raise IOError(msg.format(bai_file))        
+        
 def parse_bam_fasta(infile):
     """ parse bam-fasta table
     """
@@ -211,7 +235,9 @@ def main(args):
     feat_files = []
     for bam_file,fasta_file in bam_fasta_idx.items():
         # indexing fasta
-        index_file(fasta_file)
+        index_fasta(fasta_file)
+        # indexing bam
+        index_bam(bam_file, threads=args.procs)
         # bam-to-features
         outfile = os.path.join(args.outdir, os.path.splitext(bam_file)[0] + '_feats.tsv')
         if args.gzip:
