@@ -5,8 +5,8 @@ import logging
 import numpy as np
 import keras
 from keras.models import Model, Sequential
-from keras.layers import Input, LSTM, Dense, BatchNormalization, AveragePooling2D
-from keras.layers import MaxPooling2D, Dropout
+from keras.layers import Input, Dense, BatchNormalization, AveragePooling2D
+from keras.layers import Dropout
 from keras.layers import Conv2D, Flatten
 ## application
 from DeepMAsED import Utils
@@ -132,8 +132,8 @@ class Generator(keras.utils.Sequence):
         Generate new mini-batch
         """
 
-        x_mb = np.zeros((self.batch_size, self.max_len, self.n_feat, 1))
-        y_mb = np.zeros((self.batch_size, 1))
+        x_mb = np.zeros((len(indices_tmp), self.max_len, self.n_feat, 1))
+        y_mb = np.zeros((len(indices_tmp), 1))
 
         for i, idx in enumerate(indices_tmp):
             x_mb[i, 0:self.x[idx].shape[0]] = np.expand_dims(
@@ -143,14 +143,18 @@ class Generator(keras.utils.Sequence):
         return x_mb, y_mb
 
     def __len__(self):
-        return int(np.floor(len(self.indices) / self.batch_size))
+        return int(np.ceil(len(self.indices) / self.batch_size))
 
     def __getitem__(self, index):
         """
         Get new mb
         """
-        indices_tmp = \
-          self.indices[self.batch_size * index : self.batch_size * (index + 1)]
+        if self.batch_size * (index + 1) < len(self.indices):
+            indices_tmp = \
+              self.indices[self.batch_size * index : self.batch_size * (index + 1)]
+        else:
+            indices_tmp = \
+              self.indices[self.batch_size * index : ]  
         x_mb, y_mb = self.generate(indices_tmp)
         return x_mb, y_mb
 
