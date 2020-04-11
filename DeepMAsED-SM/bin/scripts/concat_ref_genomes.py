@@ -62,7 +62,11 @@ def main(args):
             _open = open
         with _open(F) as inF:
             for line in inF:
-                print(line.decode("utf-8"), end='')
+                try:
+                    print(line.decode("utf-8"), end='')
+                except AttributeError:
+                    print(line, end='')
+                    
 
 if __name__ == '__main__':
     args = parser.parse_args()

@@ -1,0 +1,5 @@
+rep	assembler	feature_file
+1	metaspades	1/metaspades/features.tsv.gz
+1	megahit	1/megahit/features.tsv.gz
+2	metaspades	2/metaspades/features.tsv.gz
+2	megahit	2/megahit/features.tsv.gz

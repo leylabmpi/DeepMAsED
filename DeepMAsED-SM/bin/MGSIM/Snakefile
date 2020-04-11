@@ -1,10 +1,5 @@
-import os
-import random
-import pandas as pd
-
-if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
-    localrules: MGSIM_genome_download
-    
+if not skipped(config['params']['MGSIM']['genome_download']):
+    localrules: MGSIM_genome_download    
     rule MGSIM_genome_download:
         """
         Using MGSIM to download the genomes
@@ -12,15 +7,16 @@ if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
         input:
             tbl = config['genomes_file']
         output:
-            tbl = genomes_dir + 'genomes.tsv',
-            fna = config['genomes_tbl']['Fasta']
+            tbl = genomes_dir + 'genomes.tsv'
         params:
             params = config['params']['MGSIM']['genome_download'],
             outdir = config['tmp_dir'] + 'ref_genomes'
+        resources:
+            tries = lambda wildcards, attempt: attempt ** 2 + 3
         conda:
             '../envs/MGSIM.yaml'
         threads:
-            12
+            1
         log:
             log_dir + 'MGSIM_genome_download.log'
         benchmark:
@@ -32,8 +28,8 @@ if not config['params']['MGSIM']['genome_download'].startswith('Skip'):
             mkdir -p $OUTDIR 2>> {log}
 
             MGSIM genome_download {params.params} \
-              -n {threads} -d $OUTDIR -r \
-              {input.tbl} > {output.tbl} 2>> {log}
+              -n {threads} -t {resources.tries} \
+              -d $OUTDIR -r {input.tbl} > {output.tbl} 2>> {log}
             """
 
 else:
@@ -114,8 +110,8 @@ rule MGSIM_reads:
         8
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 60 + (60 * 24),
-        n = lambda wildcards, attempt: 8,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 2 + 1
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2 + 4
     log:
         log_dir + 'MGSIM_reads/{rep}.log'
     benchmark:

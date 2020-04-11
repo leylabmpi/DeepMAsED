@@ -1,7 +1,3 @@
-import os
-import pandas as pd
-
-
 def get_ref_genomes(wildcards):
     # simulated metagenome community
     wAbund = os.path.join(mgsim_dir, wildcards[0], 'comm_wAbund.txt')
@@ -17,7 +13,7 @@ rule combine_ref_genomes:
     Only using those included in the metagenome community
     """
     input:
-        fna = config['genomes_file'],
+        fna = genomes_dir + 'genomes.tsv',
         comm = mgsim_dir + '{rep}/comm_wAbund.txt' 
     output:
         temp(config['tmp_dir'] + '{rep}/refs/ref_genomes.fna')

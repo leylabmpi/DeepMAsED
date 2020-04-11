@@ -13,6 +13,9 @@ def parse_args(test_args=None, subparsers=None):
     desc = 'Train model'
     epi = """DESCRIPTION:
     #-- Recommended training flow --#
+    * Partition your data into train & test, and just use
+      the train data for the following 
+        * see feature file table description below
     * Select a grid search of hyper-parameters to consider
       (learning rate, number of layers, etc).
     * Train with kfold = 5 (for example) for each combination of 
@@ -23,40 +26,24 @@ def parse_args(test_args=None, subparsers=None):
     * Re-launch the whole training with `--n-folds -1` and the best 
       hyper-parameters (this is now one single run). 
 
-    #-- Feature table input --#
-    The features table files should either be tab-delim & 
-    gzip'ed (output from DeepMAsED-SM) and labeled "features.tsv.gz". 
-    The directory structure of the feature tables should be:
+    #-- Feature File Table format --#
+    * DeepMAsED-SM will generate a feature file table that lists all
+      feature files and their associated metadata (eg., assembler & sim-rep).
+    * The table must contain the following columns:
+      * `feature_file` = the path to the feature file (created by DeepMAsED-SM, see README)
+        * The files can be (gzip'ed) tab-delim or pickled (see below on `--pickle-only`)
+      * `rep` = the metagenome simulation replicate 
+        * Set to "1" if real data
+      * `assembler` = the metadata assembler
 
-    deepmased-sm_output_dir
-      |- map
-          |- 1
-          |  |-- assembler1
-          |  |    |_ features.tsv.gz
-          |  |-- assembler2
-          |  |     |_ features.tsv.gz
-          |  |-- assemblerN
-          |       |_ features.tsv.gz
-          |- 2
-          |  |-- assembler1
-          |  |    |_ features.tsv.gz
-          |  |-- assembler2
-          |  |     |_ features.tsv.gz
-          |  |-- assemblerN
-          |       |_ features.tsv.gz
-          |- N
-             |-- assembler1
-             |    |_ features.tsv.gz
-             |-- assembler2
-             |     |_ features.tsv.gz
-             |-- assemblerN
-                  |_ features.tsv.gz
-      
-    The `--data-path` should be the base path to the feature tables,
-    ("deepmased-sm_output_dir" in the example above).
-
-    If using real data (eg., mock communities) instead of (or in addition to) simulated 
-    training data, just use the same basic directory structure.
+    #-- Pickled feature files --#
+    DeepMAsED-SM will generate tab-delim feature tables; however,
+    DeepMAsED uses formatted & pickled versions of the tab-delim feature tables.
+    `DeepMAsED train` will automatically create pickled versions of the tab-delim
+    tables. These pickled versions are written to the same locations as the tab-delim
+    files. If the user provides tab-delim files, but DeepMAsED finds the pickled
+    versions (same name, but with `pkl` for a file extension), then DeepMAsED
+    will use the pickled versions, unless `--force-overwrite=True`.
     """
     if subparsers:
         parser = subparsers.add_parser('train', description=desc, epilog=epi,
@@ -66,8 +53,8 @@ def parse_args(test_args=None, subparsers=None):
                                          formatter_class=argparse.RawTextHelpFormatter)
 
     # args
-    parser.add_argument('data_path',  metavar='data-path', type=str, 
-                        help='Base path to the feature tables (see DESCRIPTION)')
+    parser.add_argument('feature_file_table',  metavar='feature_file_table', type=str, 
+                        help='Table listing feature table files (see DESCRIPTION)')
     parser.add_argument('--technology', default='all-asmbl', type=str, 
                         help='Assembler name in the data_path. "all-asmbl" will use all assemblers (default: %(default)s)')    
     parser.add_argument('--save-path', default='model', type=str, 
@@ -94,15 +81,14 @@ def parse_args(test_args=None, subparsers=None):
                         help='How many folds for CV. Use "-1" to skip & pool all data for training (default: %(default)s)')
     parser.add_argument('--lr-init', default=0.001, type=float, 
                         help='Size of test set (default: %(default)s)')
-    parser.add_argument('--mode', default='extensive', type=str,
-                        choices = ['extensive','edit', 'chimera'],
-                        help='Classification problem (default: %(default)s)')
     parser.add_argument('--norm-raw', default=0, type=int, 
                         help='Whether to normalize the four one-hot feature of raw (default: %(default)s)')
     parser.add_argument('--pickle-only', action='store_true', default=False,
                         help='Only pickle files (default: %(default)s)')
     parser.add_argument('--force-overwrite', action='store_true', default=False,
                         help='Force re-creation of pickle files (default: %(default)s)')
+    parser.add_argument('--seed', default=12, type=int, 
+                        help='Seed used for numpy.random (default: %(default)s)')
     parser.add_argument('--n-procs', default=1, type=int, 
                         help='Number of parallel processes (default: %(default)s)')
     # running test args

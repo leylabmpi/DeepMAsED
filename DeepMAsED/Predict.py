@@ -18,7 +18,7 @@ from DeepMAsED import Utils
 
 
 def main(args):
-    np.random.seed(12)
+    np.random.seed(args.seed)
 
     # CPU only instead of GPU
     if args.cpu_only:
@@ -34,6 +34,7 @@ def main(args):
                 
     logging.info('Loading model...')
     ## pkl
+    logging.info('  Loading mstd...')
     F = os.path.join(args.model_path, args.mstd_name)
     if not os.path.exists(F):
         msg = 'Model file not available at data-path: {}'
@@ -41,6 +42,7 @@ def main(args):
     with open(F, 'rb') as mstd:
         mean_tr, std_tr = pickle.load(mstd)
     ## h5
+    logging.info('  Loading h5...')
     F = os.path.join(args.model_path, args.model_name)
     if not os.path.exists(F):
         msg = 'Model file not available at data-path: {}'
@@ -52,19 +54,23 @@ def main(args):
         os.makedirs(args.save_path)
 
     logging.info('Loading features...')
-    x, y, i2n = Utils.load_features_nogt(args.data_path,
-                                         force_overwrite=args.force_overwrite)
+    x, y, i2n = Utils.load_features_nogt(args.feature_file_table,
+                                         force_overwrite=args.force_overwrite,
+                                         pickle_only=args.pickle_only,
+                                         n_procs=args.n_procs)
     
-    logging.info('Loaded {} contigs...'.format(len(set(i2n.values()))))    
+    logging.info('Loaded {} contigs'.format(len(set(i2n.values()))))    
     n2i = Utils.reverse_dict(i2n)
     x = [xi for xmeta in x for xi in xmeta]
     y = np.concatenate(y)
     
+    logging.info('Running model generator...')
     dataGen = Models.Generator(x, y, batch_size=64, shuffle=False, 
                                norm_raw=0, mean_tr=mean_tr, std_tr=std_tr)
     
     logging.info('Computing predictions...')
-    scores = Utils.compute_predictions(n2i, dataGen, model, args.save_path, args.save_name)
+    scores = Utils.compute_predictions(n2i, dataGen, model,
+                                       args.save_path, args.save_name)
     
 
 if __name__ == '__main__':

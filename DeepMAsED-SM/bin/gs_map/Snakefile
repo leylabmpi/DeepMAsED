@@ -17,28 +17,44 @@ rule ref_genome_rename:
         {params.exe} {input.fna} > {output.fna} 2> {log}
         """
 
-localrules: symlink_reads
-
-rule symlink_reads:
+rule copy_read1:
     """
-    Uncompressing reads
+    copy read1 to tmp dir
     """
     input:
-        read1 = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read1'].unique().tolist(),
-        read2 = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read2'].unique().tolist(),
+        read = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read1'].unique().tolist(),
     output:
-        read1 = temp(config['tmp_dir'] + '{sample}_R1.fq.gz'),
-        read2 = temp(config['tmp_dir'] + '{sample}_R2.fq.gz')
+        read = temp(config['tmp_dir'] + '{sample}_R1.fq.gz')
+    params:
+        ionice = config['params']['ionice']
     log:
         log_dir + 'symlink_reads/{sample}.log'
     benchmark:
         benchmark_dir + 'symlink_reads/{sample}.txt'
     shell:
         """
-        ln -s -f {input.read1} {output.read1} 2> {log}
-        ln -s -f {input.read2} {output.read2} 2>> {log}
+        ionice {params.ionice} cp -f {input.read} {output.read} 2> {log}
         """
 
+rule copy_read2:
+    """
+    copy read2 to tmp dir
+    """
+    input:
+        read = lambda wildcards: config['genomes_tbl'].loc[config['genomes_tbl'].Sample == wildcards.sample, 'Read2'].unique().tolist(),
+    output:
+        read = temp(config['tmp_dir'] + '{sample}_R2.fq.gz')
+    params:
+        ionice = config['params']['ionice']
+    log:
+        log_dir + 'copy_read2/{sample}.log'
+    benchmark:
+        benchmark_dir + 'copy_read2/{sample}.txt'
+    shell:
+        """
+        ionice {params.ionice} cp -f {input.read} {output.read} 2> {log}
+        """
+        
 rule map_bowtie2_build:
     """
     Building bowtie2 index for each genome
@@ -149,7 +165,7 @@ rule samtools_faidx:
         benchmark_dir + 'samtools_faidx/{genome}.txt'
     shell:
         """
-        samtools faidx {input} 2> {log} 1>&2
+        samtools faidx {input} 2> {log} 1>&2 
         """
 
 rule bam_to_DL_features:
@@ -203,3 +219,43 @@ rule features_compress:
         gzip -c {input} > {output} 2> {log}
         """
 
+def all_feat_tables(genomes_tbl):
+    out_files = []
+    for i,x in genomes_tbl.iterrows():
+        f = '{genome}/{sample}/features.tsv.gz'
+        f = f.format(genome=x['Taxon'], sample=x['Sample'])
+        f = map_dir + f
+        out_files.append(f)
+    return out_files
+        
+localrules: features_file_table
+        
+rule features_file_table:
+    """
+    Creating a table that lists all feature files
+    """
+    input:
+        feats = all_feat_tables(config['genomes_tbl'])
+    output:
+        tsv = map_dir + 'feature_files.tsv'
+    params:
+        reads = config['params']['MGSIM']['reads']
+    log:
+        log_dir + 'features_file_table.log'
+    benchmark:
+        benchmark_dir + 'featuress_file_table.txt'
+    run:
+        import os,sys
+        MGSIM_reads = '"' + params.reads + '"'
+        cols = ['contigs', 'sample', 'rep', 'assembler', 'feature_file']
+        rep = 'NA'
+        assembler = 'NA'
+        with open(output.tsv, 'w') as outF:
+            outF.write('\t'.join(cols) + '\n')
+            for F in input.feats:
+                D,feat_file = os.path.split(F)
+                D,sample = os.path.split(D)
+                D,contigs = os.path.split(D)
+                rel_path = os.path.join(contigs, sample, os.path.split(F)[1])
+                x = '\t'.join([contigs, sample, rep, assembler, rel_path])
+                outF.write(x + '\n')

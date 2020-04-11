@@ -3,6 +3,7 @@
 import os
 import sys
 import pytest
+import logging
 ## 3rd party
 import numpy as np
 ## package
@@ -19,20 +20,13 @@ def test_help():
         Predict_CMD.parse_args(args)
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 0
-
-#def test_predict(tmpdir):
-#    out_path = tmpdir.mkdir('save_dir')
-#    model_path = os.path.join(data_dir, 'n1000_r3/', 'model')
-#    args = [os.path.join(data_dir, 'deepmased_trained'),
-#            model_path, '--cpu-only']
-#    args = Predict_CMD.parse_args(args)
-#    Predict_CMD.main(args)    
     
-def test_predict_r3(tmpdir):
-    out_path = tmpdir.mkdir('save_dir')
-    model_path = os.path.join(data_dir, 'n1000_r3/', 'model')
-    args = [os.path.join(data_dir, 'n1000_r3/'),
-            '--cpu-only']
+def test_predict_default_model(tmpdir, caplog):
+    caplog.set_level(logging.INFO)   
+    save_path = tmpdir.mkdir('save_dir')
+    args = ['--cpu-only',
+            '--save-path', str(save_path),
+            os.path.join(data_dir, 'n10_r2/feature_files.tsv')]
     args = Predict_CMD.parse_args(args)
-    Predict_CMD.main(args)    
+    Predict_CMD.main(args)  
     

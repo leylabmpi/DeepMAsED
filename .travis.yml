@@ -1,6 +1,5 @@
 language: python
 
-
 matrix:
   include:
     - name: "ubuntu xenial"
@@ -32,7 +31,7 @@ install:
   - conda config --add channels bioconda
   - conda info -a
   # conda env setup
-  - conda create -n DeepMAsED --yes python=$TRAVIS_PYTHON_VERSION tensorflow tensorboard keras scikit-learn ipython pytest snakemake
+  - conda create -n DeepMAsED --yes python=$TRAVIS_PYTHON_VERSION tensorflow=2.0 tensorboard keras scikit-learn ipython samtools pysam pytest snakemake
   - conda activate DeepMAsED
   # DeepMAsED install
   - python setup.py build_ext --inplace
@@ -42,4 +41,4 @@ install:
 
 script:
   - pytest
-  - snakemake --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
+  - snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
