@@ -8,7 +8,12 @@ import numpy
 # dependencies
 install_reqs = [
     'numpy>=1.17.0',
-    'scipy>=1.3.1'
+    'scipy>=1.3.1',
+    'tensorflow>=2.0',
+    'tensorboard',
+    'keras',
+    'scikit-learn',
+    'ipython'
 ]
 
 # getting version from __main__.py
