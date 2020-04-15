@@ -3,11 +3,11 @@
 import logging
 ## 3rd party
 import numpy as np
-import keras
-from keras.models import Model, Sequential
-from keras.layers import Input, Dense, BatchNormalization, AveragePooling2D
-from keras.layers import Dropout
-from keras.layers import Conv2D, Flatten
+from tensorflow import keras
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import Input, Dense, BatchNormalization, AveragePooling2D
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import Conv2D, Flatten
 ## application
 from DeepMAsED import Utils
 
@@ -44,7 +44,7 @@ class deepmased(object):
         self.net.add(AveragePooling2D((self.pool_window, 1)))
         self.net.add(Flatten())
 
-        optimizer = keras.optimizers.adam(lr=self.lr_init)
+        optimizer = keras.optimizers.Adam(lr=self.lr_init)
 
         # binary classification
         for _ in range(self.n_fc - 1):

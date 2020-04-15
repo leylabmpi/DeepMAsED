@@ -6,7 +6,7 @@ import logging
 import _pickle as pickle
 ## 3rd party
 import numpy as np
-import keras
+from tensorflow import keras
 from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.metrics import recall_score, roc_auc_score, average_precision_score
 from sklearn.preprocessing import StandardScaler

@@ -25,20 +25,31 @@ The tool is divided into two main parts:
 
 # Setup
 
-## conda 
+## Via the conda recipe
+
+The simplest approach is to use the conda recipe:
+
+`conda create -n deepmased bioconda::deepmased`
+
+## [alternative] The piecemeal setup
+
+### Dependency setup via conda
 
 * [If needed] Install miniconda (or anaconda)
 * See the `conda create` line in the [.travis.yml](./.travis.yml) file.
 * If just using DeepMAsED-SM:
   * `conda create -n snakemake conda-forge::pandas bioconda::snakemake`
 
-### Testing the DeepMAsED package (optional)
+#### Testing the DeepMAsED package (optional)
 
 `pytest -s`
 
-### Installing the DeepMAsED package into the conda environment
+#### Installing the DeepMAsED package into the conda environment
 
-`python setup.py install`
+* Via `setup.py`
+  * `python setup.py install`
+* Via `pip`
+  * `pip install DeepMAsED`
 
 # Usage
 

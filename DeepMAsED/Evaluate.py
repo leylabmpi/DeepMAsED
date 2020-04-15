@@ -7,8 +7,8 @@ import _pickle as pickle
 #import argparse
 ## 3rd party
 import numpy as np
-import keras
-from keras.models import load_model
+from tensorflow import keras
+from tensorflow.keras.models import load_model
 from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.metrics import recall_score, roc_auc_score
 from sklearn.preprocessing import StandardScaler
