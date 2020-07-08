@@ -20,7 +20,7 @@ def parse_args(test_args=None, subparsers=None):
     In order to predict misassembled contigs with DeepMAsED predict,
     one must first create the table of features used for prediction.
  
-    This subcommand takes as input >=1 BAM file and the associated fasta files
+    This subcommand takes as input >=1 sorted BAM file and the associated fasta files
     of reference contigs and converted them to a set of features for each contig.
     The input is a table that maps BAM to ref-seq fasta files. 
     The format (with header): bam<tab>fasta
@@ -28,10 +28,11 @@ def parse_args(test_args=None, subparsers=None):
     The output will be a set of tab-delim feature tables (1 per input BAM-fasta pair)
     and a table summarizing all other others (the "feature_file_table").
 
-    Note1: for a large number of contigs, the output can be
-    10's of millions of rows or larger.
+    Note1: for a large number of contigs, the output can be 10's of millions of rows or larger.
 
     Note2: we recommend filtering out all contigs <1000 bp. 
+
+    Note3: the BAM files needed to be sorted
     """
     if subparsers:
         parser = subparsers.add_parser('features', description=desc, epilog=epi,
