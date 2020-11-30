@@ -1,0 +1,34 @@
+name: DeepMAsED
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: build (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+    - uses: goanpeca/setup-miniconda@v1
+      with:
+        miniconda-version: 'latest'
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+        channels: conda-forge,bioconda
+        activate-environment: deepmased
+    - name: conda env setup
+      shell: bash -l {0}
+      run: |
+        conda info -a
+        conda install --yes python=${{ matrix.python-version }} "tensorflow>=2.0" tensorboard keras scikit-learn ipython samtools pysam pytest snakemake
+    - uses: actions/checkout@v2	
+    - name: Unit tests
+      shell: bash -l {0}
+      run: |
+        pytest
+        snakemake --use-conda --directory DeepMAsED-SM --snakefile DeepMAsED-SM/Snakefile -F --dryrun
