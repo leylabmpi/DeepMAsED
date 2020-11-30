@@ -550,21 +550,23 @@ def pickle_data_b(x, set_target=True):
             
     return x
         
-def class_recall(label):
+def class_recall(label, name='metr'):
     """
     Custom metric for Keras, computes recall per class. 
 
     Inputs:
         label: label wrt which recall is to be computed. 
     """
-    def metr(y_true, y_pred):
+    def __init__(self, name='recall', **kwargs):
+        super(class_recall, self).__init__(name=name, **kwargs)
+        
+    def __call__(self, y_true, y_pred):
         class_id_preds = K.cast(K.greater(y_pred, 0.5), 'int32')
         y_true = K.cast(y_true, 'int32')
         accuracy_mask = K.cast(K.equal(y_true, label), 'int32')
         class_acc_tensor = K.cast(K.equal(y_true, class_id_preds), 'int32') * accuracy_mask
         class_acc = K.sum(class_acc_tensor) / K.maximum(K.sum(accuracy_mask), 1)
         return class_acc
-    return metr
 
 def explained_var(y_true, y_pred):
     """
@@ -573,7 +575,8 @@ def explained_var(y_true, y_pred):
     return 1  - K.mean((y_true - y_pred) ** 2) / K.var(y_true)
 
 def reverse_dict(d):
-    """Flip keys and values
+    """
+    Flip keys and values
     """
     r_d = {}
     for k, v in d.items():

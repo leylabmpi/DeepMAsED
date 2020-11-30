@@ -54,8 +54,8 @@ class deepmased(object):
         self.net.add(Dense(1, activation='sigmoid'))
         self.net.add(Dropout(rate=self.dropout))
 
-        recall_0 = Utils.class_recall(0)
-        recall_1 = Utils.class_recall(1)
+        recall_0 = Utils.class_recall(0, name='recall1')
+        recall_1 = Utils.class_recall(1, name='recall2')
         self.net.compile(loss='binary_crossentropy',
                          optimizer=optimizer,
                          metrics=[recall_0, recall_1])
