@@ -25,7 +25,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda info -a
-        conda install --yes python=${{ matrix.python-version }} "tensorflow>=2.0" tensorboard keras scikit-learn ipython samtools pysam pytest snakemake
+        conda install python=${{ matrix.python-version }} "tensorflow>=2.0" tensorboard keras scikit-learn ipython samtools pysam pytest snakemake
     - uses: actions/checkout@v2	
     - name: Unit tests
       shell: bash -l {0}

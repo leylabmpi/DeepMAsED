@@ -1,4 +1,4 @@
-[![Travis-CI Build Status](https://travis-ci.org/leylabmpi/DeepMAsED.svg?branch=master)](https://travis-ci.org/leylabmpi/DeepMAsED)
+![DeepMAsED](https://github.com/leylabmpi/DeepMAsED/workflows/DeepMAsED/badge.svg)
 
 DeepMAsED
 =========
